@@ -16,7 +16,14 @@ import { ShoppingCart, Info, FileImage, Calculator, Sparkles, X, Palette } from 
 import { useSearchParams } from "next/navigation"
 import { useCart } from "@/lib/cart-context"
 import DesignServiceEditor from "@/components/design-service-editor" // New import
-import type { DesignOutputData } from "@/components/design-editor" // New import
+// Define the DesignOutputData type locally since it's not exported
+type DesignOutputData = {
+  elements: any[]
+  zoom: number
+  customizedProductImage?: string
+  baseProductImage?: string
+  id?: string
+}
 import QuoteRequestModal from "@/components/quote-request-modal"
 
 const digitalPrintingProducts = [
@@ -149,7 +156,12 @@ const digitalPrintingProducts = [
 export default function DigitalPrintingPage() {
   const searchParams = useSearchParams()
   const [selectedProduct, setSelectedProduct] = useState(digitalPrintingProducts[0])
-  const [selectedSize, setSelectedSize] = useState(selectedProduct.sizes[0])
+  const [selectedSize, setSelectedSize] = useState<{
+    width: number
+    height: number
+    price_single: number
+    price_double?: number
+  }>(selectedProduct.sizes[0])
   const [printSides, setPrintSides] = useState<"single" | "double">("single")
   const [quantity, setQuantity] = useState(1)
   const [aiDesign, setAiDesign] = useState<any>(null)
@@ -174,8 +186,11 @@ export default function DigitalPrintingPage() {
     }
 
 
-// Determine the correct image to use for the cart thumbnail
-let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
+// Determine which design to use (AI design takes priority over custom design)
+    const designToUse = aiDesign || customDesign
+
+    // Determine the correct image to use for the cart thumbnail
+    let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
     
     if (aiDesign && aiDesign.previewUrl) {
       // Use AI-generated design image as thumbnail
@@ -222,8 +237,8 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
 
   const calculatePrice = () => {
     const basePrice =
-      printSides === "double" && selectedSize.price_double ? selectedSize.price_double : selectedSize.price_single
-    return basePrice * quantity
+      printSides === "double" && 'price_double' in selectedSize ? selectedSize.price_double : selectedSize.price_single
+    return (basePrice || 0) * quantity
   }
 
   const handleProductChange = (productId: string) => {
@@ -244,7 +259,13 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
   const handleSizeChange = (sizeIndex: string) => {
     const size = selectedProduct.sizes[Number.parseInt(sizeIndex)]
     if (size) {
-      setSelectedSize(size)
+      // Handle union type with optional price_double
+      setSelectedSize({
+        width: size.width,
+        height: size.height,
+        price_single: size.price_single,
+        price_double: 'price_double' in size ? size.price_double : undefined
+      })
     }
   }
 
@@ -329,6 +350,7 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
       if (storedCustomDesign) {
         try {
           const designData = JSON.parse(storedCustomDesign) as DesignOutputData
+          console.log('Loaded custom design from sessionStorage:', designData)
           setCustomDesign(designData)
           setAiDesign(null) // Ensure AI design is cleared if custom design is loaded
           setShowAiDesign(false)
@@ -513,7 +535,11 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                     Material Size
                   </Label>
                   <Select
-                    value={selectedProduct.sizes.indexOf(selectedSize).toString()}
+                    value={selectedProduct.sizes.findIndex(size => 
+                      size.width === selectedSize.width && 
+                      size.height === selectedSize.height && 
+                      size.price_single === selectedSize.price_single
+                    ).toString()}
                     onValueChange={handleSizeChange}
                   >
                     <SelectTrigger>
@@ -523,7 +549,7 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                       {selectedProduct.sizes.map((size, index) => (
                         <SelectItem key={index} value={index.toString()}>
                           {size.width}" × {size.height}" - ${size.price_single}
-                          {size.price_double && ` / $${size.price_double} (double)`}
+                          {'price_double' in size && ` / $${(size as any).price_double} (double)`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -538,7 +564,7 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                         <RadioGroupItem value="single" id="single" />
                         <Label htmlFor="single">Single-sided - ${selectedSize.price_single}</Label>
                       </div>
-                      {selectedSize.price_double && (
+                      {'price_double' in selectedSize && (
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="double" id="double" />
                           <Label htmlFor="double">Double-sided - ${selectedSize.price_double}</Label>
@@ -634,16 +660,36 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                 ) : (
                   <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={customDesign?.customizedProductImage || aiDesign?.previewUrl || "/placeholder.svg"}
-                        alt="Current Design"
-                        className="w-16 h-16 object-cover rounded border"
-                      />
+                      <div className="w-16 h-16 rounded border bg-white flex items-center justify-center overflow-hidden">
+                        {(customDesign?.customizedProductImage || aiDesign?.previewUrl) ? (
+                          <img
+                            src={customDesign?.customizedProductImage || aiDesign?.previewUrl}
+                            alt="Current Design"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.log('Image failed to load, using placeholder')
+                              e.currentTarget.src = '/placeholder.svg'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <Palette className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <p className="font-medium">Design Loaded</p>
                         <p className="text-sm text-gray-600">
                           {customDesign ? "Your custom design" : "AI-generated design"} is ready.
                         </p>
+                        {/* Debug info */}
+                        {process.env.NODE_ENV === 'development' && (
+                          <div className="text-xs text-gray-400 mt-1 space-y-1">
+                            <p>Image: {customDesign?.customizedProductImage ? 'Custom' : aiDesign?.previewUrl ? 'AI' : 'None'}</p>
+                            <p>Custom Image URL: {customDesign?.customizedProductImage ? 'Available' : 'Missing'}</p>
+                            <p>AI Preview URL: {aiDesign?.previewUrl ? 'Available' : 'Missing'}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <Button variant="outline" onClick={() => setShowDesignEditor(true)}>
@@ -670,7 +716,7 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
 
           {/* Order Summary */}
           <div className="space-y-6">
-            <Card className="sticky top-6">
+            <Card className="sticky top-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
@@ -698,11 +744,16 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                       <span>{quantity}</span>
                     </div>
                     {(aiDesign || customDesign) && (
-                      <div className="flex justify-between">
-                        <span>Design:</span>
-                        <span className="text-purple-600">{aiDesign ? "AI Generated" : "Custom"}</span>
-                      </div>
-                    )}
+                  <div className="flex justify-between">
+                    <span>Design:</span>
+                    <span className="text-purple-600 flex items-center gap-1">
+                      {aiDesign ? "AI Generated" : "Custom"}
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                        ✓ Ready
+                      </Badge>
+                    </span>
+                  </div>
+                )}
                   </div>
                 </div>
 
@@ -712,11 +763,11 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                   <div className="flex justify-between">
                     <span>Unit Price:</span>
                     <span>
-                      $
-                      {printSides === "double" && selectedSize.price_double
-                        ? selectedSize.price_double.toFixed(2)
-                        : selectedSize.price_single.toFixed(2)}
-                    </span>
+                        $
+                        {printSides === "double" && 'price_double' in selectedSize
+                          ? (selectedSize.price_double || selectedSize.price_single).toFixed(2)
+                          : selectedSize.price_single.toFixed(2)}
+                      </span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
@@ -724,19 +775,21 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
                   </div>
                 </div>
 
-                <Button onClick={handleAddToCart} className="w-full bg-red-600 hover:bg-red-700" size="lg">
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                  Add to Cart
-                </Button>
-
-                <div className="text-center space-y-2">
-                  <Button
-                    onClick={() => setShowQuoteModal(true)}
-                    variant="outline"
-                    className="w-full border-red-600 text-red-600 hover:bg-red-50"
-                  >
-                    Request Custom Quote
+                <div className="space-y-3 pb-4">
+                  <Button onClick={handleAddToCart} className="w-full bg-red-600 hover:bg-red-700" size="lg">
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
                   </Button>
+
+                  <div className="text-center">
+                    <Button
+                      onClick={() => setShowQuoteModal(true)}
+                      variant="outline"
+                      className="w-full border-red-600 text-red-600 hover:bg-red-50"
+                    >
+                      Request Custom Quote
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -766,21 +819,25 @@ let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
       </div>
 
       {showDesignEditor && (
-        <DesignServiceEditor
-          isOpen={showDesignEditor}
-          onClose={() => setShowDesignEditor(false)}
-          productImage={selectedProduct.image}
-          productName={selectedProduct.name}
-          initialDesign={
-            customDesign
-              ? {
-                  elements: customDesign.elements,
-                  zoom: customDesign.zoom,
-                  productImage: customDesign.baseProductImage,
-                }
-              : null
-          }
-        />
+          <DesignServiceEditor
+            isOpen={showDesignEditor}
+            onClose={() => setShowDesignEditor(false)}
+            onSave={(designData: any) => {
+              setCustomDesign(designData)
+              setShowDesignEditor(false)
+            }}
+            productImage={selectedProduct.image || ''}
+            productName={selectedProduct.name}
+            initialDesign={
+              customDesign
+                ? {
+                    elements: customDesign.elements,
+                    zoom: customDesign.zoom,
+                    productImage: customDesign.baseProductImage || selectedProduct.image || '',
+                  }
+                : undefined
+            }
+          />
       )}
       {showQuoteModal && (
         <QuoteRequestModal

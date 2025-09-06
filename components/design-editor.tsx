@@ -18,6 +18,7 @@ import {
   Redo,
   Crop,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react"
 import ReactCrop, { type Crop as CropperCrop, centerCrop, makeAspectCrop } from "react-image-crop"
 import "react-image-crop/dist/ReactCrop.css"
@@ -118,7 +119,7 @@ interface DesignEditorProps {
 
 const DesignEditor: React.FC<DesignEditorProps> = ({
   productImage = "/placeholder.svg?width=600&height=600&text=Product+Mockup",
-  printArea = { x: 150, y: 150, width: 300, height: 300 },
+  printArea = { x: 0, y: 0, width: 600, height: 600 },
   onSave,
   onCancel,
   initialDesign,
@@ -440,24 +441,29 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
   }
 
   const handleSave = async () => {
-    if (!designViewportRef.current) {
-      console.error("Design viewport ref not found for capturing.")
-      toast({
-        title: "Error",
-        description: "Could not capture design. Please try again.",
-        variant: "destructive",
-      })
-      return
-    }
-
+    // Ensure we always reset loading state
+    let isLoadingStateSet = false
+    
     try {
+      if (!designViewportRef.current) {
+        console.error("Design viewport ref not found for capturing.")
+        toast({
+          title: "Error",
+          description: "Could not capture design. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
       setErrorMessage(null)
       setIsSaving(true)
+      isLoadingStateSet = true
 
       console.log("🎨 Starting design save process...")
 
       // Generate unique product name automatically
-      const generatedProductName = generateProductName(user?.email || null, productName)
+      const userEmail = user?.email ?? null
+      const generatedProductName = generateProductName(userEmail, productName || 'Custom Design')
       console.log("📝 Generated product name:", generatedProductName)
 
       // Validate required data
@@ -469,35 +475,46 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         throw new Error("Please log in to save your design")
       }
 
-      // Show loading toast
+      // Show initial loading toast
       const loadingToast = toast({
         title: "Saving Design...",
-        description: "Creating and storing your custom product (up to 10MB)",
+        description: "Processing your design...",
+        duration: 0, // Keep open
       })
 
       // Temporarily set transform-origin to top left for html2canvas
       const originalTransformOrigin = designViewportRef.current.style.transformOrigin
       designViewportRef.current.style.transformOrigin = "top left"
 
-      console.log("📸 Capturing design canvas at full quality...")
-      const canvas = await html2canvas(designViewportRef.current, {
+      console.log("📸 Capturing design canvas...")
+      
+      // Add timeout protection for canvas capture with shorter timeout
+      const capturePromise = html2canvas(designViewportRef.current, {
         useCORS: true,
-        scale: 2, // High quality
+        scale: 1.5, // Reduced scale for faster processing
         logging: false,
         backgroundColor: null,
+        allowTaint: true,
+        foreignObjectRendering: true,
       })
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Canvas capture timeout. Please try a simpler design.')), 15000) // Reduced to 15s
+      )
+      
+      const canvas = await Promise.race([capturePromise, timeoutPromise]) as HTMLCanvasElement
 
       // Revert transform-origin
       designViewportRef.current.style.transformOrigin = originalTransformOrigin
 
-      // Get full quality image (NO COMPRESSION)
-      const capturedImageBase64 = canvas.toDataURL("image/png", 1.0) // Maximum quality
+      // Get image with reasonable quality
+      const capturedImageBase64 = canvas.toDataURL("image/png", 0.9) // Slightly reduced quality for speed
       const sizeInMB = capturedImageBase64.length / (1024 * 1024)
-      console.log(`📏 Full quality image size: ${sizeInMB.toFixed(2)}MB`)
+      console.log(`📏 Image size: ${sizeInMB.toFixed(2)}MB`)
 
-      // Check if under 10MB limit
-      if (sizeInMB > 10) {
-        throw new Error(`Image too large (${sizeInMB.toFixed(2)}MB). Please simplify your design to stay under 10MB.`)
+      // Check if under 8MB limit (reduced from 10MB)
+      if (sizeInMB > 8) {
+        throw new Error(`Image too large (${sizeInMB.toFixed(2)}MB). Please simplify your design to stay under 8MB.`)
       }
 
       // Prepare design data
@@ -513,7 +530,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
       // Generate a unique ID for the design
       const designId = `design_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-      // Prepare API request data (full quality, no compression)
+      // Prepare API request data
       const requestData = {
         id: designId,
         name: generatedProductName,
@@ -522,7 +539,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         file_data: {
           design_data: designData,
           formats: ["png", "pdf", "svg", "jpg"],
-          canvas_data: capturedImageBase64, // Full quality image
+          canvas_data: capturedImageBase64,
         },
         generation_inputs: {
           base_product: productName,
@@ -536,13 +553,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         preview_url: capturedImageBase64,
       }
 
-      console.log("📦 Request data prepared:", {
-        id: requestData.id,
-        name: requestData.name,
-        elementsCount: elements.length,
-        userEmail: user?.email,
-        imageSizeMB: sizeInMB.toFixed(2),
-      })
+      console.log("📦 Request data prepared")
 
       // Get auth token for API request
       console.log("🔑 Getting auth token...")
@@ -558,10 +569,18 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
       const authToken = session.access_token
       console.log("✅ Auth token obtained")
-
-      // Send to API (will upload to Supabase Storage)
-      console.log("📡 Sending full quality image to API...")
+      
+      // Send to API with shorter timeout
+      console.log("📡 Uploading design...")
       let digitalProductResponse: Response
+      
+      // Reduced timeout to 30 seconds
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+        console.log("⏰ API request timed out")
+      }, 30000)
+      
       try {
         digitalProductResponse = await fetch("/api/digital-products/create-memory", {
           method: "POST",
@@ -571,38 +590,39 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
             ...(authToken && { Authorization: `Bearer ${authToken}` }),
           },
           body: JSON.stringify(requestData),
+          signal: controller.signal,
         })
+        clearTimeout(timeoutId)
       } catch (fetchError) {
-        console.error("❌ Network error during fetch:", fetchError)
+        clearTimeout(timeoutId)
+        console.error("❌ Network error:", fetchError)
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error("Upload timeout. Please try again with a simpler design.")
+        }
         throw new Error("Network error. Please check your connection and try again.")
       }
 
-      console.log("📨 API response received:", {
-        status: digitalProductResponse.status,
-        statusText: digitalProductResponse.statusText,
-        contentType: digitalProductResponse.headers.get("content-type"),
-      })
+      console.log("📨 API response received:", digitalProductResponse.status)
 
       // Parse response
       let responseData: any
       try {
         responseData = await digitalProductResponse.json()
-        console.log("📄 Parsed response data:", responseData)
       } catch (jsonError) {
-        console.error("❌ Failed to parse JSON response:", jsonError)
-        throw new Error("Invalid response from server. Please try again.")
+        console.error("❌ Failed to parse response:", jsonError)
+        throw new Error("Invalid server response. Please try again.")
       }
 
       // Check for errors
       if (!digitalProductResponse.ok || !responseData.success) {
-        const errorMessage = responseData?.error || `API request failed: ${digitalProductResponse.status}`
-        console.error("❌ API error response:", responseData)
+        const errorMessage = responseData?.error || `Upload failed: ${digitalProductResponse.status}`
+        console.error("❌ API error:", responseData)
         throw new Error(errorMessage)
       }
 
       // Use the response data
       const digitalProduct = responseData
-      console.log("✅ Digital product created successfully:", digitalProduct.product?.id)
+      console.log("✅ Design saved successfully:", digitalProduct.product?.id)
 
       // Find the selected variant for pricing
       const variant = variants.find((v) => v.id === selectedVariant)
@@ -612,9 +632,9 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
       const storedImageUrl = digitalProduct.product.preview_url || digitalProduct.product.download_url
       const productDisplayName = `${generatedProductName} - Custom Design`
 
-      console.log("🛒 Adding to cart with Supabase Storage URL:", storedImageUrl)
+      console.log("🛒 Adding to cart...")
 
-      // Add to cart with LIGHTWEIGHT customizations (NO large design data)
+      // Add to cart
       addItem({
         productId: product?.id || "custom-design",
         variantId: selectedVariant || undefined,
@@ -622,66 +642,53 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         quantity: 1,
         price: finalPrice,
         name: productDisplayName,
-        image: storedImageUrl, // This is now a Supabase Storage URL, not base64
+        image: storedImageUrl,
         customizations: {
-          // LIGHTWEIGHT metadata only - NO large design data
           designId: digitalProduct.product.id,
           is_custom_design: true,
           formats_available: ["png", "pdf", "svg", "jpg"],
           generated_name: generatedProductName,
           storage_url: storedImageUrl,
           elements_count: elements.length,
-          // DO NOT include: design_data, elements, canvas_data, etc.
         },
       })
 
       // Dismiss loading toast
-      loadingToast.dismiss?.()
-      setIsSaving(false)
+      if (loadingToast.dismiss) {
+        loadingToast.dismiss()
+      }
 
+      // Success toast
       toast({
         title: "Design Saved Successfully! 🎨",
-        description: `${productDisplayName} has been added to your cart (${sizeInMB.toFixed(2)}MB stored in Supabase)`,
+        description: `${productDisplayName} added to cart`,
+        duration: 3000,
       })
 
       // Call original onSave if provided
-      onSave &&
+      if (onSave) {
         onSave({
           ...designData,
-          customizedProductImage: storedImageUrl, // Use Supabase Storage URL
+          customizedProductImage: storedImageUrl,
         })
-    } catch (error) {
-      console.error("💥 Save error details:", {
-        name: error instanceof Error ? error.name : "Unknown",
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        designData: {
-          elementsCount: elements.length,
-          productName,
-          hasProduct: !!product,
-          userEmail: user?.email,
-          generatedName: generateProductName(user?.email || null, productName),
-        },
-        timestamp: new Date().toISOString(),
-      })
+      }
 
-      setIsSaving(false)
+    } catch (error) {
+      console.error("💥 Save error:", error)
 
       let userFriendlyMessage = "Could not save your design. Please try again."
 
       if (error instanceof Error) {
         const errorMsg = error.message.toLowerCase()
 
-        if (errorMsg.includes("network") || errorMsg.includes("fetch")) {
+        if (errorMsg.includes("timeout")) {
+          userFriendlyMessage = "Save timeout. Please try a simpler design or check your connection."
+        } else if (errorMsg.includes("network") || errorMsg.includes("fetch")) {
           userFriendlyMessage = "Network error. Please check your connection and try again."
-        } else if (errorMsg.includes("internal server error") || errorMsg.includes("500")) {
-          userFriendlyMessage = "Server error. Please try again in a few moments."
         } else if (errorMsg.includes("unauthorized") || errorMsg.includes("401")) {
           userFriendlyMessage = "Please log in again to save your design."
-        } else if (errorMsg.includes("forbidden") || errorMsg.includes("403")) {
-          userFriendlyMessage = "You don't have permission to save designs. Please contact support."
-        } else if (errorMsg.includes("not found") || errorMsg.includes("404")) {
-          userFriendlyMessage = "Service not available. Please contact support."
+        } else if (errorMsg.includes("too large")) {
+          userFriendlyMessage = error.message
         } else if (error.message.length < 100) {
           userFriendlyMessage = error.message
         }
@@ -693,7 +700,14 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         title: "Error Saving Design",
         description: userFriendlyMessage,
         variant: "destructive",
+        duration: 5000,
       })
+    } finally {
+      // ALWAYS reset loading state
+      if (isLoadingStateSet) {
+        setIsSaving(false)
+        console.log("🔄 Loading state reset")
+      }
     }
   }
 
@@ -794,7 +808,13 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
           <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
             <Redo className="w-4 h-4" />
           </Button>
-          <Button onClick={handleSave} size="sm" className="bg-red-700 hover:bg-red-800 text-white" disabled={isSaving}>
+          <Button 
+            onClick={handleSave} 
+            size="sm" 
+            className="bg-red-700 hover:bg-red-800 text-white" 
+            disabled={isSaving}
+            data-save-design
+          >
             {isSaving ? "Saving..." : "Save Design"}
           </Button>
         </div>
@@ -829,9 +849,9 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         </Alert>
       )}
 
-      <div className="flex" style={{ height: "calc(100vh - 200px)", minHeight: "600px" }}>
+      <div className="flex" style={{ height: "calc(100vh - 12rem)", minHeight: "600px" }}>
         {/* Sidebar */}
-        <div className="w-72 border-r border-gray-200 bg-gray-50 flex flex-col">
+        <div className="w-80 border-r border-gray-200 bg-gray-50 flex flex-col">
           <Tabs defaultValue="upload" className="flex flex-col flex-grow">
             <TabsList className="grid w-full grid-cols-3 shrink-0">
               <TabsTrigger value="upload">
@@ -942,69 +962,166 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
           {/* Element Properties */}
           {selected && (
             <div
-              className="border-t border-gray-200 p-4 space-y-3 overflow-y-auto shrink-0"
-              style={{ maxHeight: "40%" }}
+              className="border-t border-gray-200 p-4 space-y-4 overflow-y-auto shrink-0 bg-white"
+              style={{ minHeight: "300px", maxHeight: "50%" }}
             >
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Element Properties</h3>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">X</Label>
-                  <Input
-                    type="number"
-                    value={Math.round(selected.x)}
-                    onChange={(e) => updateSelectedElement({ x: Number(e.target.value) })}
-                    onBlur={() => commitSelectedElementUpdate({})}
-                    className="h-8 text-xs"
-                  />
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700">Element Properties</h3>
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  {selected.type.charAt(0).toUpperCase() + selected.type.slice(1)}
                 </div>
-                <div>
-                  <Label className="text-xs">Y</Label>
-                  <Input
-                    type="number"
-                    value={Math.round(selected.y)}
-                    onChange={(e) => updateSelectedElement({ y: Number(e.target.value) })}
-                    onBlur={() => commitSelectedElementUpdate({})}
-                    className="h-8 text-xs"
-                  />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-xs font-medium text-gray-700">Position & Size</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">X Position</Label>
+                    <Input
+                      type="number"
+                      value={Math.round(selected.x)}
+                      onChange={(e) => updateSelectedElement({ x: Number(e.target.value) })}
+                      onBlur={() => commitSelectedElementUpdate({})}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Y Position</Label>
+                    <Input
+                      type="number"
+                      value={Math.round(selected.y)}
+                      onChange={(e) => updateSelectedElement({ y: Number(e.target.value) })}
+                      onBlur={() => commitSelectedElementUpdate({})}
+                      className="h-8 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
               {(selected.type === "image" || selected.type === "shape") && (
-                <div className="grid grid-cols-2 gap-2">
+                <>
                   <div>
-                    <Label className="text-xs">Width</Label>
-                    <Input
-                      type="number"
-                      value={Math.round(selected.width || 0)}
-                      onChange={(e) =>
-                        updateSelectedElement({
-                          width: Number(e.target.value),
-                          ...(selected.type === "image" &&
-                            selected.aspectRatio && { height: Number(e.target.value) / selected.aspectRatio }),
-                        })
-                      }
-                      onBlur={() => commitSelectedElementUpdate({})}
-                      className="h-8 text-xs"
-                    />
+                    <Label className="text-xs font-medium">Element Size ({Math.round(((selected.width || 0) / 100) * 100)}%)</Label>
+                    <div className="mt-2">
+                      <Slider
+                        value={[selected.width || 100]}
+                        onValueChange={(v) => {
+                          const newWidth = v[0]
+                          updateSelectedElement({
+                            width: newWidth,
+                            ...(selected.type === "image" &&
+                              selected.aspectRatio && { height: newWidth / selected.aspectRatio }),
+                          })
+                        }}
+                        onValueCommit={(v) => {
+                          const newWidth = v[0]
+                          commitSelectedElementUpdate({
+                            width: newWidth,
+                            ...(selected.type === "image" &&
+                              selected.aspectRatio && { height: newWidth / selected.aspectRatio }),
+                          })
+                        }}
+                        min={20}
+                        max={600}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Small</span>
+                      <span>Medium</span>
+                      <span>Large</span>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs">Height</Label>
-                    <Input
-                      type="number"
-                      value={Math.round(selected.height || 0)}
-                      onChange={(e) =>
-                        updateSelectedElement({
-                          height: Number(e.target.value),
-                          ...(selected.type === "image" &&
-                            selected.aspectRatio && { width: Number(e.target.value) * selected.aspectRatio }),
-                        })
-                      }
-                      onBlur={() => commitSelectedElementUpdate({})}
-                      className="h-8 text-xs"
-                    />
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Width</Label>
+                      <Input
+                        type="number"
+                        value={Math.round(selected.width || 0)}
+                        onChange={(e) =>
+                          updateSelectedElement({
+                            width: Number(e.target.value),
+                            ...(selected.type === "image" &&
+                              selected.aspectRatio && { height: Number(e.target.value) / selected.aspectRatio }),
+                          })
+                        }
+                        onBlur={() => commitSelectedElementUpdate({})}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Height</Label>
+                      <Input
+                        type="number"
+                        value={Math.round(selected.height || 0)}
+                        onChange={(e) =>
+                          updateSelectedElement({
+                            height: Number(e.target.value),
+                            ...(selected.type === "image" &&
+                              selected.aspectRatio && { width: Number(e.target.value) * selected.aspectRatio }),
+                          })
+                        }
+                        onBlur={() => commitSelectedElementUpdate({})}
+                        className="h-8 text-xs"
+                      />
+                    </div>
                   </div>
-                </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const currentWidth = selected.width || 100
+                        const newWidth = Math.max(20, currentWidth * 0.8)
+                        commitSelectedElementUpdate({
+                          width: newWidth,
+                          ...(selected.type === "image" &&
+                            selected.aspectRatio && { height: newWidth / selected.aspectRatio }),
+                        })
+                      }}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                      <span className="text-xs">Zoom Out</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const originalWidth = selected.type === "image" ? 200 : 100
+                        commitSelectedElementUpdate({
+                          width: originalWidth,
+                          ...(selected.type === "image" &&
+                            selected.aspectRatio && { height: originalWidth / selected.aspectRatio }),
+                        })
+                      }}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span className="text-xs">Reset</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const currentWidth = selected.width || 100
+                        const newWidth = Math.min(600, currentWidth * 1.25)
+                        commitSelectedElementUpdate({
+                          width: newWidth,
+                          ...(selected.type === "image" &&
+                            selected.aspectRatio && { height: newWidth / selected.aspectRatio }),
+                        })
+                      }}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                      <span className="text-xs">Zoom In</span>
+                    </Button>
+                  </div>
+                </>
               )}
 
               {selected.type === "text" && (
@@ -1057,60 +1174,106 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                 </>
               )}
 
-              <div>
-                <Label className="text-xs">Rotation ({selected.rotation}°)</Label>
-                <Slider
-                  value={[selected.rotation]}
-                  onValueChange={(v) => updateSelectedElement({ rotation: v[0] })}
-                  onValueCommit={(v) => commitSelectedElementUpdate({ rotation: v[0] })}
-                  min={0}
-                  max={359}
-                  step={1}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Opacity ({Math.round((selected.opacity || 0) * 100)}%)</Label>
-                <Slider
-                  value={[selected.opacity || 0]}
-                  onValueChange={(v) => updateSelectedElement({ opacity: v[0] })}
-                  onValueCommit={(v) => commitSelectedElementUpdate({ opacity: v[0] })}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                />
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium">Rotation ({selected.rotation}°)</Label>
+                  <div className="mt-2">
+                    <Slider
+                      value={[selected.rotation]}
+                      onValueChange={(v) => updateSelectedElement({ rotation: v[0] })}
+                      onValueCommit={(v) => commitSelectedElementUpdate({ rotation: v[0] })}
+                      min={0}
+                      max={359}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0°</span>
+                    <span>180°</span>
+                    <span>359°</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-xs font-medium">Opacity ({Math.round((selected.opacity || 1) * 100)}%)</Label>
+                  <div className="mt-2">
+                    <Slider
+                      value={[selected.opacity || 1]}
+                      onValueChange={(v) => updateSelectedElement({ opacity: v[0] })}
+                      onValueCommit={(v) => commitSelectedElementUpdate({ opacity: v[0] })}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => commitSelectedElementUpdate({ flipX: !selected.flipX })}
-                  title="Flip Horizontal"
-                  className="flex-1"
+              <div className="space-y-3 pt-2 border-t border-gray-100">
+                <Label className="text-xs font-medium text-gray-700">Transform Actions</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => commitSelectedElementUpdate({ flipX: !selected.flipX })}
+                    title="Flip Horizontal"
+                    className={`flex flex-col items-center gap-1 h-auto py-2 ${selected.flipX ? 'bg-blue-50 border-blue-200' : ''}`}
+                  >
+                    <FlipHorizontal className="w-4 h-4" />
+                    <span className="text-xs">Flip H</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => commitSelectedElementUpdate({ flipY: !selected.flipY })}
+                    title="Flip Vertical"
+                    className={`flex flex-col items-center gap-1 h-auto py-2 ${selected.flipY ? 'bg-blue-50 border-blue-200' : ''}`}
+                  >
+                    <FlipVertical className="w-4 h-4" />
+                    <span className="text-xs">Flip V</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={duplicateSelected} 
+                    title="Duplicate" 
+                    className="flex flex-col items-center gap-1 h-auto py-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span className="text-xs">Copy</span>
+                  </Button>
+                </div>
+                
+                {selected.type === "image" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={openCropModal} 
+                    className="w-full flex items-center justify-center gap-2 py-2"
+                  >
+                    <Crop className="w-4 h-4" /> 
+                    <span>Crop Image</span>
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={deleteSelected} 
+                  title="Delete" 
+                  className="w-full flex items-center justify-center gap-2 py-2 mt-3"
                 >
-                  <FlipHorizontal className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => commitSelectedElementUpdate({ flipY: !selected.flipY })}
-                  title="Flip Vertical"
-                  className="flex-1"
-                >
-                  <FlipVertical className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={duplicateSelected} title="Duplicate" className="flex-1">
-                  <Copy className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" /> 
+                  <span>Delete Element</span>
                 </Button>
               </div>
-              {selected.type === "image" && (
-                <Button variant="outline" size="sm" onClick={openCropModal} className="w-full mt-2">
-                  <Crop className="w-4 h-4 mr-2" /> Crop Image
-                </Button>
-              )}
-              <Button variant="destructive" size="sm" onClick={deleteSelected} title="Delete" className="w-full mt-2">
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Element
-              </Button>
             </div>
           )}
         </div>
@@ -1137,7 +1300,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
           <div
             ref={canvasContainerRef}
-            className="relative bg-white shadow-lg overflow-hidden w-full h-full max-w-[600px] max-h-[600px]"
+            className="relative bg-gray-100 shadow-lg overflow-hidden w-full h-full max-w-[600px] max-h-[600px]"
             onMouseDown={(e) => handleCanvasMouseDown(e)}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
@@ -1151,13 +1314,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                 transformOrigin: "top left",
               }}
             >
-              <img
-                src={productImage || "/placeholder.svg"}
-                alt="Product Background"
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                draggable={false}
-                crossOrigin="anonymous"
-              />
+              {/* Background removed - blank canvas */}
               <div
                 className="absolute border-2 border-dashed border-red-500 pointer-events-none"
                 style={{ left: printArea.x, top: printArea.y, width: printArea.width, height: printArea.height }}

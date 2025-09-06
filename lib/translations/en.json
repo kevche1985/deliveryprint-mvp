@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "digitalProducts": "Digital Products"
+  },
+  "home": {
+    "title": "Welcome",
+    "description": "This is the home page"
+  },
+  "about": {
+    "title": "About Us",
+    "description": "Learn more about our company"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Get in touch with us"
+  }
+}

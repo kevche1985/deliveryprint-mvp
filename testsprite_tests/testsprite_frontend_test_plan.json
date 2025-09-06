@@ -1,0 +1,685 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration Success",
+    "description": "Verify that a new user can register successfully with valid data and receives appropriate role assignment.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the registration page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid username, email, and password."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registration success message is displayed."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user role is assigned correctly and user is authenticated."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Login with Correct Credentials",
+    "description": "Check login functionality with valid username/email and password.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Enter a registered username/email and correct password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is successfully logged in and redirected appropriately."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "User Login Failure with Incorrect Password",
+    "description": "Verify login fails with incorrect password and appropriate error message is shown.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Enter a registered username/email and incorrect password."
+      },
+      {
+        "type": "action",
+        "description": "Click the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login failure message is displayed and user remains on login page."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Password Reset Flow Success",
+    "description": "Verify that a user can initiate and complete the password reset process successfully.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the forgot password page."
+      },
+      {
+        "type": "action",
+        "description": "Submit registered email for password reset."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password reset email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Open password reset link from email."
+      },
+      {
+        "type": "action",
+        "description": "Enter and confirm new password."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password reset success confirmation."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "AI Studio Image Generation with Valid Prompt",
+    "description": "Verify AI Studio generates a valid image output from a user-provided prompt.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to AI Studio image generation page."
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid image generation prompt."
+      },
+      {
+        "type": "action",
+        "description": "Submit the prompt for generation."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the generated image is displayed and matches prompt context."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "AI Studio Logo Generation with Empty Prompt",
+    "description": "Verify the system handles an empty prompt gracefully and shows appropriate error.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to AI Studio logo generation page."
+      },
+      {
+        "type": "action",
+        "description": "Submit an empty prompt."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an error message about the required prompt is shown."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Print Services Display and Selection",
+    "description": "Verify print services are listed correctly and user can select digital printing, large format, or event stands.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the print services page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all print service types are displayed with correct info."
+      },
+      {
+        "type": "action",
+        "description": "Select digital printing service."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify digital printing details are shown and selectable."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Product Catalog Browsing and Detail Viewing",
+    "description": "Verify product catalog loads, products are listed, and individual product detail pages display correctly with configurations.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to product catalog page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of products is displayed with pagination or infinite scroll."
+      },
+      {
+        "type": "action",
+        "description": "Select a product to view details."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product detail page shows product info, images, and configuration options."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Shopping Cart Management for Mixed Product Types",
+    "description": "Verify shopping cart correctly adds, updates, and removes both digital and physical products reflecting accurate totals.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Add a physical product to the shopping cart."
+      },
+      {
+        "type": "action",
+        "description": "Add a digital product to the shopping cart."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify cart shows both products with correct quantity and price."
+      },
+      {
+        "type": "action",
+        "description": "Update quantity of a product in the cart."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify cart total updates correctly."
+      },
+      {
+        "type": "action",
+        "description": "Remove a product from the cart."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product is removed and totals adjusted accordingly."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Checkout Flow with PayPal Payment and 3DS Authentication",
+    "description": "Verify the standard checkout process completes successfully with PayPal including 3DS authentication.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Proceed to checkout with items in the cart."
+      },
+      {
+        "type": "action",
+        "description": "Select PayPal as the payment method."
+      },
+      {
+        "type": "action",
+        "description": "Complete PayPal payment flow including any required 3DS authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order confirmation is displayed."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order status is updated and available in user dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Checkout Flow with Wompi Payment and 3DS Authentication",
+    "description": "Verify the checkout process completes successfully with Wompi payment processing including 3DS authentication.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Proceed to checkout with items in the cart."
+      },
+      {
+        "type": "action",
+        "description": "Select Wompi as the payment method."
+      },
+      {
+        "type": "action",
+        "description": "Complete Wompi payment flow including 3DS authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order confirmation is displayed."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order status is updated and visible in user dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Simplified Checkout Flow Completion",
+    "description": "Verify users can complete the simplified checkout flow without errors.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Add items to cart."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the simplified checkout page."
+      },
+      {
+        "type": "action",
+        "description": "Complete checkout inputs and submit."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify successful completion and order confirmation."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Order Management View for User",
+    "description": "Verify user can view their orders with detailed status and tracking information.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a standard user."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to user order history page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify list of user orders is displayed with up-to-date status."
+      },
+      {
+        "type": "action",
+        "description": "Select an order to view detailed tracking info."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order detail page shows tracking and order processing steps."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Admin Dashboard Access and Orders Management",
+    "description": "Verify admin users can access the admin dashboard, view, filter, and update orders.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to admin orders management page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order list is displayed with filtering and sorting options."
+      },
+      {
+        "type": "action",
+        "description": "Select and update an order status."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order status updates persist and trigger email notification."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "User Dashboard Displays Orders, Designs, and Account Info",
+    "description": "Verify user dashboard shows personalized orders, designs created, and account details.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as user."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to user dashboard page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify orders list is correct and up-to-date."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify AI-generated designs are listed and accessible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account information displays and user can update details."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Digital Product Download Post Purchase",
+    "description": "Verify users can securely download digital products after successful purchase.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete purchase of a digital product."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to digital downloads page in user dashboard."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify digital product appears with download link."
+      },
+      {
+        "type": "action",
+        "description": "Click on download link."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify file download starts and is complete."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Interactive Design Editor Customization and Preview",
+    "description": "Verify user can customize products with design editor and preview changes before purchase.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to product page supporting design editor."
+      },
+      {
+        "type": "action",
+        "description": "Open interactive design editor."
+      },
+      {
+        "type": "action",
+        "description": "Apply different design customizations (images, logos, fonts)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify preview updates in real-time reflecting changes."
+      },
+      {
+        "type": "action",
+        "description": "Save customized design and add product to cart."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customized product is added with correct attributes."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Quote Request Submission and Management",
+    "description": "Verify users can submit custom order quote requests and admins can manage these quotes.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as user and navigate to quote request page."
+      },
+      {
+        "type": "action",
+        "description": "Fill out quote request form with valid data."
+      },
+      {
+        "type": "action",
+        "description": "Submit the quote request."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify submission success confirmation."
+      },
+      {
+        "type": "action",
+        "description": "Login as admin and navigate to admin quotes management page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quote request is listed and details are accessible."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Internationalization Toggle Between English and Spanish",
+    "description": "Verify users can toggle interface language between English and Spanish and translations are accurate.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to main page."
+      },
+      {
+        "type": "action",
+        "description": "Switch language from English to Spanish."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all visible UI text updates to correct Spanish translations."
+      },
+      {
+        "type": "action",
+        "description": "Switch back language to English."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI text changes back to English accurately."
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "UI Responsiveness and Accessibility Across Devices",
+    "description": "Verify the platform's UI components render properly, are responsive, and accessible on desktop, tablet, and mobile.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the platform on desktop viewport."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI layout is correctly displayed and navigable."
+      },
+      {
+        "type": "action",
+        "description": "Access the platform on tablet viewport."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI components resize and reorganize correctly."
+      },
+      {
+        "type": "action",
+        "description": "Access the platform on mobile viewport."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all navigation and content remains accessible and functional."
+      },
+      {
+        "type": "action",
+        "description": "Test accessibility features such as keyboard navigation and screen reader support."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify compliance with accessibility best practices."
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Email Notifications Triggering on Key Events",
+    "description": "Verify email notifications are sent to users upon events like registration, password reset, order confirmation, and quote updates.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger user registration."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registration confirmation email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Trigger password reset request."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password reset email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Complete an order checkout."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order confirmation email is sent."
+      },
+      {
+        "type": "action",
+        "description": "Update a quote status as admin."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify quote update notification email is sent to user."
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Role-based Access Control Enforcement",
+    "description": "Verify that user and admin roles have appropriate access restrictions for different platform areas.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a standard user."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access admin dashboard."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied or redirected for unauthorized users."
+      },
+      {
+        "type": "action",
+        "description": "Login as admin user."
+      },
+      {
+        "type": "action",
+        "description": "Access admin dashboard and all management pages."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify full access granted to admin functionalities."
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Error Handling for Payment Failures",
+    "description": "Verify system handles payment failures from PayPal and Wompi gracefully and notifies user with actionable messages.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate checkout with PayPal."
+      },
+      {
+        "type": "action",
+        "description": "Simulate payment failure or decline."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error message displayed and user can retry or select another payment method."
+      },
+      {
+        "type": "action",
+        "description": "Repeat for Wompi payment method."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify similar error handling behavior."
+      }
+    ]
+  }
+]

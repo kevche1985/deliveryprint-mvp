@@ -1,0 +1,1166 @@
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
+import { Loader2, CreditCard, AlertCircle, Download } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { useCart } from "@/lib/cart-context"
+import { useDigitalCart } from "@/lib/digital-cart-context"
+import { useToast } from "@/hooks/use-toast"
+import { createOrder } from "@/lib/database"
+import WompiPaymentModal from "@/components/wompi-payment-modal"
+import PayPalButton from "@/components/paypal-button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
+const shippingMethods = [
+  { id: "standard", name: "Regular Shipping", price: 3, description: "5-7 business days", value: "standard" },
+  { id: "express", name: "Priority Shipping", price: 5, description: "3-5 business days", value: "express" },
+  { id: "overnight", name: "Urgent Shipping", price: 10, description: "1-2 business days", value: "overnight" },
+  { id: "pickup", name: "Store Pickup", price: 0, description: "Pick up at our store", value: "pickup" },
+]
+
+// Add this after the shippingMethods constant
+const digitalShippingMethods = [
+  {
+    id: "download",
+    name: "Digital Download",
+    price: 0,
+    description: "Instant download after payment",
+    value: "download",
+    icon: <Download className="h-4 w-4" />,
+  },
+]
+
+const paymentMethods = [
+  {
+    id: "wompi",
+    name: "Credit/Debit Card",
+    description: "Visa, Mastercard, American Express",
+    value: "wompi",
+    icon: <CreditCard className="h-5 w-5" />,
+  },
+  { id: "paypal", name: "PayPal", description: "PayPal Account", value: "paypal" },
+  { id: "stripe", name: "Stripe", description: "Credit/Debit Card", value: "stripe" },
+  { id: "cash", name: "Cash on Delivery", description: "Pay when you receive", value: "cash" },
+]
+
+// Add this after the paymentMethods constant
+export default function CheckoutPage() {
+  const [activePaymentMethods, setActivePaymentMethods] = useState(paymentMethods)
+  const router = useRouter()
+  const { user, profile, loading } = useAuth()
+  const { items, subtotal, clearCart } = useCart()
+  const { items: digitalItems, subtotal: digitalSubtotal, clearCart: clearDigitalCart } = useDigitalCart()
+  const { toast } = useToast()
+
+  // ALL STATE HOOKS FIRST
+  const [internalLoading, setInternalLoading] = useState(false)
+  const [paypalError, setPaypalError] = useState<string | null>(null)
+  const [showWompiModal, setShowWompiModal] = useState(false)
+  const [showPayPalButtons, setShowPayPalButtons] = useState(false)
+  const [currentOrder, setCurrentOrder] = useState<any>(null)
+  const [shippingMethod, setShippingMethod] = useState("standard")
+  const [paymentMethod, setPaymentMethod] = useState("wompi")
+  const [billingInfo, setBillingInfo] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "El Salvador",
+  })
+  const [sameAsBilling, setSameAsBilling] = useState(true)
+  const [shippingInfo, setShippingInfo] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "El Salvador",
+  })
+  const [notes, setNotes] = useState("")
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
+  const [isDigitalOnly, setIsDigitalOnly] = useState(false)
+
+  // CALCULATIONS - Move these before they're used
+  const taxRate = 0.13 // 13% VAT in El Salvador
+  const selectedShipping = isDigitalOnly
+    ? digitalShippingMethods.find((method) => method.id === shippingMethod)
+    : shippingMethods.find((method) => method.id === shippingMethod)
+  const shippingCost = selectedShipping?.price || 0
+  const taxAmount = subtotal * taxRate
+  const total = subtotal + shippingCost + taxAmount
+
+  // Combined calculations
+  const combinedItems = [...items, ...digitalItems]
+  const combinedSubtotal = subtotal + digitalSubtotal
+  const combinedTaxAmount = combinedSubtotal * taxRate
+  const combinedTotal = combinedSubtotal + shippingCost + combinedTaxAmount
+
+  // Format digital items to match the structure expected by PayPal
+  const formattedDigitalItems = digitalItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    quantity: 1,
+    price: item.finalPrice || item.basePrice || 0,
+  }))
+
+  // Combine regular items with formatted digital items
+  const paypalItems = [...items, ...formattedDigitalItems]
+
+  // Add this right after the calculations for debugging
+  console.log("=== CHECKOUT DEBUG ===")
+  console.log("Regular cart items:", items)
+  console.log("Digital cart items:", digitalItems)
+  console.log("Formatted digital items:", formattedDigitalItems)
+  console.log("Combined items for PayPal:", paypalItems)
+  console.log("Regular subtotal:", subtotal)
+  console.log("Digital subtotal:", digitalSubtotal)
+  console.log("Combined subtotal:", combinedSubtotal)
+  console.log("=== END DEBUG ===")
+
+  // ALL EFFECT HOOKS SECOND
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login?redirect=checkout")
+    }
+  }, [loading, user, router])
+
+  // Check if this is a digital-only order
+  useEffect(() => {
+    const digitalOnly = digitalItems.length > 0 && items.length === 0
+    setIsDigitalOnly(digitalOnly)
+
+    // If it's a digital-only order, set shipping method to download
+    if (digitalOnly) {
+      setShippingMethod("download")
+    } else if (shippingMethod === "download") {
+      // If it's not digital-only but shipping method is download, change to standard
+      setShippingMethod("standard")
+    }
+  }, [digitalItems.length, items.length, shippingMethod])
+
+  // Add this useEffect to fetch active payment providers
+  useEffect(() => {
+    const fetchActivePaymentProviders = async () => {
+      try {
+        const response = await fetch("/api/admin/payments/active")
+
+        if (!response.ok) {
+          console.warn("Failed to fetch active payment providers, using all methods")
+          setActivePaymentMethods(paymentMethods)
+          return
+        }
+
+        const activeProviders = await response.json()
+        console.log("Active providers from API:", activeProviders)
+
+        if (Array.isArray(activeProviders)) {
+          const activeProviderNames = activeProviders.map((p) => p.provider_name)
+          console.log("Active provider names:", activeProviderNames)
+
+          // Create a mapping between database provider names and payment method IDs
+          const providerMapping = {
+            wompi: "wompi",
+            paypal: "paypal",
+            stripe: "stripe",
+            cash_on_delivery: "cash",
+          }
+
+          // Filter payment methods to only show active ones
+          const filteredMethods = paymentMethods.filter((method) => {
+            // Always show cash option if cash_on_delivery is active
+            if (method.id === "cash") {
+              return activeProviderNames.includes("cash_on_delivery")
+            }
+
+            // For all other payment methods, check if they're active in the database
+            const isActive = activeProviderNames.includes(method.id)
+            console.log(`Payment method ${method.id} is ${isActive ? "active" : "inactive"}`)
+            return isActive
+          })
+
+          console.log(
+            "Filtered payment methods:",
+            filteredMethods.map((m) => m.id),
+          )
+          setActivePaymentMethods(filteredMethods)
+        } else {
+          console.warn("Invalid response format, using all payment methods")
+          setActivePaymentMethods(paymentMethods)
+        }
+      } catch (error) {
+        console.error("Error fetching active payment providers:", error)
+        // Fallback to all payment methods if there's an error
+        setActivePaymentMethods(paymentMethods)
+      }
+    }
+
+    fetchActivePaymentProviders()
+  }, [])
+
+  // Add this useEffect after the activePaymentMethods state is updated
+  useEffect(() => {
+    // If the currently selected payment method is not in the active list, select the first available one
+    if (activePaymentMethods.length > 0 && !activePaymentMethods.some((m) => m.id === paymentMethod)) {
+      setPaymentMethod(activePaymentMethods[0].id)
+    }
+  }, [activePaymentMethods, paymentMethod])
+
+  // Fill in user information if available
+  useEffect(() => {
+    if (profile) {
+      setBillingInfo((prev) => ({
+        ...prev,
+        firstName: profile.first_name || prev.firstName,
+        lastName: profile.last_name || prev.lastName,
+        email: profile.email || prev.email,
+        phone: (profile as any)?.phone || prev.phone,
+      }))
+    }
+  }, [profile])
+
+  // Update shipping info when billing info changes and sameAsBilling is true
+  useEffect(() => {
+    if (sameAsBilling) {
+      setShippingInfo({
+        firstName: billingInfo.firstName,
+        lastName: billingInfo.lastName,
+        phone: billingInfo.phone,
+        address: billingInfo.address,
+        city: billingInfo.city,
+        state: billingInfo.state,
+        zipCode: billingInfo.zipCode,
+        country: billingInfo.country,
+      })
+    }
+  }, [billingInfo, sameAsBilling])
+
+  // EVENT HANDLERS
+  const handleBillingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setBillingInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleShippingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setShippingInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const validateForm = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to complete your order",
+        variant: "destructive",
+      })
+      router.push("/auth/login?redirect=checkout")
+      return false
+    }
+
+    // Replace the existing combinedItems check
+    const hasItems = items.length > 0 || digitalItems.length > 0
+    console.log(
+      "Has items check:",
+      hasItems,
+      "items.length:",
+      items.length,
+      "digitalItems.length:",
+      digitalItems.length,
+    )
+
+    // Then use this in the condition
+    if (!hasItems) {
+      toast({
+        title: "Empty cart",
+        description: "Your cart is empty. Please add products to your cart before checking out.",
+        variant: "destructive",
+      })
+      router.push("/products")
+      return false
+    }
+
+    if (!agreeToTerms) {
+      toast({
+        title: "Terms & Conditions",
+        description: "Please agree to the terms and conditions to complete your order.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (
+      !billingInfo.firstName ||
+      !billingInfo.lastName ||
+      !billingInfo.email ||
+      !billingInfo.phone ||
+      !billingInfo.address ||
+      !billingInfo.city ||
+      !billingInfo.state ||
+      !billingInfo.zipCode
+    ) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required billing information fields.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (
+      !isDigitalOnly &&
+      !sameAsBilling &&
+      (!shippingInfo.firstName ||
+        !shippingInfo.lastName ||
+        !shippingInfo.phone ||
+        !shippingInfo.address ||
+        !shippingInfo.city ||
+        !shippingInfo.state ||
+        !shippingInfo.zipCode)
+    ) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required shipping information fields.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmitOrder = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    setInternalLoading(true)
+    // Reset any previous PayPal errors
+    setPaypalError(null)
+
+    try {
+      // For digital-only orders, add a special note
+      const orderNotes = isDigitalOnly ? (notes ? `${notes} [DIGITAL DOWNLOAD]` : "[DIGITAL DOWNLOAD]") : notes
+
+      const orderData = {
+        user_id: user?.id || '',
+        email: billingInfo.email,
+        order_number: `ORD-${Date.now()}`,
+        status: "pending",
+        subtotal: combinedSubtotal,
+        tax: combinedTaxAmount,
+        shipping: shippingCost,
+        discount: 0,
+        total: combinedTotal,
+        shipping_method: shippingMethod, // Now we can use "download" directly
+        payment_method: paymentMethod,
+        billing_address: billingInfo,
+        shipping_address: sameAsBilling ? billingInfo : shippingInfo,
+        notes: orderNotes,
+        currency: "USD",
+      }
+
+      const order = await createOrder(orderData)
+      setCurrentOrder(order)
+
+      if (paymentMethod === "wompi") {
+        setShowWompiModal(true)
+      } else if (paymentMethod === "paypal") {
+        console.log("Showing PayPal buttons for order:", order.id)
+        setShowPayPalButtons(true)
+      } else if (paymentMethod === "stripe") {
+        setTimeout(() => {
+          clearCart()
+          clearDigitalCart()
+          router.push(`/orders/${order.id}/confirmation?status=success`)
+        }, 2000)
+      } else {
+        clearCart()
+        clearDigitalCart()
+        router.push(`/orders/${order.id}/confirmation?status=pending`)
+      }
+    } catch (error) {
+      console.error("Error creating order:", error)
+      toast({
+        title: "Order creation failed",
+        description: "There was an error processing your order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setInternalLoading(false)
+    }
+  }
+
+  const handlePayPalSuccess = async (transactionId: string) => {
+    try {
+      // Extract digital product IDs from digital cart items
+      const digitalProductIds = digitalItems.map((item) => item.productId || item.designId).filter(Boolean)
+
+      console.log("PayPal payment successful, confirming with digital products:", digitalProductIds)
+
+      // Call payment confirmation API
+      const confirmResponse = await fetch("/api/payments/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: currentOrder.id,
+          transactionId,
+          paymentMethod: "paypal",
+          paymentStatus: "completed",
+          cartItems: items.map((item) => ({
+            ...item,
+            productImage: (item as any).productImage || null, // Add base product image
+          })),
+          digitalCartItems: digitalItems.map((item) => ({
+            ...item,
+            productImage: null, // Digital items don't have base product images
+          })),
+          customerEmail: billingInfo.email || user?.email || '',
+          shippingAddress: sameAsBilling ? billingInfo : shippingInfo,
+          notes: notes,
+          shippingMethod: shippingMethod,
+          total: combinedTotal,
+          subtotal: combinedSubtotal,
+          tax: combinedTaxAmount,
+          shipping: shippingCost,
+          userId: user?.id,
+        }),
+      })
+
+      // Check if response is JSON
+      const contentType = confirmResponse.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("API returned non-JSON response:", await confirmResponse.text())
+        throw new Error("Server returned an invalid response format")
+      }
+
+      if (!confirmResponse.ok) {
+        const errorData = await confirmResponse.json()
+        console.error("Payment confirmation failed. API Response:", errorData)
+        throw new Error(errorData.error || "Payment confirmation failed")
+      }
+
+      const confirmationData = await confirmResponse.json()
+      console.log("Payment confirmation successful:", confirmationData)
+
+      toast({
+        title: "Payment Successful",
+        description: "Your PayPal payment has been processed successfully.",
+      })
+
+      clearCart()
+      clearDigitalCart()
+      router.push(`/orders/${currentOrder.id}/confirmation?status=success&transaction=${transactionId}`)
+    } catch (error) {
+      console.error("Error in PayPal confirmation:", error)
+      toast({
+        title: "Payment Processing Error",
+        description: error instanceof Error ? error.message : "There was an error confirming your payment.",
+        variant: "destructive",
+      })
+
+      // Still redirect but with error flag
+      clearCart()
+      clearDigitalCart()
+      router.push(
+        `/orders/${currentOrder.id}/confirmation?status=success&transaction=${transactionId}&confirm_error=true`,
+      )
+    }
+  }
+
+  const handlePayPalError = (error: any) => {
+    console.error("PayPal payment error:", error)
+    setPaypalError(error.message || "There was an error processing your PayPal payment. Please try again.")
+    toast({
+      title: "Payment Failed",
+      description: error.message || "There was an error processing your PayPal payment. Please try again.",
+      variant: "destructive",
+    })
+  }
+
+  const handlePayPalCancel = () => {
+    console.log("PayPal payment cancelled")
+    toast({
+      title: "Payment Cancelled",
+      description: "You cancelled the PayPal payment process.",
+    })
+    setShowPayPalButtons(false)
+  }
+
+  const handleWompiSuccess = async (transactionId: string) => {
+    try {
+      // Extract digital product IDs from digital cart items
+      const digitalProductIds = digitalItems.map((item) => item.productId || item.designId).filter(Boolean)
+
+      console.log("Wompi payment successful, confirming with digital products:", digitalProductIds)
+
+      // Call payment confirmation API
+      const confirmResponse = await fetch("/api/payments/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: currentOrder.id,
+          transactionId,
+          paymentMethod: "wompi",
+          paymentStatus: "completed",
+          cartItems: items.map((item) => ({
+            ...item,
+            productImage: (item as any).productImage || null, // Add base product image
+          })),
+          digitalCartItems: digitalItems.map((item) => ({
+            ...item,
+            productImage: null, // Digital items don't have base product images
+          })),
+          customerEmail: billingInfo.email || user?.email,
+          shippingAddress: sameAsBilling ? billingInfo : shippingInfo,
+          notes: notes,
+          shippingMethod: shippingMethod,
+          total: combinedTotal,
+          subtotal: combinedSubtotal,
+          tax: combinedTaxAmount,
+          shipping: shippingCost,
+          userId: user?.id,
+        }),
+      })
+
+      if (!confirmResponse.ok) {
+        const errorData = await confirmResponse
+          .json()
+          .catch(() => ({ error: "Failed to parse error response from API" }))
+        console.error("Payment confirmation failed. API Response:", errorData)
+        toast({
+          title: "Payment Confirmation Failed",
+          description: errorData.error || "Could not confirm payment with the server.",
+          variant: "destructive",
+        })
+        // Similar to PayPal, consider the flow on failure.
+        // Original code proceeds to clear cart and redirect.
+        clearCart()
+        clearDigitalCart()
+        router.push(
+          `/orders/${currentOrder.id}/confirmation?status=success&transaction=${transactionId}&confirm_failed=true`,
+        )
+        return // Stop further execution
+      }
+      // If confirmResponse.ok, proceed with success logic
+      const confirmationData = await confirmResponse.json()
+      console.log("Payment confirmation successful. API Response:", confirmationData)
+
+      toast({
+        title: "Payment Successful",
+        description: "Your payment has been processed successfully.",
+      })
+      clearCart()
+      clearDigitalCart()
+      router.push(`/orders/${currentOrder.id}/confirmation?status=success&transaction=${transactionId}`)
+    } catch (error) {
+      console.error("Error in payment confirmation:", error)
+      // Still redirect to success page even if confirmation fails
+      toast({
+        title: "Payment Successful",
+        description: "Your payment has been processed successfully.",
+      })
+      clearCart()
+      clearDigitalCart()
+      router.push(`/orders/${currentOrder.id}/confirmation?status=success&transaction=${transactionId}`)
+    }
+  }
+
+  const handleWompiError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    })
+  }
+
+  // NOW HANDLE CONDITIONAL RENDERING AFTER ALL HOOKS
+
+  // Update the shipping method selection logic
+  const availableShippingMethods = isDigitalOnly ? digitalShippingMethods : shippingMethods
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="container mx-auto px-4 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="container mx-auto px-4 text-center">
+          <p>Redirecting to login...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const hasItems = items.length > 0 || digitalItems.length > 0
+  console.log("Has items check:", hasItems, "items.length:", items.length, "digitalItems.length:", digitalItems.length)
+
+  if (!hasItems) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
+          <p className="mb-6">Add some products to your cart before proceeding to checkout.</p>
+          <Button asChild className="bg-[#8B0000] hover:bg-[#6B0000]">
+            <a href="/products">Browse Products</a>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
+          <p className="text-gray-600">Complete your order by providing your information below</p>
+
+          {isDigitalOnly && (
+            <Alert className="mt-4 bg-purple-50 border-purple-200">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Digital Products Order</span>
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Digital Download</span>
+              </div>
+              <AlertDescription>
+                Your digital products will be available for download after payment is complete.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {paypalError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{paypalError}</AlertDescription>
+          </Alert>
+        )}
+
+        {showPayPalButtons && currentOrder ? (
+          <div className="max-w-md mx-auto mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Payment with PayPal</CardTitle>
+                <CardDescription>Click one of the PayPal buttons below to complete your payment</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span>Order Total:</span>
+                    <span className="font-bold">${combinedTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="text-sm text-gray-500">Order #{currentOrder.id}</div>
+                </div>
+
+                <PayPalButton
+                  amount={combinedTotal}
+                  items={paypalItems}
+                  orderId={currentOrder.id}
+                  shippingInfo={sameAsBilling ? billingInfo : shippingInfo}
+                  billingInfo={billingInfo}
+                  shippingCost={shippingCost}
+                  taxAmount={combinedTaxAmount}
+                  onSuccess={handlePayPalSuccess}
+                  onError={handlePayPalError}
+                  onCancel={handlePayPalCancel}
+                />
+
+                <Button variant="outline" className="w-full mt-4" onClick={() => setShowPayPalButtons(false)}>
+                  Back to Checkout
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Billing Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Billing Information</CardTitle>
+                  <CardDescription>Please enter your billing details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={billingInfo.firstName}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={billingInfo.lastName}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={billingInfo.email}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={billingInfo.phone}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Street Address *</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      value={billingInfo.address}
+                      onChange={handleBillingInfoChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        value={billingInfo.city}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State/Province *</Label>
+                      <Input
+                        id="state"
+                        name="state"
+                        value={billingInfo.state}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">Postal/Zip Code *</Label>
+                      <Input
+                        id="zipCode"
+                        name="zipCode"
+                        value={billingInfo.zipCode}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Country *</Label>
+                      <Input
+                        id="country"
+                        name="country"
+                        value={billingInfo.country}
+                        onChange={handleBillingInfoChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Shipping Information - Only show for physical products */}
+              {!isDigitalOnly && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Shipping Information</CardTitle>
+                    <CardDescription>Where should we send your order?</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="sameAsBilling"
+                        checked={sameAsBilling}
+                        onCheckedChange={(checked) => setSameAsBilling(!!checked)}
+                      />
+                      <Label htmlFor="sameAsBilling" className="font-normal">
+                        Same as billing address
+                      </Label>
+                    </div>
+
+                    {!sameAsBilling && (
+                      <div className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingFirstName">First Name *</Label>
+                            <Input
+                              id="shippingFirstName"
+                              name="firstName"
+                              value={shippingInfo.firstName}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingLastName">Last Name *</Label>
+                            <Input
+                              id="shippingLastName"
+                              name="lastName"
+                              value={shippingInfo.lastName}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="shippingPhone">Phone Number *</Label>
+                          <Input
+                            id="shippingPhone"
+                            name="phone"
+                            type="tel"
+                            value={shippingInfo.phone}
+                            onChange={handleShippingInfoChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="shippingAddress">Street Address *</Label>
+                          <Input
+                            id="shippingAddress"
+                            name="address"
+                            value={shippingInfo.address}
+                            onChange={handleShippingInfoChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingCity">City *</Label>
+                            <Input
+                              id="shippingCity"
+                              name="city"
+                              value={shippingInfo.city}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingState">State/Province *</Label>
+                            <Input
+                              id="shippingState"
+                              name="state"
+                              value={shippingInfo.state}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingZipCode">Postal/Zip Code *</Label>
+                            <Input
+                              id="shippingZipCode"
+                              name="zipCode"
+                              value={shippingInfo.zipCode}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingCountry">Country *</Label>
+                            <Input
+                              id="shippingCountry"
+                              name="country"
+                              value={shippingInfo.country}
+                              onChange={handleShippingInfoChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-4">
+                      <Label htmlFor="notes" className="mb-2 block">
+                        Order Notes (Optional)
+                      </Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Special instructions for delivery or order details..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Delivery Method */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Delivery Method</CardTitle>
+                  <CardDescription>
+                    {isDigitalOnly
+                      ? "Your digital products will be available for download"
+                      : "Choose how you want your order delivered"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isDigitalOnly ? (
+                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                      <h3 className="font-medium mb-2 flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Digital Download
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">FREE</span>
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        After your payment is processed, you'll be able to download your digital products from your
+                        order confirmation page and account dashboard.
+                      </p>
+                      <div className="mt-4 text-sm">
+                        <p className="font-medium">Available formats:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>High-resolution JPG/PNG images</li>
+                          <li>Vector files (SVG, AI) for logos</li>
+                          <li>Font files (OTF, TTF, WOFF) for custom fonts</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <RadioGroup value={shippingMethod} onValueChange={setShippingMethod}>
+                      {availableShippingMethods.map((method) => (
+                        <div
+                          key={method.id}
+                          className="flex items-center justify-between border rounded-lg p-4 mb-2 hover:bg-gray-50"
+                        >
+                          <div className="flex items-center">
+                            <RadioGroupItem value={method.id} id={`shipping-${method.id}`} className="mr-3" />
+                            <div className="flex items-center">
+                              {(method as any).icon && <div className="text-gray-600 mr-2">{(method as any).icon}</div>}
+                              <div>
+                                <Label htmlFor={`shipping-${method.id}`} className="font-medium">
+                                  {method.name}
+                                </Label>
+                                <p className="text-sm text-gray-500">{method.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <span className="font-semibold">
+                            {method.price === 0 ? "FREE" : `$${method.price.toFixed(2)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Payment Method */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Method</CardTitle>
+                  <CardDescription>Select how you want to pay for your order</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    {activePaymentMethods.map((method) => (
+                      <div key={method.id} className="flex items-center border rounded-lg p-4 mb-2 hover:bg-gray-50">
+                        <RadioGroupItem value={method.id} id={`payment-${method.id}`} className="mr-3" />
+                        <div className="flex items-center gap-3">
+                          {method.icon && <div className="text-gray-600">{method.icon}</div>}
+                          <div>
+                            <Label htmlFor={`payment-${method.id}`} className="font-medium">
+                              {method.name}
+                            </Label>
+                            <p className="text-sm text-gray-500">{method.description}</p>
+                            {method.id === "wompi" && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Secure</span>
+                                <span className="text-xs text-gray-500">Powered by Wompi</span>
+                              </div>
+                            )}
+                            {method.id === "paypal" && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Secure</span>
+                                <span className="text-xs text-gray-500">PayPal Express Checkout</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Order Summary */}
+            <div className="space-y-6">
+              <Card className="sticky top-6">
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                  <CardDescription>Review your order before checking out</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    {items.map((item) => (
+                      <div key={item.id} className="flex justify-between text-sm py-2">
+                        <span>
+                          {item.name} <span className="text-gray-500">x {item.quantity}</span>
+                        </span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {digitalItems.map((item) => (
+                      <div key={item.id} className="flex justify-between text-sm py-2">
+                        <span className="flex items-center gap-2">
+                          {item.name}
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Digital</span>
+                        </span>
+                        <span>${(item.finalPrice || item.basePrice || 0).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${combinedSubtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Shipping</span>
+                      <span>${shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax (13%)</span>
+                      <span>${combinedTaxAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span>${combinedTotal.toFixed(2)}</span>
+                  </div>
+
+                  <div className="pt-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Checkbox
+                        id="agreeToTerms"
+                        checked={agreeToTerms}
+                        onCheckedChange={(checked) => setAgreeToTerms(!!checked)}
+                      />
+                      <Label htmlFor="agreeToTerms" className="font-normal text-sm">
+                        I agree to the{" "}
+                        <a href="/terms" className="text-[#8B0000] hover:underline">
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a href="/privacy" className="text-[#8B0000] hover:underline">
+                          Privacy Policy
+                        </a>
+                      </Label>
+                    </div>
+
+                    <Button
+                      className="w-full bg-[#8B0000] hover:bg-[#6B0000]"
+                      onClick={handleSubmitOrder}
+                      disabled={internalLoading || !agreeToTerms}
+                    >
+                      {internalLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Complete Order • $${combinedTotal.toFixed(2)}`
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Wompi Payment Modal */}
+        {showWompiModal && currentOrder && (
+          <WompiPaymentModal
+            isOpen={showWompiModal}
+            onClose={() => setShowWompiModal(false)}
+            orderData={{
+              total: combinedTotal,
+              billingInfo,
+              shippingInfo: sameAsBilling ? billingInfo : shippingInfo,
+              items: combinedItems,
+              orderId: currentOrder.id,
+            }}
+            onSuccess={handleWompiSuccess}
+            onError={handleWompiError}
+          />
+        )}
+      </div>
+    </div>
+  )
+}

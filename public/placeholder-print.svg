@@ -1,0 +1,6 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" fill="#EFF6FF"/>
+  <path d="M25 30H55V50H25V30Z" fill="#DBEAFE"/>
+  <path d="M30 35H50M30 40H45M30 45H50" stroke="#3B82F6" stroke-width="2"/>
+  <text x="40" y="65" text-anchor="middle" fill="#1E40AF" font-size="8">Print</text>
+</svg>

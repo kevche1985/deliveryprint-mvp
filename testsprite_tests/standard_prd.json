@@ -1,0 +1,288 @@
+{
+  "meta": {
+    "project": "AI-Powered Print and Design Platform",
+    "date": "2025-08-25",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "An integrated web platform combining AI-powered design tools with print-on-demand services, digital and physical product sales, and comprehensive user and admin management, built on Next.js, TypeScript, and Supabase.",
+  "core_goals": [
+    "Provide seamless user authentication and role-based access control.",
+    "Enable users to create AI-generated designs such as images, logos, and fonts.",
+    "Support a wide range of print services including digital printing, large format, and event stands.",
+    "Manage a diverse product catalog with configurable products.",
+    "Facilitate smooth shopping cart and checkout experiences with multi-gateway payment support.",
+    "Offer comprehensive order processing and tracking for users and admins.",
+    "Provide robust administrative tools for managing all aspects of the platform.",
+    "Support digital product downloads and interactive product customization.",
+    "Allow users to request and manage custom order quotes.",
+    "Ensure internationalization with multi-language support.",
+    "Deliver a responsive and accessible UI using modern design frameworks."
+  ],
+  "key_features": [
+    "Complete authentication system with Supabase including login, registration, password reset, and role-based access control.",
+    "AI Studio offering image, logo, and font generation powered by OpenAI API.",
+    "Print services covering digital printing, large format prints, and event stands.",
+    "Product management with catalog browsing, individual product pages, and configurations.",
+    "Shopping cart functionality for physical and digital products with context management.",
+    "Multi-gateway payment processing supporting PayPal and Wompi including 3DS authentication.",
+    "Order management system with detailed order views and tracking.",
+    "Checkout process supporting both standard and simplified flows.",
+    "Administrative dashboard to manage orders, products, users, payments, transactions, email settings, and quotes.",
+    "User dashboard for managing personal orders, designs, and account details.",
+    "Digital product management with download capabilities.",
+    "Interactive design editor for customizing products before purchase.",
+    "Quote request system for custom orders with backend integration.",
+    "Responsive main navigation and reusable UI components based on Radix UI and Tailwind CSS.",
+    "Email service integration for notifications and communications.",
+    "Internationalization supporting English and Spanish languages."
+  ],
+  "user_flow_summary": [
+    "Users register or log in via Supabase authentication system.",
+    "Users browse the product catalog and view detailed product pages.",
+    "Users use AI Studio to generate custom images, logos, or fonts for their designs.",
+    "Users add physical or digital products to their shopping cart.",
+    "Users proceed through checkout selecting preferred payment gateway (PayPal or Wompi).",
+    "Users receive order confirmation and track orders via user dashboard.",
+    "Admins log into the admin dashboard to manage orders, products, users, payments, and system settings.",
+    "Users can request quotes for custom orders through the quote system.",
+    "Users download digital products after purchase from their dashboard.",
+    "Users customize products using the interactive design editor before purchase."
+  ],
+  "validation_criteria": [
+    "All user authentication flows (login, registration, password reset) function correctly with role-based access.",
+    "AI Studio features generate appropriate design assets using OpenAI API responses.",
+    "Print services are accurately listed and selectable with proper product information.",
+    "Product catalog displays correctly with individual product detail and configuration options.",
+    "Shopping cart manages physical and digital products accurately, reflecting correct totals.",
+    "Payment processing completes successfully with both PayPal and Wompi, including 3DS authentication.",
+    "Order management allows users and admins to view and track orders with up-to-date statuses.",
+    "Checkout process completes without errors in both normal and simplified modes.",
+    "Admin dashboard interfaces operate correctly for all management views and updates.",
+    "User dashboards correctly display user details, orders, and designs.",
+    "Digital product downloads are accessible and secure post-purchase.",
+    "Design editor functions allow product customization and preview before checkout.",
+    "Quote requests can be submitted, reviewed, and managed through the system.",
+    "UI components are responsive and accessible across devices.",
+    "Internationalization toggles between supported languages with correct translations.",
+    "Email notifications trigger appropriately for key user and system events."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "Next.js 14",
+      "React 18",
+      "Supabase",
+      "Tailwind CSS",
+      "Radix UI",
+      "OpenAI API",
+      "PayPal API",
+      "Wompi Payment Gateway"
+    ],
+    "features": [
+      {
+        "name": "Authentication System",
+        "description": "Complete user authentication with Supabase including login, register, password reset, and role-based access control",
+        "files": [
+          "lib/auth-context.tsx",
+          "app/auth/login/page.tsx",
+          "app/auth/register/page.tsx",
+          "app/auth/forgot-password/page.tsx",
+          "app/auth/reset-password/page.tsx",
+          "components/auth-wrapper.tsx"
+        ]
+      },
+      {
+        "name": "AI Studio",
+        "description": "AI-powered design tools for generating images, logos, and fonts using OpenAI API",
+        "files": [
+          "app/ai-studio/page.tsx",
+          "app/ai-studio/image/page.tsx",
+          "app/ai-studio/logo/page.tsx",
+          "app/ai-studio/font/page.tsx",
+          "lib/openai.ts",
+          "app/api/ai/route.ts"
+        ]
+      },
+      {
+        "name": "Print Services",
+        "description": "Print-on-demand services including digital printing, large format, and event stands",
+        "files": [
+          "app/services/page.tsx",
+          "app/services/digital-printing/page.tsx",
+          "app/services/large-format/page.tsx",
+          "app/services/event-stands/page.tsx"
+        ]
+      },
+      {
+        "name": "Product Management",
+        "description": "Product catalog, individual product pages, and product configuration",
+        "files": [
+          "app/products/page.tsx",
+          "app/products/[id]/page.tsx",
+          "app/products/loading.tsx"
+        ]
+      },
+      {
+        "name": "Shopping Cart",
+        "description": "Shopping cart functionality for both physical and digital products",
+        "files": [
+          "lib/cart-context.tsx",
+          "lib/digital-cart-context.tsx",
+          "app/digital-cart/page.tsx"
+        ]
+      },
+      {
+        "name": "Payment Processing",
+        "description": "Multi-gateway payment processing with PayPal and Wompi, including 3DS authentication",
+        "files": [
+          "app/api/payments/paypal/route.ts",
+          "app/api/payments/wompi/route.ts",
+          "app/api/payments/wompi/webhook/route.ts",
+          "app/payment-3ds/page.tsx",
+          "components/paypal-payment-modal.tsx",
+          "components/wompi-payment-modal.tsx",
+          "lib/paypal-client.ts"
+        ]
+      },
+      {
+        "name": "Order Management",
+        "description": "Order processing, tracking, and management system",
+        "files": [
+          "app/orders/page.tsx",
+          "app/orders/[id]/page.tsx",
+          "app/orders/loading.tsx",
+          "app/api/orders/route.ts"
+        ]
+      },
+      {
+        "name": "Checkout Process",
+        "description": "Complete checkout flow for both regular and simplified checkout",
+        "files": [
+          "app/checkout/page.tsx",
+          "app/checkout-simple/page.tsx",
+          "app/payment-complete/page.tsx"
+        ]
+      },
+      {
+        "name": "Admin Dashboard",
+        "description": "Administrative interface for managing orders, products, users, payments, and system settings",
+        "files": [
+          "app/admin/page.tsx",
+          "app/admin/layout.tsx",
+          "app/admin/orders/page.tsx",
+          "app/admin/products/page.tsx",
+          "app/admin/users/page.tsx",
+          "app/admin/payments/page.tsx",
+          "app/admin/transactions/page.tsx",
+          "app/admin/email-settings/page.tsx",
+          "app/admin/quotes/page.tsx"
+        ]
+      },
+      {
+        "name": "User Dashboard",
+        "description": "User dashboard for managing personal orders, designs, and account settings",
+        "files": [
+          "app/dashboard/page.tsx"
+        ]
+      },
+      {
+        "name": "Digital Products",
+        "description": "Digital product management and download system",
+        "files": [
+          "app/digital-products/page.tsx",
+          "app/digital-downloads/page.tsx",
+          "app/api/digital-products/route.ts",
+          "app/api/digital-downloads/route.ts",
+          "app/api/digital-orders/route.ts"
+        ]
+      },
+      {
+        "name": "Design Editor",
+        "description": "Interactive design editor for customizing products",
+        "files": [
+          "components/design-editor.tsx"
+        ]
+      },
+      {
+        "name": "Quote System",
+        "description": "Quote request and management system for custom orders",
+        "files": [
+          "app/quote/page.tsx",
+          "app/api/quotes/route.ts"
+        ]
+      },
+      {
+        "name": "Navigation",
+        "description": "Main navigation component with responsive design",
+        "files": [
+          "components/navigation.tsx"
+        ]
+      },
+      {
+        "name": "Database Integration",
+        "description": "Supabase database integration with connection management and setup",
+        "files": [
+          "lib/supabase.ts",
+          "lib/supabase-server.ts",
+          "lib/supabase-connection.ts",
+          "lib/database.ts",
+          "lib/database-setup.ts"
+        ]
+      },
+      {
+        "name": "Email Services",
+        "description": "Email service integration for notifications and communications",
+        "files": [
+          "lib/email-service.ts",
+          "lib/email-server.ts",
+          "lib/resend-email-manager.ts",
+          "app/api/email/route.ts",
+          "app/api/cron/process-emails/route.ts"
+        ]
+      },
+      {
+        "name": "Internationalization",
+        "description": "Multi-language support with translation files",
+        "files": [
+          "lib/language-context.tsx",
+          "lib/translations/en.json",
+          "lib/translations/es.json"
+        ]
+      },
+      {
+        "name": "UI Components",
+        "description": "Reusable UI components built with Radix UI and Tailwind CSS",
+        "files": [
+          "components/ui/button.tsx",
+          "components/ui/card.tsx",
+          "components/ui/dialog.tsx",
+          "components/ui/form.tsx",
+          "components/ui/input.tsx",
+          "components/ui/table.tsx",
+          "components/ui/toast.tsx",
+          "components/ui/tabs.tsx"
+        ]
+      },
+      {
+        "name": "Image Utilities",
+        "description": "Image processing and utility functions",
+        "files": [
+          "lib/image-utils.ts"
+        ]
+      },
+      {
+        "name": "Testing and Debug",
+        "description": "Testing utilities and debug endpoints",
+        "files": [
+          "app/test-api-debug/page.tsx",
+          "app/test-payment/page.tsx",
+          "app/test-paypal/page.tsx",
+          "app/test-wompi/page.tsx",
+          "app/test-download/page.tsx",
+          "app/api/debug/order-flow/route.ts",
+          "app/api/auth/test/route.ts"
+        ]
+      }
+    ]
+  }
+}

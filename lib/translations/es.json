@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "digitalProducts": "Productos Digitales"
+  },
+  "home": {
+    "title": "Bienvenido",
+    "description": "Esta es la página de inicio."
+  },
+  "about": {
+    "title": "Acerca de Nosotros",
+    "content": "Somos una empresa dedicada a..."
+  },
+  "contact": {
+    "title": "Contáctanos",
+    "form": {
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "message": "Mensaje",
+      "submit": "Enviar"
+    }
+  }
+}

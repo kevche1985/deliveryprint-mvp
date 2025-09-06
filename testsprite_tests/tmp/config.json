@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "loginUser": "admid@example.com",
+  "loginPassword": "password",
+  "executionArgs": {
+    "projectName": "mvp536",
+    "projectPath": "/Users/kevinbonilla/Downloads/PrintOnDemand/DeliveryOndemand/mvp536",
+    "testIds": [],
+    "additionalInstruction": "Re-run all test cases to verify that the authentication system fixes have resolved the issues. Focus on validating that TC002 (User Login with Correct Credentials) and all other test cases now pass successfully.",
+    "envs": {
+      "API_KEY": "sk-user-9jzNyuLxGNiwTXpA7LSQvN2RjV_em4M9bj3yfmjwQq630trub7TTToP_qzsT-LPZNdxTm3U69kXjmIwQ3UVMZZQjWCeepm2Hf_SxQDA7uyUvwaFlzT-oJQSsm9-CfrvMDqU"
+    }
+  },
+  "proxy": "http://f649d81d-d376-4df0-8edd-11a1740782c5:i0Jk2LNGEArHJRLsAli1pNZax4RJqa6v@tun.testsprite.com:8080"
+}

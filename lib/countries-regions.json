@@ -1,0 +1,334 @@
+{
+  "countries": [
+    {
+      "id": "SV",
+      "nombre": "El Salvador",
+      "territorios": [
+        {
+          "id": "SV-AH",
+          "nombre": "Ahuachapán"
+        },
+        {
+          "id": "SV-CA",
+          "nombre": "Cabañas"
+        },
+        {
+          "id": "SV-CH",
+          "nombre": "Chalatenango"
+        },
+        {
+          "id": "SV-CU",
+          "nombre": "Cuscatlán"
+        },
+        {
+          "id": "SV-LI",
+          "nombre": "La Libertad"
+        },
+        {
+          "id": "SV-PA",
+          "nombre": "La Paz"
+        },
+        {
+          "id": "SV-UN",
+          "nombre": "La Unión"
+        },
+        {
+          "id": "SV-MO",
+          "nombre": "Morazán"
+        },
+        {
+          "id": "SV-SM",
+          "nombre": "San Miguel"
+        },
+        {
+          "id": "SV-SS",
+          "nombre": "San Salvador"
+        },
+        {
+          "id": "SV-SV",
+          "nombre": "San Vicente"
+        },
+        {
+          "id": "SV-SA",
+          "nombre": "Santa Ana"
+        },
+        {
+          "id": "SV-SO",
+          "nombre": "Sonsonate"
+        },
+        {
+          "id": "SV-US",
+          "nombre": "Usulután"
+        }
+      ]
+    },
+    {
+      "id": "CA",
+      "nombre": "Canada",
+      "territorios": [
+        {
+          "id": "CA-AB",
+          "nombre": "Alberta"
+        },
+        {
+          "id": "CA-BC",
+          "nombre": "British Columbia"
+        },
+        {
+          "id": "CA-MB",
+          "nombre": "Manitoba"
+        },
+        {
+          "id": "CA-NB",
+          "nombre": "New Brunswick"
+        },
+        {
+          "id": "CA-NL",
+          "nombre": "Newfoundland and Labrador"
+        },
+        {
+          "id": "CA-NS",
+          "nombre": "Nova Scotia"
+        },
+        {
+          "id": "CA-NT",
+          "nombre": "Northwest Territories"
+        },
+        {
+          "id": "CA-NU",
+          "nombre": "Nunavut"
+        },
+        {
+          "id": "CA-ON",
+          "nombre": "Ontario"
+        },
+        {
+          "id": "CA-PE",
+          "nombre": "Prince Edward Island"
+        },
+        {
+          "id": "CA-QC",
+          "nombre": "Quebec"
+        },
+        {
+          "id": "CA-SK",
+          "nombre": "Saskatchewan"
+        },
+        {
+          "id": "CA-YT",
+          "nombre": "Yukon"
+        }
+      ]
+    },
+    {
+      "id": "US",
+      "nombre": "United States of America (the)",
+      "territorios": [
+        {
+          "id": "US-AK",
+          "nombre": "Alaska"
+        },
+        {
+          "id": "US-AL",
+          "nombre": "Alabama"
+        },
+        {
+          "id": "US-AR",
+          "nombre": "Arkansas"
+        },
+        {
+          "id": "US-AZ",
+          "nombre": "Arizona"
+        },
+        {
+          "id": "US-CA",
+          "nombre": "California"
+        },
+        {
+          "id": "US-CO",
+          "nombre": "Colorado"
+        },
+        {
+          "id": "US-CT",
+          "nombre": "Connecticut"
+        },
+        {
+          "id": "US-DC",
+          "nombre": "District of Columbia"
+        },
+        {
+          "id": "US-DE",
+          "nombre": "Delaware"
+        },
+        {
+          "id": "US-FL",
+          "nombre": "Florida"
+        },
+        {
+          "id": "US-GA",
+          "nombre": "Georgia"
+        },
+        {
+          "id": "US-HI",
+          "nombre": "Hawaii"
+        },
+        {
+          "id": "US-IA",
+          "nombre": "Iowa"
+        },
+        {
+          "id": "US-ID",
+          "nombre": "Idaho"
+        },
+        {
+          "id": "US-IL",
+          "nombre": "Illinois"
+        },
+        {
+          "id": "US-IN",
+          "nombre": "Indiana"
+        },
+        {
+          "id": "US-KS",
+          "nombre": "Kansas"
+        },
+        {
+          "id": "US-KY",
+          "nombre": "Kentucky"
+        },
+        {
+          "id": "US-LA",
+          "nombre": "Louisiana"
+        },
+        {
+          "id": "US-MA",
+          "nombre": "Massachusetts"
+        },
+        {
+          "id": "US-MD",
+          "nombre": "Maryland"
+        },
+        {
+          "id": "US-ME",
+          "nombre": "Maine"
+        },
+        {
+          "id": "US-MI",
+          "nombre": "Michigan"
+        },
+        {
+          "id": "US-MN",
+          "nombre": "Minnesota"
+        },
+        {
+          "id": "US-MO",
+          "nombre": "Missouri"
+        },
+        {
+          "id": "US-MS",
+          "nombre": "Mississippi"
+        },
+        {
+          "id": "US-MT",
+          "nombre": "Montana"
+        },
+        {
+          "id": "US-NC",
+          "nombre": "North Carolina"
+        },
+        {
+          "id": "US-ND",
+          "nombre": "North Dakota"
+        },
+        {
+          "id": "US-NE",
+          "nombre": "Nebraska"
+        },
+        {
+          "id": "US-NH",
+          "nombre": "New Hampshire"
+        },
+        {
+          "id": "US-NJ",
+          "nombre": "New Jersey"
+        },
+        {
+          "id": "US-NM",
+          "nombre": "New Mexico"
+        },
+        {
+          "id": "US-NV",
+          "nombre": "Nevada"
+        },
+        {
+          "id": "US-NY",
+          "nombre": "New York"
+        },
+        {
+          "id": "US-OH",
+          "nombre": "Ohio"
+        },
+        {
+          "id": "US-OK",
+          "nombre": "Oklahoma"
+        },
+        {
+          "id": "US-OR",
+          "nombre": "Oregon"
+        },
+        {
+          "id": "US-PA",
+          "nombre": "Pennsylvania"
+        },
+        {
+          "id": "US-RI",
+          "nombre": "Rhode Island"
+        },
+        {
+          "id": "US-SC",
+          "nombre": "South Carolina"
+        },
+        {
+          "id": "US-SD",
+          "nombre": "South Dakota"
+        },
+        {
+          "id": "US-TN",
+          "nombre": "Tennessee"
+        },
+        {
+          "id": "US-TX",
+          "nombre": "Texas"
+        },
+        {
+          "id": "US-UT",
+          "nombre": "Utah"
+        },
+        {
+          "id": "US-VA",
+          "nombre": "Virginia"
+        },
+        {
+          "id": "US-VT",
+          "nombre": "Vermont"
+        },
+        {
+          "id": "US-WA",
+          "nombre": "Washington"
+        },
+        {
+          "id": "US-WI",
+          "nombre": "Wisconsin"
+        },
+        {
+          "id": "US-WV",
+          "nombre": "West Virginia"
+        },
+        {
+          "id": "US-WY",
+          "nombre": "Wyoming"
+        }
+      ]
+    }
+  ]
+}

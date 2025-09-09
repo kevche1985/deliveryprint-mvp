@@ -24,28 +24,35 @@ export default function PerformanceMonitor() {
     errors: [],
     warnings: []
   })
-  const [startTime] = useState(Date.now())
-  const [authStartTime] = useState(Date.now())
-  const [isVisible, setIsVisible] = useState(false)
+  const [startTime] = useState(performance.now())
+  const [authStartTime] = useState(performance.now())
+  const [isVisible, setIsVisible] = useState(true) // Show by default in dev
 
   useEffect(() => {
-    // Monitor auth loading time
+    // Monitor auth loading time with high precision
     if (!loading && user !== undefined) {
-      const authTime = Date.now() - authStartTime
-      setMetrics(prev => ({ ...prev, authLoadTime: authTime }))
+      const authTime = performance.now() - authStartTime
+      const warnings: string[] = []
       
       if (authTime > 3000) {
-        setMetrics(prev => ({
-          ...prev,
-          warnings: [...prev.warnings, `Auth took ${authTime}ms (>3s)`]
-        }))
+        warnings.push(`Auth took ${authTime.toFixed(0)}ms (>3s)`)
       }
+      
+      if (authTime > 10000) {
+        warnings.push(`Auth took ${authTime.toFixed(0)}ms (>10s) - Critical`)
+      }
+      
+      setMetrics(prev => ({ 
+        ...prev, 
+        authLoadTime: authTime,
+        warnings: [...prev.warnings, ...warnings]
+      }))
     }
   }, [loading, user, authStartTime])
 
   useEffect(() => {
-    // Monitor page load time
-    const pageTime = Date.now() - startTime
+    // Monitor page load time with high precision
+    const pageTime = performance.now() - startTime
     setMetrics(prev => ({ ...prev, pageLoadTime: pageTime }))
     
     if (pageTime > 5000) {

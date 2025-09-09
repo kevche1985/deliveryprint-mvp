@@ -28,76 +28,76 @@ interface WompiPaymentRequest {
   idExterno: string
 }
 
-// Enhanced mock payment processing
-function processMockPayment(paymentData: WompiPaymentRequest) {
-  console.log("🎭 Processing mock payment for testing...")
-
+// Wompi Test Mode Helper - Based on official documentation
+// https://docs.wompi.sv/metodos-api/transaccion_prueba
+function getTestModeInfo(paymentData: WompiPaymentRequest) {
+  const cvv = paymentData.tarjetaCreditoDebido.cvv
   const cardNumber = paymentData.tarjetaCreditoDebido.numeroTarjeta
-  const lastFourDigits = cardNumber.slice(-4)
-  const amount = paymentData.monto
-
-  console.log(`💳 Card ending in: ${lastFourDigits}`)
-  console.log(`💰 Amount: $${amount}`)
-
-  // Simulate different payment scenarios based on card number
-  if (lastFourDigits === "0000") {
-    console.log("❌ Simulating insufficient funds")
+  
+  console.log("🧪 Wompi Test Mode Analysis:")
+  console.log(`💳 Card ending in: ${cardNumber.slice(-4)}`)
+  console.log(`🔒 CVV: ${cvv}`)
+  
+  // According to Wompi docs: CVV "111" simulates rejected payment
+  if (cvv === "111") {
+    console.log("❌ CVV '111' detected - Will simulate rejected payment")
     return {
-      success: false,
-      error: "Insufficient funds",
-      code: "01",
-      estado: "RECHAZADO",
+      expectsRejection: true,
+      reason: "CVV 111 triggers rejection in Wompi test mode"
     }
   }
-
-  if (lastFourDigits === "1111") {
-    console.log("🔐 Simulating 3DS authentication required")
-    const transactionId = `mock-3ds-${Date.now()}`
-    return {
-      success: true,
-      data: {
-        idTransaccion: transactionId,
-        numeroReferencia: `REF-${Date.now()}`,
-        urlCompletarPago3Ds: `/payment-complete?orderId=${paymentData.idExterno}&status=success&type=3ds&transactionId=${transactionId}`,
-        estado: "PENDIENTE_3DS",
-        mensaje: "3DS authentication required",
-      },
-    }
-  }
-
-  if (lastFourDigits === "2222") {
-    console.log("❌ Simulating card declined")
-    return {
-      success: false,
-      error: "Card declined by issuer",
-      code: "05",
-      estado: "RECHAZADO",
-    }
-  }
-
-  if (lastFourDigits === "3333") {
-    console.log("❌ Simulating expired card")
-    return {
-      success: false,
-      error: "Expired card",
-      code: "54",
-      estado: "RECHAZADO",
-    }
-  }
-
-  // Default: Successful payment
-  console.log("✅ Simulating successful payment")
-  const transactionId = `mock-success-${Date.now()}`
+  
+  console.log("✅ Normal CVV - Will process as successful test transaction")
   return {
-    success: true,
-    data: {
-      idTransaccion: transactionId,
-      numeroReferencia: `REF-${Date.now()}`,
-      codigoAutorizacion: `AUTH-${Date.now()}`,
-      estado: "EXITOSO",
-      mensaje: "Payment processed successfully (mock mode)",
-    },
+    expectsRejection: false,
+    reason: "Normal test transaction"
   }
+}
+
+// Extract user-friendly messages from Wompi error responses
+function extractUserFriendlyMessage(wompiError: any): string {
+  if (!wompiError) {
+    return "Payment processing failed. Please try again."
+  }
+  
+  // Handle Wompi's mensajes array
+  if (wompiError.mensajes && Array.isArray(wompiError.mensajes) && wompiError.mensajes.length > 0) {
+    const message = wompiError.mensajes[0]
+    
+    // Phone number validation error
+    if (message.includes("formatos de telefonos") || message.includes("no son válidos")) {
+      return "Invalid phone number format. Please enter a valid El Salvador phone number without dashes (numbers only)."
+    }
+    
+    // Card validation errors
+    if (message.includes("tarjeta") || message.includes("card")) {
+      return "Invalid card information. Please check your card details and try again."
+    }
+    
+    // Email validation errors
+    if (message.includes("email") || message.includes("correo")) {
+      return "Invalid email format. Please enter a valid email address."
+    }
+    
+    // Generic validation error
+    if (message.includes("válido") || message.includes("formato")) {
+      return "Invalid information format. Please check your details and try again."
+    }
+    
+    // Return the original message if no specific pattern matches
+    return message
+  }
+  
+  // Handle other error formats
+  if (wompiError.mensaje) {
+    return wompiError.mensaje
+  }
+  
+  if (wompiError.error) {
+    return wompiError.error
+  }
+  
+  return "Payment processing failed. Please check your information and try again."
 }
 
 // Safe database operation with error handling
@@ -235,6 +235,9 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
   // Try different combinations
   for (const endpoint of apiEndpoints) {
     for (const payload of payloads) {
+      let timeoutId: NodeJS.Timeout | null = null
+      let controller: AbortController | null = null
+      
       try {
         console.log(`🚀 Trying ${payload.name} payload at: ${endpoint}`)
         console.log("📤 Payload:", {
@@ -246,8 +249,16 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
           },
         })
 
+        // Add timeout protection to prevent hanging
+        controller = new AbortController()
+        timeoutId = setTimeout(() => {
+          controller?.abort()
+          console.log(`⏰ Request to ${endpoint} timed out after 30 seconds`)
+        }, 30000) // 30 second timeout
+        
         const paymentResponse = await fetch(endpoint, {
           method: "POST",
+          signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -258,6 +269,12 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
           body: JSON.stringify(payload.data),
         })
 
+        // Clear timeout on successful response
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        
         console.log("📡 Payment response status:", paymentResponse.status)
         console.log("📡 Payment response headers:", Object.fromEntries(paymentResponse.headers.entries()))
 
@@ -304,11 +321,43 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
           }
         } else {
           console.log(`❌ ${endpoint} with ${payload.name} payload failed: ${paymentResponse.status}`)
-          lastError = new Error(`${endpoint}: ${paymentResponse.status} - ${responseText}`)
+          
+          // Parse Wompi error response for better error handling
+          let wompiError
+          try {
+            wompiError = JSON.parse(responseText)
+            console.log("📋 Wompi error details:", wompiError)
+          } catch (parseError) {
+            console.log("⚠️ Could not parse error response as JSON")
+            wompiError = { mensajes: [responseText] }
+          }
+          
+          // Create structured error for frontend handling
+          const structuredError = {
+            success: false,
+            error: "validation_error",
+            code: paymentResponse.status,
+            wompiError: wompiError,
+            userMessage: extractUserFriendlyMessage(wompiError),
+            canRetry: true
+          }
+          
+          lastError = new Error(JSON.stringify(structuredError))
         }
       } catch (error) {
-        console.log(`❌ Error with ${endpoint} and ${payload.name} payload:`, error.message)
-        lastError = error
+        // Clear timeout in case of error
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log(`⏰ Request to ${endpoint} with ${payload.name} payload timed out after 30 seconds`)
+          lastError = new Error(`Payment request timed out. Please try again.`)
+        } else {
+          console.log(`❌ Error with ${endpoint} and ${payload.name} payload:`, error instanceof Error ? error.message : 'Unknown error')
+          lastError = error instanceof Error ? error : new Error('Unknown error occurred')
+        }
       }
     }
   }
@@ -405,36 +454,58 @@ export async function POST(request: NextRequest) {
       return await supabaseServer.from("wompi_transactions").insert(transactionData)
     }, "database transaction creation")
 
-    // Process payment
+    // Process payment using Wompi API (Test or Production mode)
     let paymentResult
 
-    const enableRealWompi = process.env.ENABLE_REAL_WOMPI === "true"
-    console.log("🎛️ ENABLE_REAL_WOMPI:", enableRealWompi)
+    // Get test mode information for debugging
+    const testModeInfo = getTestModeInfo(paymentData)
+    console.log("🧪 Test Mode Info:", testModeInfo)
 
-    if (enableRealWompi) {
-      console.log("🚀 === ATTEMPTING REAL WOMPI API ===")
-      console.log("🔍 Will try Full payload first, then Minimal payload")
-      try {
-        paymentResult = await attemptRealWompiPayment(paymentData)
-        console.log("✅ Real Wompi API succeeded!")
+    console.log("🚀 === PROCESSING WOMPI PAYMENT ===")
+    console.log("🔍 Using Wompi API with proper test mode support")
+    
+    try {
+      paymentResult = await attemptRealWompiPayment(paymentData)
+      console.log("✅ Wompi API call completed!")
 
-        // Update database if available
-        await safeDbOperation(async () => {
-          const { supabaseServer } = await import("@/lib/supabase-server")
-          return await supabaseServer
-            .from("wompi_transactions")
-            .update({ es_real: true })
-            .eq("id_externo", paymentData.idExterno)
-        }, "marking transaction as real")
-      } catch (apiError) {
-        console.error("❌ Real Wompi API failed:", apiError instanceof Error ? apiError.message : "Unknown error")
-        console.log("🔄 Falling back to mock payment...")
-        paymentResult = processMockPayment(paymentData)
-      }
-    } else {
-      console.log("🎭 === USING MOCK PAYMENT ===")
-      paymentResult = processMockPayment(paymentData)
-    }
+      // Update database to mark as processed
+      await safeDbOperation(async () => {
+        const { supabaseServer } = await import("@/lib/supabase-server")
+        return await supabaseServer
+          .from("wompi_transactions")
+          .update({ 
+            es_real: true,
+            test_mode_info: testModeInfo 
+          })
+          .eq("id_externo", paymentData.idExterno)
+      }, "updating transaction with test mode info")
+    } catch (apiError) {
+       console.error("❌ Wompi API failed:", apiError instanceof Error ? apiError.message : "Unknown error")
+       
+       // Try to parse structured error from Wompi
+       let structuredError
+       try {
+         if (apiError instanceof Error && apiError.message.startsWith('{')) {
+           structuredError = JSON.parse(apiError.message)
+         }
+       } catch (parseError) {
+         console.log("⚠️ Could not parse structured error")
+       }
+       
+       // Return structured error if available, otherwise generic error
+       if (structuredError && structuredError.error === "validation_error") {
+         paymentResult = structuredError
+       } else {
+         paymentResult = {
+           success: false,
+           error: "api_error",
+           userMessage: "Payment processing failed. Please try again.",
+           code: "API_ERROR",
+           estado: "ERROR",
+           canRetry: true
+         }
+       }
+     }
 
     // Update database with result (optional)
     await safeDbOperation(async () => {

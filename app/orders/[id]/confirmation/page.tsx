@@ -10,6 +10,8 @@ import { Loader2, CheckCircle, AlertCircle, Printer, FileText, ArrowRight } from
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabase"
 import { getOrderById, getOrderItems } from "@/lib/database"
 import type { Order, OrderItem } from "@/lib/database"
 
@@ -18,9 +20,12 @@ export default function OrderConfirmationPage() {
   const searchParams = useSearchParams()
   const paymentStatus = searchParams.get("status") || "pending"
   const { user } = useAuth()
+  const { toast } = useToast()
   const [order, setOrder] = useState<Order | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [generatingInvoice, setGeneratingInvoice] = useState(false)
+  const [printingReceipt, setPrintingReceipt] = useState(false)
 
   useEffect(() => {
     async function loadOrderData() {
@@ -44,6 +49,165 @@ export default function OrderConfirmationPage() {
       loadOrderData()
     }
   }, [id, user])
+
+  const handlePrintReceipt = () => {
+    if (!order) return
+    
+    setPrintingReceipt(true)
+    try {
+      // Create a printable receipt
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt - ${order.order_number}</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .company-name { font-size: 24px; font-weight: bold; color: #8B0000; }
+                .receipt-title { font-size: 18px; margin: 10px 0; }
+                .order-info { margin: 20px 0; }
+                .items { margin: 20px 0; }
+                .total { font-weight: bold; font-size: 16px; margin-top: 10px; }
+                .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f5f5f5; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <div class="company-name">DELIVERY PRINT</div>
+                <div>Professional Printing & Design Services</div>
+                <div>123 Business Avenue, San Salvador, El Salvador</div>
+                <div>Phone: +503 2222-3333 | Email: info@deliveryprint.com</div>
+                <div class="receipt-title">RECEIPT</div>
+              </div>
+              
+              <div class="order-info">
+                <p><strong>Order #:</strong> ${order.order_number}</p>
+                <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
+                <p><strong>Payment Method:</strong> ${order.payment_method?.toUpperCase() || 'N/A'}</p>
+                <p><strong>Status:</strong> ${(order as any).payment_status || 'Paid'}</p>
+              </div>
+              
+              <div class="items">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${orderItems.map(item => `
+                      <tr>
+                        <td>${item.name || 'Unknown Item'}</td>
+                        <td>${item.quantity || 1}</td>
+                        <td>$${(item.price || 0).toFixed(2)}</td>
+                        <td>$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="total">
+                <p>Subtotal: $${order.subtotal.toFixed(2)}</p>
+                <p>Shipping: $${order.shipping.toFixed(2)}</p>
+                <p>Tax: $${order.tax.toFixed(2)}</p>
+                <p style="font-size: 18px; color: #8B0000;">TOTAL: $${order.total.toFixed(2)}</p>
+              </div>
+              
+              <div class="footer">
+                <p>Thank you for choosing Delivery Print!</p>
+                <p>For questions, contact us at support@deliveryprint.com</p>
+              </div>
+            </body>
+          </html>
+        `)
+        printWindow.document.close()
+        printWindow.print()
+      }
+    } catch (error) {
+      console.error('Print error:', error)
+      toast({
+        title: "Print Error",
+        description: "Failed to print receipt. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setPrintingReceipt(false)
+    }
+  }
+
+  const handleDownloadInvoice = async () => {
+    if (!order || !user) return
+
+    setGeneratingInvoice(true)
+    try {
+      // Get current session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again to generate invoice.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch(`/api/orders/${id}/invoice`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        let errorMessage = "Failed to generate invoice"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (e) {
+          console.error("Invoice generation error:", e)
+        }
+        throw new Error(errorMessage)
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.style.display = "none"
+      a.href = url
+      a.download = `Invoice_${order.order_number || id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Invoice Downloaded",
+        description: "Your invoice has been downloaded successfully.",
+      })
+    } catch (error) {
+      console.error("Invoice download error:", error)
+      toast({
+        title: "Download Error",
+        description: error instanceof Error ? error.message : "Failed to download invoice.",
+        variant: "destructive",
+      })
+    } finally {
+      setGeneratingInvoice(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -148,7 +312,7 @@ export default function OrderConfirmationPage() {
                     </p>
                     <p className="text-gray-600">
                       <span className="font-medium">Shipping:</span>{" "}
-                      {order.shipping_method.charAt(0).toUpperCase() + order.shipping_method.slice(1)} Shipping
+                      {((order as any).shipping_method || 'standard').charAt(0).toUpperCase() + ((order as any).shipping_method || 'standard').slice(1)} Shipping
                     </p>
                   </div>
                 </div>
@@ -205,13 +369,31 @@ export default function OrderConfirmationPage() {
           </Card>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" className="flex-1">
-              <Printer className="mr-2 h-4 w-4" />
-              Print Receipt
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={handlePrintReceipt}
+              disabled={printingReceipt}
+            >
+              {printingReceipt ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="mr-2 h-4 w-4" />
+              )}
+              {printingReceipt ? 'Printing...' : 'Print Receipt'}
             </Button>
-            <Button variant="outline" className="flex-1">
-              <FileText className="mr-2 h-4 w-4" />
-              Download Invoice
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleDownloadInvoice}
+              disabled={generatingInvoice}
+            >
+              {generatingInvoice ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="mr-2 h-4 w-4" />
+              )}
+              {generatingInvoice ? 'Generating...' : 'Download Invoice'}
             </Button>
             <Button asChild className="flex-1 bg-[#8B0000] hover:bg-[#6B0000]">
               <Link href="/orders">

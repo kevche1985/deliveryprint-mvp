@@ -14,6 +14,9 @@ interface DesignServiceEditorProps {
   productImage: string
   initialDesign?: any
   productName: string
+  product?: any
+  variants?: any[]
+  selectedVariant?: string
 }
 
 // Add named export
@@ -26,6 +29,9 @@ export default function DesignServiceEditor({
   productImage,
   initialDesign,
   productName,
+  product,
+  variants = [],
+  selectedVariant,
 }: DesignServiceEditorProps) {
   const [designData, setDesignData] = useState<any>(null)
 
@@ -54,6 +60,9 @@ export default function DesignServiceEditor({
             onCancel={onClose}
             initialDesign={initialDesign}
             productName={productName}
+            product={product}
+            variants={variants}
+            selectedVariant={selectedVariant}
           />
         </div>
         

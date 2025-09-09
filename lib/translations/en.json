@@ -16,5 +16,44 @@
   "contact": {
     "title": "Contact Us",
     "description": "Get in touch with us"
+  },
+  "payment": {
+    "modal": {
+      "title": "Payment Details"
+    },
+    "testMode": {
+      "title": "Test Mode",
+      "description": "Wompi test mode - Use CVV to simulate different scenarios:"
+    },
+    "testCard": {
+      "declined": "Payment will be rejected",
+      "othersSuccess": "Payment will be successful"
+    },
+    "security": {
+      "sslEncrypted": "SSL Encrypted",
+      "pciCompliant": "PCI Compliant",
+      "notice": "Your payment information is secure and encrypted"
+    },
+    "form": {
+      "cardNumber": "Card Number",
+      "month": "Month",
+      "year": "Year",
+      "cvv": "CVV",
+      "cardholderName": "Cardholder Name",
+      "country": "Country",
+      "region": "Region"
+    },
+    "summary": {
+      "totalToPay": "Total to Pay:"
+    },
+    "payButton": "Pay",
+    "error": {
+      "title": "Payment Error",
+      "processingFailed": "Payment processing failed. Please try again."
+    },
+    "success": {
+      "title": "Payment Successful",
+      "transactionId": "Transaction ID"
+    }
   }
 }

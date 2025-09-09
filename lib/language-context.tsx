@@ -81,6 +81,43 @@ const translations = {
       title: "Quotes",
     },
     payment: {
+      modal: {
+        title: "Payment Details"
+      },
+      testMode: {
+        title: "Test Mode",
+        description: "Wompi test mode - Use CVV to simulate different scenarios:"
+      },
+      testCard: {
+        declined: "Payment will be rejected",
+        othersSuccess: "Payment will be successful"
+      },
+      security: {
+        sslEncrypted: "SSL Encrypted",
+        pciCompliant: "PCI Compliant",
+        notice: "Your payment information is secure and encrypted"
+      },
+      form: {
+        cardNumber: "Card Number",
+        month: "Month",
+        year: "Year",
+        cvv: "CVV",
+        cardholderName: "Cardholder Name",
+        country: "Country",
+        region: "Region"
+      },
+      summary: {
+        totalToPay: "Total to Pay:"
+      },
+      payButton: "Pay",
+      error: {
+        title: "Payment Error",
+        processingFailed: "Payment processing failed. Please try again."
+      },
+      success: {
+        title: "Payment Successful",
+        transactionId: "Transaction ID"
+      },
       "3ds": {
         processing: {
           title: "Processing Payment",
@@ -197,6 +234,43 @@ const translations = {
       title: "Cotizaciones",
     },
     payment: {
+      modal: {
+        title: "Detalles de Pago"
+      },
+      testMode: {
+        title: "Modo de Prueba",
+        description: "Modo de prueba Wompi - Usa CVV para simular diferentes escenarios:"
+      },
+      testCard: {
+        declined: "El pago será rechazado",
+        othersSuccess: "El pago será exitoso"
+      },
+      security: {
+        sslEncrypted: "Cifrado SSL",
+        pciCompliant: "Cumple PCI",
+        notice: "Tu información de pago está segura y cifrada"
+      },
+      form: {
+        cardNumber: "Número de Tarjeta",
+        month: "Mes",
+        year: "Año",
+        cvv: "CVV",
+        cardholderName: "Nombre del Titular",
+        country: "País",
+        region: "Región"
+      },
+      summary: {
+        totalToPay: "Total a Pagar:"
+      },
+      payButton: "Pagar",
+      error: {
+        title: "Error de Pago",
+        processingFailed: "El procesamiento del pago falló. Por favor intenta de nuevo."
+      },
+      success: {
+        title: "Pago Exitoso",
+        transactionId: "ID de Transacción"
+      },
       "3ds": {
         processing: {
           title: "Procesando Pago",

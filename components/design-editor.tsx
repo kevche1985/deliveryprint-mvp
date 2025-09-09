@@ -471,9 +471,23 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         throw new Error("Please add at least one design element before saving")
       }
 
+      console.log("🔐 User authentication check:", {
+        hasUser: !!user,
+        userEmail: user?.email,
+        userObject: user
+      })
+      
       if (!user?.email) {
+        console.error("❌ User authentication failed:", {
+          user: user,
+          hasUser: !!user,
+          hasEmail: !!user?.email,
+          email: user?.email
+        })
         throw new Error("Please log in to save your design")
       }
+      
+      console.log("✅ User authenticated:", user.email)
 
       // Show initial loading toast
       const loadingToast = toast({
@@ -628,23 +642,42 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
       const variant = variants.find((v) => v.id === selectedVariant)
       const finalPrice = variant ? variant.price : product?.price || 0
 
-      // Use the stored image URL from Supabase Storage
-      const storedImageUrl = digitalProduct.product.preview_url || digitalProduct.product.download_url
+      // Use the stored image URL from Supabase Storage with fallback
+      const apiPreviewUrl = digitalProduct.product?.preview_url || digitalProduct.preview_url
+      const apiDownloadUrl = digitalProduct.product?.download_url || digitalProduct.download_url
+      
+      // Prefer API URLs over base64, but use base64 as last resort
+      const storedImageUrl = apiPreviewUrl || apiDownloadUrl || capturedImageBase64
+      
       const productDisplayName = `${generatedProductName} - Custom Design`
 
-      console.log("🛒 Adding to cart...")
+      console.log("🛒 Image URL analysis:", {
+        apiPreviewUrl: apiPreviewUrl ? apiPreviewUrl.substring(0, 100) + '...' : 'None',
+        apiDownloadUrl: apiDownloadUrl ? apiDownloadUrl.substring(0, 100) + '...' : 'None',
+        usingFallback: !apiPreviewUrl && !apiDownloadUrl,
+        finalUrlType: storedImageUrl?.startsWith('data:') ? 'base64' : storedImageUrl?.startsWith('http') ? 'url' : 'unknown',
+        finalUrlLength: storedImageUrl?.length
+      })
+      
+      console.log("📄 Digital product response structure:", {
+        hasProduct: !!digitalProduct.product,
+        hasPreviewUrl: !!digitalProduct.product?.preview_url,
+        hasDownloadUrl: !!digitalProduct.product?.download_url,
+        directPreviewUrl: !!digitalProduct.preview_url,
+        directDownloadUrl: !!digitalProduct.download_url
+      })
 
       // Add to cart
       addItem({
         productId: product?.id || "custom-design",
         variantId: selectedVariant || undefined,
-        designId: digitalProduct.product.id,
+        designId: digitalProduct.product?.id || digitalProduct.id,
         quantity: 1,
         price: finalPrice,
         name: productDisplayName,
         image: storedImageUrl,
         customizations: {
-          designId: digitalProduct.product.id,
+          designId: digitalProduct.product?.id || digitalProduct.id,
           is_custom_design: true,
           formats_available: ["png", "pdf", "svg", "jpg"],
           generated_name: generatedProductName,
@@ -665,12 +698,28 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         duration: 3000,
       })
 
-      // Call original onSave if provided
+      // Call original onSave if provided with enhanced data
       if (onSave) {
-        onSave({
+        const enhancedDesignData = {
           ...designData,
           customizedProductImage: storedImageUrl,
+          // Ensure we have the image for thumbnail display
+          preview_url: storedImageUrl,
+          download_url: storedImageUrl,
+          // Add metadata for debugging
+          saved_at: new Date().toISOString(),
+          design_id: digitalProduct.product?.id || digitalProduct.id
+        }
+        
+        console.log("💾 Saving design data for thumbnail:", {
+          hasCustomizedProductImage: !!enhancedDesignData.customizedProductImage,
+          hasPreviewUrl: !!enhancedDesignData.preview_url,
+          imageUrlType: enhancedDesignData.customizedProductImage?.startsWith('data:') ? 'base64' : enhancedDesignData.customizedProductImage?.startsWith('http') ? 'url' : 'unknown',
+          imageUrlLength: enhancedDesignData.customizedProductImage?.length,
+          imageUrlPreview: enhancedDesignData.customizedProductImage?.substring(0, 100) + '...'
         })
+        
+        onSave(enhancedDesignData)
       }
 
     } catch (error) {

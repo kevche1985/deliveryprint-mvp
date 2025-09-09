@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
-import { Loader2, CreditCard, Lock, Shield, Info } from "lucide-react"
+import { Loader2, CreditCard, Lock, Shield, Info, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLanguage } from "@/lib/language-context"
@@ -48,6 +48,14 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
   // Get regions for selected country
   const selectedCountryData = countriesData.countries.find((country) => country.id === selectedCountry)
   const regions = selectedCountryData?.territorios || []
+
+  // Clear general error when user makes changes
+  const clearGeneralError = () => {
+    if (errors.general) {
+      const { general, ...rest } = errors
+      setErrors(rest)
+    }
+  }
 
   // Reset form when modal opens
   useEffect(() => {
@@ -193,13 +201,24 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
 
       console.log("💳 Sending payment request...")
 
+      // Add timeout protection for frontend request
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+        console.log("⏰ Payment request timed out after 45 seconds")
+      }, 45000) // 45 second timeout (longer than backend)
+
       const response = await fetch("/api/payments/wompi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(paymentData),
+        signal: controller.signal,
       })
+      
+      // Clear timeout on response
+      clearTimeout(timeoutId)
 
       const responseText = await response.text()
       console.log("📡 Response:", responseText)
@@ -280,11 +299,34 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
           throw new Error("Invalid payment response")
         }
       } else {
-        throw new Error(responseData.error || t("payment.error.processingFailed"))
+        // Handle validation errors differently from other errors
+        if (responseData.error === "validation_error" && responseData.canRetry) {
+          console.log("🔄 Validation error - staying in form:", responseData.userMessage)
+          
+          // Show validation error in form instead of closing modal
+          setErrors({ general: responseData.userMessage || "Please check your information and try again." })
+          
+          toast({
+            title: "Validation Error",
+            description: responseData.userMessage || "Please check your information and try again.",
+            variant: "destructive",
+          })
+          
+          return // Stay in the form, don't close modal
+        }
+        
+        throw new Error(responseData.userMessage || responseData.error || t("payment.error.processingFailed"))
       }
     } catch (error) {
       console.error("❌ Payment error:", error)
-      const errorMessage = error instanceof Error ? error.message : t("payment.error.processingFailed")
+      
+      let errorMessage: string
+      if (error instanceof Error && error.name === 'AbortError') {
+        errorMessage = "Payment request timed out. Please check your connection and try again."
+      } else {
+        errorMessage = error instanceof Error ? error.message : t("payment.error.processingFailed")
+      }
+      
       onError(errorMessage)
       toast({
         title: t("payment.error.title"),
@@ -310,14 +352,14 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Test Mode Alert */}
+          {/* Test Mode Alert - Based on Wompi Official Documentation */}
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
               <strong>{t("payment.testMode.title")}:</strong> {t("payment.testMode.description")}
-              <br />• 0000 = {t("payment.testCard.insufficientFunds")} • 1111 = {t("payment.testCard.3dsAuth")}• 2222 ={" "}
-              {t("payment.testCard.declined")} • 3333 = {t("payment.testCard.expired")}•{" "}
-              {t("payment.testCard.othersSuccess")}
+              <br />• <strong>CVV "111"</strong> = {t("payment.testCard.declined")}
+              <br />• <strong>Any other CVV</strong> = {t("payment.testCard.othersSuccess")}
+              <br />• <em>Note: Use any valid card number for testing</em>
             </AlertDescription>
           </Alert>
 
@@ -333,6 +375,14 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
             </div>
           </div>
 
+          {/* General Error Display */}
+          {errors.general && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errors.general}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Card Number */}
           <div className="space-y-2">
             <Label htmlFor="cardNumber">{t("payment.form.cardNumber")} *</Label>
@@ -341,12 +391,13 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
                 id="cardNumber"
                 placeholder="1234 5678 9012 3456"
                 value={cardData.cardNumber}
-                onChange={(e) =>
+                onChange={(e) => {
+                  clearGeneralError()
                   setCardData((prev) => ({
                     ...prev,
                     cardNumber: formatCardNumber(e.target.value),
                   }))
-                }
+                }}
                 maxLength={19}
                 className={errors.cardNumber ? "border-red-500" : ""}
               />
@@ -418,12 +469,13 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
                 id="cvv"
                 placeholder="123"
                 value={cardData.cvv}
-                onChange={(e) =>
+                onChange={(e) => {
+                  clearGeneralError()
                   setCardData((prev) => ({
                     ...prev,
                     cvv: e.target.value.replace(/\D/g, "").slice(0, 4),
                   }))
-                }
+                }}
                 maxLength={4}
                 className={errors.cvv ? "border-red-500" : ""}
               />
@@ -439,12 +491,13 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
               id="cardholderName"
               placeholder="John Doe"
               value={cardData.cardholderName}
-              onChange={(e) =>
+              onChange={(e) => {
+                clearGeneralError()
                 setCardData((prev) => ({
                   ...prev,
                   cardholderName: e.target.value,
                 }))
-              }
+              }}
               className={errors.cardholderName ? "border-red-500" : ""}
             />
             {errors.cardholderName && <p className="text-sm text-red-500">{errors.cardholderName}</p>}

@@ -21,5 +21,44 @@
       "message": "Mensaje",
       "submit": "Enviar"
     }
+  },
+  "payment": {
+    "modal": {
+      "title": "Detalles de Pago"
+    },
+    "testMode": {
+      "title": "Modo de Prueba",
+      "description": "Modo de prueba Wompi - Usa CVV para simular diferentes escenarios:"
+    },
+    "testCard": {
+      "declined": "El pago será rechazado",
+      "othersSuccess": "El pago será exitoso"
+    },
+    "security": {
+      "sslEncrypted": "Cifrado SSL",
+      "pciCompliant": "Cumple PCI",
+      "notice": "Tu información de pago está segura y cifrada"
+    },
+    "form": {
+      "cardNumber": "Número de Tarjeta",
+      "month": "Mes",
+      "year": "Año",
+      "cvv": "CVV",
+      "cardholderName": "Nombre del Titular",
+      "country": "País",
+      "region": "Región"
+    },
+    "summary": {
+      "totalToPay": "Total a Pagar:"
+    },
+    "payButton": "Pagar",
+    "error": {
+      "title": "Error de Pago",
+      "processingFailed": "El procesamiento del pago falló. Por favor intenta de nuevo."
+    },
+    "success": {
+      "title": "Pago Exitoso",
+      "transactionId": "ID de Transacción"
+    }
   }
 }

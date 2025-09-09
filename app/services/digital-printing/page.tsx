@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ShoppingCart, Info, FileImage, Calculator, Sparkles, X, Palette } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useCart } from "@/lib/cart-context"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "@/components/ui/use-toast"
 import DesignServiceEditor from "@/components/design-service-editor" // New import
 // Define the DesignOutputData type locally since it's not exported
 type DesignOutputData = {
@@ -178,6 +180,7 @@ export default function DigitalPrintingPage() {
 
   const cartContext = useCart()
   const { addItem } = cartContext || { addItem: () => {} }
+  const { user } = useAuth()
 
   const handleAddToCart = () => {
     if (!cartContext) {
@@ -249,10 +252,10 @@ export default function DigitalPrintingPage() {
       if (!product.double_sided_available) {
         setPrintSides("single")
       }
-      // Clear custom design when product changes
-      setCustomDesign(null)
-      setShowAiDesign(false) // Also clear AI design if product changes
-      setAiDesign(null)
+      // Don't clear designs when material changes - preserve user's design choice
+      // setCustomDesign(null) - Commented out to preserve custom designs
+      // setShowAiDesign(false) - Commented out to preserve AI designs
+      // setAiDesign(null) - Commented out to preserve AI designs
     }
   }
 
@@ -649,7 +652,27 @@ export default function DigitalPrintingPage() {
                     <div className="text-center">
                       <p className="text-gray-600 mb-4">Or create a custom design:</p>
                       <Button
-                        onClick={() => setShowDesignEditor(true)}
+                        onClick={() => {
+                          console.log("🎨 Design editor button clicked", {
+                            hasUser: !!user,
+                            userEmail: user?.email,
+                            userObject: user
+                          })
+                          
+                          // Check if user is logged in before opening design editor
+                          if (!user?.email) {
+                            console.log("❌ User not logged in, showing login toast")
+                            toast({
+                              title: "Login Required",
+                              description: "Please log in to create custom designs.",
+                              variant: "destructive",
+                            })
+                            return
+                          }
+                          
+                          console.log("✅ User authenticated, opening design editor")
+                          setShowDesignEditor(true)
+                        }}
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >
                         <Palette className="mr-2 h-5 w-5" />
@@ -658,38 +681,128 @@ export default function DigitalPrintingPage() {
                     </div>
                   </>
                 ) : (
+                  /* Show compact design info when design exists */
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-white border-2">
+                        <img
+                          src={customDesign?.customizedProductImage || aiDesign?.previewUrl || "/placeholder.svg"}
+                          alt="Current Design"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">
+                          {aiDesign ? aiDesign.name : "Custom Design"}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {aiDesign ? "AI Generated" : "Custom Upload"} • Ready for Printing
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          Replace
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (!user?.email) {
+                              toast({
+                                title: "Login Required",
+                                description: "Please log in to create custom designs.",
+                                variant: "destructive",
+                              })
+                              return
+                            }
+                            setShowDesignEditor(true)
+                          }}
+                        >
+                          <Palette className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Debug section - can be removed in production */}
+                {(customDesign || aiDesign) && (
                   <div className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 rounded border bg-white flex items-center justify-center overflow-hidden">
-                        {(customDesign?.customizedProductImage || aiDesign?.previewUrl) ? (
-                          <img
-                            src={customDesign?.customizedProductImage || aiDesign?.previewUrl}
-                            alt="Current Design"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.log('Image failed to load, using placeholder')
-                              e.currentTarget.src = '/placeholder.svg'
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <Palette className="w-6 h-6 text-gray-400" />
-                          </div>
-                        )}
+                        {(() => {
+                          // Try multiple possible image URL properties
+                           const customDesignAny = customDesign as any
+                           const imageUrl = customDesign?.customizedProductImage || 
+                                           customDesignAny?.preview_url || 
+                                           customDesignAny?.download_url ||
+                                           aiDesign?.previewUrl
+                           
+                           console.log('🖼️ Thumbnail debug:', {
+                             hasCustomDesign: !!customDesign,
+                             hasAiDesign: !!aiDesign,
+                             customizedProductImage: customDesign?.customizedProductImage?.substring(0, 100) + '...',
+                             preview_url: customDesignAny?.preview_url?.substring(0, 100) + '...',
+                             download_url: customDesignAny?.download_url?.substring(0, 100) + '...',
+                             aiPreviewUrl: aiDesign?.previewUrl,
+                             finalImageUrl: imageUrl?.substring(0, 100) + '...',
+                             imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : imageUrl?.startsWith('http') ? 'url' : 'unknown',
+                             imageUrlLength: imageUrl?.length
+                           })
+                          
+                          return imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt="Current Design"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.log('❌ Image failed to load:', {
+                                  url: imageUrl,
+                                  urlType: imageUrl?.startsWith('data:') ? 'base64' : imageUrl?.startsWith('http') ? 'url' : 'unknown',
+                                  urlLength: imageUrl?.length,
+                                  error: e
+                                })
+                                e.currentTarget.src = '/placeholder.svg'
+                              }}
+                              onLoad={() => {
+                                console.log('✅ Image loaded successfully:', {
+                                  url: imageUrl?.substring(0, 100) + '...',
+                                  urlType: imageUrl?.startsWith('data:') ? 'base64' : imageUrl?.startsWith('http') ? 'url' : 'unknown'
+                                })
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <Palette className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )
+                        })()}
                       </div>
                       <div>
                         <p className="font-medium">Design Loaded</p>
                         <p className="text-sm text-gray-600">
                           {customDesign ? "Your custom design" : "AI-generated design"} is ready.
                         </p>
-                        {/* Debug info */}
-                        {process.env.NODE_ENV === 'development' && (
-                          <div className="text-xs text-gray-400 mt-1 space-y-1">
-                            <p>Image: {customDesign?.customizedProductImage ? 'Custom' : aiDesign?.previewUrl ? 'AI' : 'None'}</p>
-                            <p>Custom Image URL: {customDesign?.customizedProductImage ? 'Available' : 'Missing'}</p>
-                            <p>AI Preview URL: {aiDesign?.previewUrl ? 'Available' : 'Missing'}</p>
-                          </div>
-                        )}
+                        {/* Enhanced debug info */}
+                         {process.env.NODE_ENV === 'development' && (() => {
+                           const customDesignAny = customDesign as any
+                           return (
+                             <div className="text-xs text-gray-400 mt-1 space-y-1">
+                               <p>Type: {customDesign ? 'Custom' : aiDesign ? 'AI' : 'None'}</p>
+                               <p>customizedProductImage: {customDesign?.customizedProductImage ? '✅' : '❌'}</p>
+                               <p>preview_url: {customDesignAny?.preview_url ? '✅' : '❌'}</p>
+                               <p>download_url: {customDesignAny?.download_url ? '✅' : '❌'}</p>
+                               <p>AI previewUrl: {aiDesign?.previewUrl ? '✅' : '❌'}</p>
+                               <p>Design ID: {customDesignAny?.design_id || 'None'}</p>
+                               <p>Saved at: {customDesignAny?.saved_at || 'Unknown'}</p>
+                             </div>
+                           )
+                         })()}
                       </div>
                     </div>
                     <Button variant="outline" onClick={() => setShowDesignEditor(true)}>
@@ -828,6 +941,13 @@ export default function DigitalPrintingPage() {
             }}
             productImage={selectedProduct.image || ''}
             productName={selectedProduct.name}
+            product={selectedProduct}
+            variants={selectedProduct.sizes || []}
+            selectedVariant={selectedProduct.sizes?.findIndex(size => 
+              size.width === selectedSize.width && 
+              size.height === selectedSize.height && 
+              size.price_single === selectedSize.price_single
+            )?.toString() || '0'}
             initialDesign={
               customDesign
                 ? {

@@ -1,0 +1,1149 @@
+{
+  "navigation": {
+    "home": "Inicio",
+    "services": "Servicios",
+    "products": "Productos",
+    "orders": "Pedidos",
+    "cart": "Carrito",
+    "profile": "Perfil",
+    "admin": "Administración",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "register": "Registrarse",
+    "dashboard": "Panel de Control",
+    "settings": "Configuración",
+    "aiStudio": "Estudio IA",
+    "allServices": "Todos los Servicios",
+    "digitalPrinting": "Impresión Digital",
+    "largeFormat": "Gran Formato",
+    "eventStands": "Stands para Eventos",
+    "illuminatedSigns": "Letreros Iluminados",
+    "paymentTransactions": "Transacciones de Pago",
+    "emailSettings": "Configuración de Email",
+    "supplierPortal": "Portal de Proveedores",
+    "digitalDownloads": "Descargas Digitales",
+    "signIn": "Iniciar Sesión",
+    "getStarted": "Comenzar",
+    "logoAlt": "Logo de DeliveryPrint"
+  },
+  "home": {
+    "hero": {
+      "title": "Impresión Digital Profesional",
+      "subtitle": "Soluciones de impresión de alta calidad para tu negocio",
+      "cta": "Explorar Servicios",
+      "secondary_cta": "Ver Productos"
+    },
+    "featured_products": "Productos Destacados",
+    "services_title": "Nuestros Servicios",
+    "why_choose_us": "¿Por qué elegirnos?",
+    "quality_guarantee": "Garantía de Calidad",
+    "quality_description": "Materiales premium y procesos de impresión profesionales",
+    "fast_turnaround": "Entrega Rápida",
+    "fast_description": "Tiempos de entrega rápidos para cumplir con tus plazos",
+    "professional_service": "Servicio Profesional",
+    "professional_description": "Consultoría experta y soporte de instalación",
+    "cta": {
+      "title": "¿Listo para Imprimir tus Ideas?",
+      "description": "Comienza con nuestras herramientas de diseño fáciles de usar o contáctanos para una cotización personalizada.",
+      "get_quote": "Obtener Cotización"
+    }
+  },
+  "digitalPrinting": {
+    "title": "Servicios de Impresión Digital",
+    "subtitle": "Impresión de formato estándar de alta calidad para todas las necesidades de tu negocio",
+    "aiGeneratedDesign": "Diseño Generado por IA",
+    "customDesign": "Diseño Personalizado",
+    "readyForPrinting": "Listo para Imprimir",
+    "yourAiGeneratedDesign": "Tu Diseño Generado por IA",
+    "yourCustomDesign": "Tu Diseño Personalizado",
+    "aiGenerated": "Generado por IA",
+    "manuallyCreated": "Creado Manualmente",
+    "aiDesignReady": "Tu diseño generado por IA está listo para imprimir. Selecciona tu material y tamaño preferido a continuación.",
+    "customDesignReady": "Tu diseño personalizado está listo para imprimir. Selecciona tu material y tamaño preferido a continuación.",
+    "selectMaterial": "Seleccionar Material",
+    "from": "Desde",
+    "doubleSided": "Doble Cara",
+    "sizeAndOptions": "Tamaño y Opciones",
+    "materialSize": "Tamaño del Material",
+    "printSides": "Lados de Impresión",
+    "singleSided": "Una Cara",
+    "quantity": "Cantidad",
+    "uploadOrCreateDesign": "Subir o Crear tu Diseño",
+    "dropFilesHere": "Suelta tus archivos aquí",
+    "supportedFormats": "Soporte: PDF, PNG, JPG, AI, PSD, ZIP (Máx 50MB)",
+    "chooseFiles": "Elegir Archivos",
+    "uploadedFiles": "Archivos Subidos:",
+    "orCreateCustomDesign": "O crea un diseño personalizado:",
+    "customizeDesign": "Personalizar Diseño",
+    "designTip": "💡 <strong>Consejo:</strong> ¡Después de crear tu diseño, haz clic en \"Guardar Diseño\" para verlo aquí!",
+    "currentDesign": "Diseño Actual",
+    "customUpload": "Subida Personalizada",
+    "replace": "Reemplazar",
+    "edit": "Editar",
+    "designLoaded": "Diseño Cargado",
+    "yourCustomDesignReady": "Tu diseño personalizado está listo.",
+    "yourAiDesignReady": "Tu diseño generado por IA está listo.",
+    "editDesign": "Editar Diseño",
+    "designGuidelines": "Pautas de Diseño:",
+    "minimumResolution": "• Resolución mínima de 300 DPI",
+    "includeBleed": "• Incluir 0.125\" de sangrado para diseños de cobertura completa",
+    "cmykColorMode": "• Modo de color CMYK preferido",
+    "orderSummary": "Resumen del Pedido",
+    "size": "Tamaño:",
+    "print": "Impresión:",
+    "design": "Diseño:",
+    "ready": "✓ Listo",
+    "unitPrice": "Precio Unitario:",
+    "total": "Total:",
+    "addToCart": "Agregar al Carrito",
+    "requestCustomQuote": "Solicitar Cotización Personalizada",
+    "productionInfo": "Información de Producción",
+    "turnaround": "Tiempo de Entrega:",
+    "businessDays": "1-2 días hábiles",
+    "shipping": "Envío:",
+    "available": "Disponible",
+    "pickup": "Recogida:",
+    "sameDay": "Mismo día",
+    "loginRequired": "Inicio de Sesión Requerido",
+    "loginToCreateDesigns": "Por favor inicia sesión para crear diseños personalizados.",
+    "cartNotAvailable": "El carrito no está disponible. Por favor actualiza la página e intenta de nuevo.",
+    "addedToCart": "¡Agregado al carrito!",
+    "custom": "Personalizado",
+    "aiGeneratedDesignReady": "Tu diseño generado por IA está listo.",
+    "yourCustomDesignReady": "Tu diseño personalizado está listo.",
+    "materials": {
+      "foldcote14": {
+        "name": "FOLDCOTE 14",
+        "description": "Papel recubierto premium con excelente calidad de impresión y durabilidad"
+      },
+      "adhesivo": {
+        "name": "ADHESIVO",
+        "description": "Calcomanías de vinilo de alta calidad con respaldo adhesivo fuerte"
+      },
+      "couche": {
+        "name": "COUCHE",
+        "description": "Papel recubierto suave perfecto para impresión a color de alta calidad"
+      },
+      "bond": {
+        "name": "BOND",
+        "description": "Papel de oficina estándar para necesidades de impresión diarias"
+      },
+      "etiquetaEspecial": {
+        "name": "ETIQUETA ESPECIAL",
+        "description": "Etiquetas especiales premium para aplicaciones profesionales"
+      },
+      "vinylBanner": {
+        "name": "BANNER DE VINILO",
+        "description": "Material de vinilo duradero perfecto para señalización exterior e impresión de gran formato"
+      },
+      "troquelate": {
+        "name": "TROQUELATE",
+        "description": "Material especial troquelado para formas personalizadas y aplicaciones profesionales"
+      },
+      "canvas": {
+        "name": "CANVAS",
+        "description": "Material de lienzo de alta calidad ideal para impresiones artísticas y exhibiciones de gran formato"
+      }
+    }
+  },
+  "services": {
+    "hero": {
+      "title": "Servicios de Impresión Profesional",
+      "description": "Desde impresión digital hasta señalización a gran escala, ofrecemos soluciones de impresión completas para todas tus necesidades comerciales.",
+      "getStarted": "Comenzar",
+      "requestQuote": "Solicitar Cotización"
+    },
+    "ourServices": {
+      "title": "Nuestros Servicios",
+      "description": "Descubre nuestra gama completa de servicios de impresión profesional diseñados para hacer crecer tu negocio."
+    },
+    "features": "Características",
+    "startingFrom": "Desde",
+    "explore": "Explorar",
+    "whyChoose": {
+      "title": "¿Por Qué Elegir Nuestros Servicios?",
+      "description": "Nos comprometemos a entregar calidad excepcional y servicio confiable para todos tus proyectos de impresión."
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "description": "Pasos simples para completar tu proyecto de impresión",
+      "steps": {
+        "chooseService": {
+          "title": "Elegir Servicio",
+          "description": "Selecciona el servicio de impresión que se adapte a tus necesidades"
+        },
+        "uploadDesign": {
+          "title": "Subir Diseño",
+          "description": "Sube tu diseño o crea uno usando nuestras herramientas de IA"
+        },
+        "reviewOrder": {
+          "title": "Revisar Pedido",
+          "description": "Confirma los detalles de tu pedido y especificaciones"
+        },
+        "getDelivered": {
+          "title": "Recibir Entrega",
+          "description": "Recibe tu producto impreso de alta calidad"
+        }
+      }
+    },
+    "cta": {
+      "title": "¿Listo para Comenzar tu Proyecto?",
+      "description": "Obtén servicios de impresión profesional con entrega rápida y calidad garantizada.",
+      "startDigitalPrinting": "Comenzar Impresión Digital",
+      "requestCustomQuote": "Solicitar Cotización Personalizada"
+    },
+    "digital_printing": {
+      "title": "Servicios de Impresión Digital",
+      "description": "Impresión digital de alta calidad para todos tus proyectos",
+      "materials": {
+        "foldcote": "FOLDCOTE 14 - Papel premium con excelente calidad de impresión",
+        "adhesive": "ADHESIVO - Etiquetas adhesivas de alta calidad",
+        "couche": "COUCHE - Papel estucado suave perfecto para impresión a color",
+        "bond": "BOND - Papel estándar para impresión cotidiana",
+        "special_label": "ETIQUETA ESPECIAL - Etiquetas premium para aplicaciones profesionales",
+        "vinyl_banner": "BANNER VINÍLICO - Material vinílico duradero para señalización"
+      }
+    },
+    "large_format": {
+      "title": "Impresión de Gran Formato",
+      "description": "Banners profesionales, pósters y impresión especializada a gran escala",
+      "products": {
+        "vinyl_banners": "Banners Vinílicos",
+        "vinyl_description": "Banners vinílicos duraderos perfectos para publicidad exterior y eventos",
+        "die_cuts": "Troquelados",
+        "die_cuts_description": "Formas troqueladas de precisión y cortes personalizados",
+        "banner": {
+          "name": "BANNER",
+          "description": "Banners de vinilo duraderos perfectos para publicidad exterior y eventos"
+        },
+        "troquelados": {
+          "name": "TROQUELADOS",
+          "description": "Formas troqueladas de precisión y recortes personalizados"
+        }
+      }
+    },
+    "event_stands": {
+      "title": "Stands y Estructuras para Eventos",
+      "description": "Displays profesionales para ferias comerciales y soluciones de montaje para eventos",
+      "products": {
+        "popup_stands": "Stands Pop-up",
+        "popup_description": "Stands portátiles y fáciles de montar perfectos para ferias y eventos",
+        "banner_stands": "Stands para Banners",
+        "banner_description": "Stands retráctiles para presentaciones profesionales y displays de marketing",
+        "trade_show": "Displays para Ferias",
+        "trade_show_description": "Soluciones completas para stands de feria con componentes modulares",
+        "backdrop_stands": "Stands para Fondos",
+        "backdrop_description": "Fondos step and repeat perfectos para eventos y sesiones fotográficas",
+        "table_covers": "Manteles para Mesa",
+        "table_covers_description": "Manteles profesionales con impresión personalizada",
+        "popupStands": {
+          "name": "Stands Pop-up",
+          "description": "Stands de exhibición portátiles y fáciles de instalar, perfectos para ferias comerciales y eventos",
+          "features": ["Ensamblaje sin herramientas", "Marco de aluminio ligero", "Estuche de transporte incluido", "Tela resistente a arrugas"],
+          "category": "Stands de Exhibición"
+        },
+        "bannerStands": {
+          "name": "Stands de Banner",
+          "description": "Stands de banner retráctiles para presentaciones profesionales y exhibiciones de marketing",
+          "features": ["Mecanismo retráctil", "Altura ajustable", "Estuche de transporte acolchado", "Cambio fácil de gráficos"],
+          "category": "Exhibiciones de Banner"
+        },
+        "tradeShowDisplays": {
+          "name": "Exhibiciones para Ferias Comerciales",
+          "description": "Soluciones completas de booth para ferias comerciales con componentes modulares",
+          "features": ["Diseño modular", "Opciones de iluminación LED", "Compartimentos de almacenamiento", "Instalación profesional"],
+          "category": "Feria Comercial"
+        },
+        "backdropStands": {
+          "name": "Stands de Fondo",
+          "description": "Fondos step and repeat perfectos para eventos, sesiones de fotos y branding",
+          "features": ["Marco telescópico", "Tela libre de arrugas", "Ensamblaje fácil", "Estuche de transporte portátil"],
+          "category": "Fondos para Eventos"
+        },
+        "tableCovers": {
+          "name": "Manteles para Mesa",
+          "description": "Manteles profesionales con impresión personalizada para eventos y ferias comerciales",
+          "features": ["Lavable a máquina", "Resistente a arrugas", "Retardante de llama", "Impresión personalizada"],
+          "category": "Manteles de Mesa"
+        }
+      }
+    },
+    "illuminated_signs": {
+      "title": "Letreros Luminosos",
+      "description": "Letreros LED profesionales, displays retroiluminados y soluciones de señalización digital",
+      "products": {
+        "led_letters": "Letras LED",
+        "led_description": "Letras LED tridimensionales con eficiencia energética",
+        "backlit_signs": "Letreros Retroiluminados",
+        "backlit_description": "Letreros profesionales retroiluminados con iluminación uniforme",
+        "light_boxes": "Cajas de Luz",
+        "light_box_description": "Cajas de luz tradicionales con tecnología LED moderna",
+        "led_neon": "LED Neón",
+        "led_neon_description": "Tiras LED neón modernas que replican el neón tradicional",
+        "digital_displays": "Pantallas Digitales",
+        "digital_description": "Letreros con pantalla digital para contenido dinámico",
+        "cabinet_signs": "Letreros de Gabinete",
+        "cabinet_description": "Letreros de gabinete iluminados con apariencia profesional"
+      }
+    },
+    "digitalPrinting": {
+      "title": "Impresión Digital",
+      "description": "Impresión digital de alta calidad para todas tus necesidades comerciales",
+      "turnaround": "1-3 días hábiles"
+    },
+    "largeFormat": {
+      "title": "Impresión de Gran Formato",
+      "description": "Impresión profesional de gran formato para banners, pósters y señalización",
+      "turnaround": "2-5 días hábiles",
+      "features": {
+        "banner": "Banners Vinílicos",
+        "troquelados": "Formas Troqueladas",
+        "customSizes": "Tamaños Personalizados",
+        "weatherResistant": "Resistente al Clima"
+      },
+      "products": {
+        "banner": {
+          "name": "BANNER",
+          "description": "Banners de vinilo duraderos perfectos para publicidad exterior y eventos"
+        },
+        "troquelados": {
+          "name": "TROQUELADOS",
+          "description": "Formas troqueladas de precisión y recortes personalizados"
+        }
+      }
+    },
+    "eventStands": {
+      "title": "Stands para Eventos",
+      "description": "Soluciones profesionales de display para ferias comerciales, eventos y presentaciones",
+      "turnaround": "3-7 días hábiles",
+      "features": {
+        "popupStands": "Stands Pop-up",
+        "tradeShowDisplays": "Displays para Ferias",
+        "tableCovers": "Manteles para Mesa",
+        "setupIncluded": "Montaje Incluido"
+      },
+      "products": {
+        "popupStands": {
+          "name": "Stands Pop-up",
+          "description": "Stands de exhibición portátiles y fáciles de instalar, perfectos para ferias comerciales y eventos",
+          "features": ["Ensamblaje sin herramientas", "Marco de aluminio ligero", "Estuche de transporte incluido", "Tela resistente a arrugas"],
+          "category": "Stands de Exhibición",
+          "unit": "por stand"
+        },
+        "bannerStands": {
+          "name": "Stands de Banner",
+          "description": "Stands de banner retráctiles para presentaciones profesionales y exhibiciones de marketing",
+          "features": ["Mecanismo retráctil", "Altura ajustable", "Estuche de transporte acolchado", "Cambio fácil de gráficos"],
+          "category": "Exhibiciones de Banner",
+          "unit": "por stand"
+        },
+        "tradeShowDisplays": {
+          "name": "Exhibiciones para Ferias Comerciales",
+          "description": "Soluciones completas de booth para ferias comerciales con componentes modulares",
+          "features": ["Diseño modular", "Opciones de iluminación LED", "Compartimentos de almacenamiento", "Instalación profesional"],
+          "category": "Feria Comercial",
+          "unit": "por booth"
+        },
+        "backdropStands": {
+          "name": "Stands de Fondo",
+          "description": "Fondos step and repeat perfectos para eventos, sesiones de fotos y branding",
+          "features": ["Marco telescópico", "Tela libre de arrugas", "Ensamblaje fácil", "Estuche de transporte portátil"],
+          "category": "Fondos para Eventos",
+          "unit": "por backdrop"
+        },
+        "tableCovers": {
+          "name": "Manteles para Mesa",
+          "description": "Manteles profesionales con impresión personalizada para eventos y ferias comerciales",
+          "features": ["Lavable a máquina", "Resistente a arrugas", "Retardante de llama", "Impresión personalizada"],
+          "category": "Manteles de Mesa",
+          "unit": "por mantel"
+        }
+      }
+    },
+    "illuminatedSigns": {
+      "title": "Letreros Iluminados",
+      "description": "Soluciones profesionales de señalización iluminada con tecnología LED eficiente",
+      "turnaround": "5-10 días hábiles",
+      "features": {
+        "ledChannelLetters": "Letras LED de Canal",
+        "backlitSigns": "Letreros Retroiluminados",
+        "digitalDisplays": "Pantallas Digitales",
+        "installation": "Instalación Disponible"
+      },
+      "products": {
+        "ledChannelLetters": {
+          "name": "Letras LED de Canal",
+          "description": "Letras iluminadas 3D premium con iluminación LED para máxima visibilidad e impacto",
+          "features": ["Letras dimensionales 3D", "LEDs eficientes energéticamente", "Resistente al clima", "Colores personalizados disponibles"],
+          "category": "Letras de Canal",
+          "unit": "por letra"
+        },
+        "backlitSigns": {
+          "name": "Letreros Retroiluminados",
+          "description": "Letreros profesionales retroiluminados con iluminación uniforme para escaparates y negocios",
+          "features": ["Retroiluminación LED uniforme", "Material de cara translúcido", "Marco de aluminio", "Instalación fácil"],
+          "category": "Letreros Retroiluminados",
+          "unit": "por letrero"
+        },
+        "lightBoxSigns": {
+          "name": "Letreros de Caja de Luz",
+          "description": "Letreros de caja de luz tradicionales con tecnología LED moderna para iluminación brillante y uniforme",
+          "features": ["Tiras de luz LED", "Cara acrílica", "Marco de apertura rápida", "Montaje en pared o techo"],
+          "category": "Cajas de Luz",
+          "unit": "por letrero"
+        },
+        "neonStyleLed": {
+          "name": "LED Estilo Neón",
+          "description": "Tiras LED modernas que replican el neón tradicional con eficiencia energética",
+          "features": ["Tiras LED flexibles", "Múltiples opciones de color", "Regulable", "Instalación fácil"],
+          "category": "LED Neón",
+          "unit": "por pie lineal"
+        },
+        "digitalDisplaySigns": {
+          "name": "Letreros de Pantalla Digital",
+          "description": "Pantallas LED de alta resolución para contenido dinámico y máximo impacto visual",
+          "features": ["Resolución Full HD", "Gestión remota de contenido", "Opciones resistentes al clima", "Software de programación"],
+          "category": "Pantallas Digitales",
+          "unit": "por pantalla"
+        },
+        "cabinetSigns": {
+          "name": "Letreros de Gabinete",
+          "description": "Letreros de gabinete iluminados con apariencia profesional para negocios y escaparates",
+          "features": ["Construcción de aluminio", "Iluminación LED", "Paneles translúcidos", "Instalación profesional"],
+          "category": "Letreros de Gabinete",
+          "unit": "por letrero"
+        }
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar Sesión",
+      "welcome": "Bienvenido de vuelta a DeliveryPrint",
+      "emailPlaceholder": "Dirección de correo electrónico",
+      "passwordPlaceholder": "Contraseña",
+      "signIn": "Iniciar Sesión",
+      "signingIn": "Iniciando sesión...",
+      "testAccounts": "Cuentas de Prueba",
+      "testCredentials": "Credenciales de Prueba (contraseña: testpass123):",
+      "adminAccount": "Administrador",
+      "customerAccount": "Cliente",
+      "operatorAccount": "Operador",
+      "noAccount": "¿No tienes una cuenta?",
+      "signUp": "Registrarse",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "loginSuccess": "¡Sesión iniciada exitosamente!",
+      "unexpectedError": "Ocurrió un error inesperado"
+    },
+    "register": {
+      "title": "Crear una cuenta",
+      "subtitle": "Únete a nuestra plataforma de impresión bajo demanda",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "password": "Contraseña",
+      "accountType": "Tipo de cuenta",
+      "customerRole": "Cliente - Ordena productos impresos personalizados",
+      "supplierRole": "Proveedor - Vende productos en nuestra plataforma",
+      "acceptTerms": "Acepto los",
+      "termsAndConditions": "términos y condiciones",
+      "createAccount": "Crear cuenta",
+      "creatingAccount": "Creando cuenta...",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar sesión",
+      "passwordReq": {
+        "minLength": "Al menos 8 caracteres",
+        "uppercase": "Una letra mayúscula",
+        "lowercase": "Una letra minúscula",
+        "number": "Un número",
+        "special": "Un carácter especial"
+      },
+      "errors": {
+        "profileCreation": "Error al crear el perfil de usuario. Inténtalo de nuevo.",
+        "emailExists": "Este correo ya está registrado. Usa un correo diferente o intenta iniciar sesión.",
+        "registrationFailed": "El registro falló. Inténtalo de nuevo."
+      }
+    },
+    "resetPassword": {
+      "title": "Restablecer Contraseña",
+      "verifyingToken": "Verificando token de restablecimiento...",
+      "invalidResetLink": "Enlace de restablecimiento inválido. Por favor solicita un nuevo restablecimiento de contraseña.",
+      "invalidOrExpiredToken": "Token inválido o expirado.",
+      "invalidResetLinkTitle": "Enlace de Restablecimiento Inválido",
+      "requestNewResetLink": "Solicitar Nuevo Enlace de Restablecimiento",
+      "backToLogin": "Volver al Inicio de Sesión",
+      "successTitle": "Contraseña Restablecida Exitosamente",
+      "successDescription": "Tu contraseña ha sido restablecida exitosamente.",
+      "signInWithNewPassword": "Iniciar Sesión con Nueva Contraseña",
+      "resettingPasswordFor": "Restableciendo contraseña para {{email}}",
+      "newPassword": "Nueva Contraseña",
+      "newPasswordPlaceholder": "Ingresa nueva contraseña",
+      "confirmNewPassword": "Confirmar Nueva Contraseña",
+      "confirmNewPasswordPlaceholder": "Confirma nueva contraseña",
+      "passwordMustContain": "La contraseña debe contener:",
+      "atLeast8Characters": "Al menos 8 caracteres",
+      "oneLowercaseLetter": "Una letra minúscula",
+      "oneUppercaseLetter": "Una letra mayúscula",
+      "oneNumber": "Un número",
+      "passwordsDoNotMatch": "Las contraseñas no coinciden",
+      "resetPasswordButton": "Restablecer Contraseña",
+      "resettingPassword": "Restableciendo Contraseña..."
+    }
+  },
+  "products": {
+    "catalog": {
+      "title": "Catálogo de Productos",
+      "description": "Explora nuestra colección de productos personalizables"
+    },
+    "search": {
+      "placeholder": "Buscar productos..."
+    },
+    "filters": {
+      "allCategories": "Todas las Categorías",
+      "sortBy": "Ordenar por",
+      "name": "Nombre",
+      "priceLowToHigh": "Precio: Menor a Mayor",
+      "priceHighToLow": "Precio: Mayor a Menor",
+      "newest": "Más Recientes"
+    },
+    "customizable": "Personalizable",
+    "customize": "Personalizar",
+    "noProductsFound": "No se encontraron productos que coincidan con tus criterios",
+    "custom_tshirt": "Camiseta Personalizada",
+    "custom_tshirt_description": "Diseña tu propia camiseta única",
+    "mug_printing": "Impresión en Tazas",
+    "mug_description": "Tazas personalizadas para cualquier ocasión",
+    "poster_design": "Diseño de Pósters",
+    "poster_description": "Pósters personalizados de alta calidad",
+    "business_cards": "Tarjetas de Presentación",
+    "business_cards_description": "Impresión profesional de tarjetas de presentación",
+    "add_to_cart": "Agregar al Carrito",
+    "view_details": "Ver Detalles",
+    "price_from": "Desde",
+    "no_description": "Descripción no disponible",
+    "loading": "Cargando productos...",
+    "error_loading": "Error al cargar productos"
+  },
+  "cart": {
+    "title": "Carrito de Compras",
+    "empty": "Tu carrito está vacío",
+    "continue_shopping": "Continuar Comprando",
+    "item": "Artículo",
+    "items": "artículos",
+    "quantity": "Cantidad",
+    "price": "Precio",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Impuestos",
+    "shipping": "Envío",
+    "grand_total": "Total General",
+    "checkout": "Proceder al Pago",
+    "remove": "Eliminar",
+    "update": "Actualizar",
+    "item_added": "Artículo Agregado",
+    "item_added_description": "El artículo se agregó exitosamente a tu carrito",
+    "browseProducts": "Explorar Productos"
+  },
+  "checkout": {
+    "title": "Finalizar Compra",
+    "billing_info": "Información de Facturación",
+    "shipping_info": "Información de Envío",
+    "payment_method": "Método de Pago",
+    "order_summary": "Resumen del Pedido",
+    "place_order": "Realizar Pedido",
+    "processing": "Procesando...",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Estado/Provincia",
+    "zip_code": "Código Postal",
+    "country": "País",
+    "same_as_billing": "Igual que la dirección de facturación",
+    "credit_card": "Tarjeta de Crédito",
+    "paypal": "PayPal",
+    "card_number": "Número de Tarjeta",
+    "expiry_date": "Fecha de Vencimiento",
+    "cvv": "CVV",
+    "cardholder_name": "Nombre del Titular",
+    "emptyCart": {
+      "title": "Tu carrito está vacío",
+      "description": "Agrega algunos productos a tu carrito para proceder con la compra.",
+      "browseProducts": "Explorar Productos"
+    }
+  },
+  "orders": {
+    "title": "Mis Pedidos",
+    "no_orders": "No has realizado ningún pedido aún",
+    "no_matches": "Ningún pedido coincide con tus filtros actuales",
+    "order_number": "Número de Pedido",
+    "date": "Fecha",
+    "status": "Estado",
+    "total": "Total",
+    "view_details": "Ver Detalles",
+    "search_placeholder": "Buscar por número de pedido o correo",
+    "all_statuses": "Todos los Estados",
+    "all_time": "Todo el Tiempo",
+    "filter_by_status": "Filtrar por Estado",
+    "filter_by_date": "Filtrar por Fecha",
+    "statuses": {
+      "pending": "Pendiente",
+      "processing": "Procesando",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado"
+    },
+    "order_details": "Detalles del Pedido",
+    "download_all": "Descargar Todo",
+    "print_invoice": "Imprimir Factura",
+    "downloading": "Descargando...",
+    "generating": "Generando...",
+    "customer_info": "Información del Cliente",
+    "billing_address": "Dirección de Facturación",
+    "shipping_address": "Dirección de Envío",
+    "payment_info": "Información de Pago",
+    "order_items": "Artículos del Pedido"
+  },
+  "payment": {
+    "processing": "Procesando tu pago...",
+    "please_wait": "Por favor espera mientras confirmamos tu pago...",
+    "successful": "¡Pago Exitoso!",
+    "failed": "Pago Fallido",
+    "cancelled": "Pago Cancelado",
+    "success_description": "Tu pago de PayPal ha sido procesado exitosamente",
+    "failed_description": "Hubo un problema al procesar tu pago",
+    "cancelled_description": "Cancelaste el proceso de pago de PayPal",
+    "verifying": "Verificando pago con PayPal...",
+    "confirmed": "¡Pago confirmado! Actualizando tu pedido...",
+    "error_processing": "Error al procesar el pago",
+    "try_again": "Intentar de Nuevo",
+    "back_to_orders": "Volver a Pedidos"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "personal_info": "Información Personal",
+    "contact_info": "Información de Contacto",
+    "address_info": "Información de Dirección",
+    "save_changes": "Guardar Cambios",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "update_success": "Perfil actualizado exitosamente",
+    "update_error": "Error al actualizar el perfil"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Panel de Control",
+      "description": "Bienvenido al panel de administración de DeliveryPrint",
+      "stats": {
+        "totalRevenue": "Ingresos Totales",
+        "totalOrders": "Pedidos Totales",
+        "totalUsers": "Usuarios Totales",
+        "totalProducts": "Productos Totales"
+      },
+      "quickStats": {
+        "pendingOrders": "Pedidos Pendientes",
+        "completedOrders": "Pedidos Completados",
+        "pendingQuotes": "Cotizaciones Pendientes",
+        "activeUsers": "Usuarios Activos"
+      },
+      "charts": {
+        "revenueOverview": "Resumen de Ingresos",
+        "revenueDescription": "Tendencias mensuales de ingresos y pedidos",
+        "orderStatusDistribution": "Distribución de Estado de Pedidos",
+        "orderStatusDescription": "Desglose actual del estado de pedidos"
+      },
+      "orderStatus": {
+        "completed": "Completado",
+        "processing": "Procesando",
+        "pending": "Pendiente",
+        "cancelled": "Cancelado"
+      },
+      "recentOrders": {
+        "title": "Pedidos Recientes",
+        "description": "Últimos pedidos de clientes"
+      },
+      "recentUsers": {
+        "title": "Usuarios Recientes",
+        "description": "Usuarios recién registrados"
+      },
+      "orderNumber": "Pedido #ORD-{{number}}",
+      "customer": "Cliente {{number}}",
+      "user": "Usuario {{number}}",
+      "customerRole": "Cliente",
+      "viewAllOrders": "Ver Todos los Pedidos",
+      "viewAllUsers": "Ver Todos los Usuarios"
+    },
+    "orders": "Gestión de Pedidos",
+    "products": "Gestión de Productos",
+    "users": "Gestión de Usuarios",
+    "settings": "Configuración del Sistema",
+    "analytics": "Analíticas",
+    "reports": "Reportes"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "remove": "Eliminar",
+    "update": "Actualizar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "continue": "Continuar",
+    "finish": "Finalizar",
+    "submit": "Enviar",
+    "reset": "Restablecer",
+    "clear": "Limpiar",
+    "select": "Seleccionar",
+    "choose": "Elegir",
+    "upload": "Subir",
+    "download": "Descargar",
+    "print": "Imprimir",
+    "share": "Compartir",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "cut": "Cortar",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "refresh": "Actualizar",
+    "reload": "Recargar",
+    "retry": "Reintentar",
+    "skip": "Omitir",
+    "help": "Ayuda",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "faq": "Preguntas Frecuentes",
+    "support": "Soporte",
+    "feedback": "Comentarios",
+    "report": "Reportar",
+    "settings": "Configuración",
+    "preferences": "Preferencias",
+    "account": "Cuenta",
+    "profile": "Perfil",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "menu": "Menú",
+    "more": "Más",
+    "less": "Menos",
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "maximize": "Maximizar",
+    "minimize": "Minimizar",
+    "fullscreen": "Pantalla Completa",
+    "exit_fullscreen": "Salir de Pantalla Completa",
+    "learn_more": "Saber más",
+    "start_designing": "Comenzar a diseñar",
+    "displaying_sample": "Mostrando productos de muestra"
+  },
+  "errors": {
+    "generic": "Ha ocurrido un error inesperado",
+    "network": "Error de conexión. Verifica tu conexión a internet",
+    "server": "Error del servidor. Inténtalo de nuevo más tarde",
+    "not_found": "Página no encontrada",
+    "unauthorized": "No autorizado. Inicia sesión para continuar",
+    "forbidden": "Acceso denegado",
+    "validation": "Por favor verifica los datos ingresados",
+    "required_field": "Este campo es obligatorio",
+    "invalid_email": "Correo electrónico inválido",
+    "invalid_phone": "Número de teléfono inválido",
+    "password_too_short": "La contraseña debe tener al menos 8 caracteres",
+    "passwords_dont_match": "Las contraseñas no coinciden",
+    "file_too_large": "El archivo es demasiado grande",
+    "invalid_file_type": "Tipo de archivo no válido",
+    "upload_failed": "Error al subir el archivo",
+    "download_failed": "Error al descargar el archivo",
+    "payment_failed": "Error en el pago",
+    "order_failed": "Error al procesar el pedido",
+    "out_of_stock": "Producto agotado",
+    "invalid_quantity": "Cantidad inválida",
+    "cart_empty": "El carrito está vacío",
+    "session_expired": "Sesión expirada. Inicia sesión nuevamente"
+  },
+  "design": {
+    "custom_design": "Diseño Personalizado",
+    "ai_generated": "Generado por IA",
+    "upload_design": "Subir Diseño",
+    "create_design": "Crear Diseño",
+    "save_design": "Guardar Diseño",
+    "design_saved": "Diseño Guardado",
+    "design_saved_description": "Tu diseño personalizado ha sido guardado y se aplicará a tu pedido",
+    "design_requirements": "Describe los requisitos de tu diseño, colores, logos, texto, etc.",
+    "current_design": "Diseño Actual",
+    "ready_for_printing": "Listo para Impresión",
+    "tip": "Consejo: Después de crear tu diseño, haz clic en 'Guardar Diseño' para verlo aquí"
+  },
+  "features": {
+    "lightweight_frame": "Marco de aluminio liviano",
+    "carrying_case": "Estuche de transporte incluido",
+    "easy_setup": "Fácil instalación",
+    "weather_resistant": "Resistente al clima",
+    "retractable_mechanism": "Mecanismo retráctil",
+    "adjustable_height": "Altura ajustable",
+    "padded_case": "Estuche acolchado",
+    "easy_graphic_change": "Cambio fácil de gráficos",
+    "modular_design": "Diseño modular",
+    "led_lighting": "Opciones de iluminación LED",
+    "storage_compartments": "Compartimentos de almacenamiento",
+    "professional_setup": "Instalación profesional",
+    "telescopic_frame": "Marco telescópico",
+    "wrinkle_free": "Libre de arrugas",
+    "easy_assembly": "Fácil ensamblaje",
+    "portable_case": "Estuche portátil",
+    "machine_washable": "Lavable a máquina",
+    "wrinkle_resistant": "Resistente a arrugas",
+    "flame_retardant": "Retardante de llama",
+    "custom_printing": "Impresión personalizada",
+    "energy_efficient": "Eficiencia energética",
+    "dimensional_letters": "Letras tridimensionales",
+    "custom_colors": "Colores personalizados",
+    "even_backlighting": "Retroiluminación uniforme",
+    "translucent_material": "Material translúcido",
+    "aluminum_frame": "Marco de aluminio",
+    "easy_installation": "Fácil instalación",
+    "led_strips": "Tiras LED",
+    "acrylic_face": "Cara acrílica",
+    "snap_open_frame": "Marco de apertura rápida",
+    "wall_ceiling_mount": "Montaje en pared o techo",
+    "flexible_strips": "Tiras flexibles",
+    "multiple_colors": "Múltiples opciones de color",
+    "dimmable": "Regulable",
+    "hd_resolution": "Resolución HD completa",
+    "remote_management": "Gestión remota de contenido",
+    "scheduling_software": "Software de programación",
+    "aluminum_construction": "Construcción de aluminio",
+    "led_illumination": "Iluminación LED",
+    "translucent_panels": "Paneles translúcidos"
+  },
+  "units": {
+    "per_piece": "por pieza",
+    "per_sq_meter": "por metro cuadrado",
+    "per_letter": "por letra",
+    "per_sign": "por letrero",
+    "per_linear_foot": "por pie lineal",
+    "per_display": "por pantalla",
+    "contact_quote": "Contactar para cotización"
+  },
+  "categories": {
+    "display_stands": "Stands de Display",
+    "banner_displays": "Displays de Banner",
+    "trade_show": "Feria Comercial",
+    "event_backdrops": "Fondos para Eventos",
+    "table_covers": "Manteles de Mesa",
+    "channel_letters": "Letras de Canal",
+    "backlit_signs": "Letreros Retroiluminados",
+    "light_boxes": "Cajas de Luz",
+    "led_neon": "LED Neón",
+    "digital_displays": "Pantallas Digitales",
+    "cabinet_signs": "Letreros de Gabinete"
+  },
+  "process": {
+    "step_1": "Elegir Servicio",
+    "step_1_description": "Selecciona el servicio de impresión que se adapte a tus necesidades",
+    "step_2": "Configurar y Subir",
+    "step_2_description": "Personaliza las opciones y sube tus archivos de diseño",
+    "step_3": "Revisar y Ordenar",
+    "step_3_description": "Revisa los detalles de tu pedido y completa el pago",
+    "step_4": "Producción y Entrega",
+    "step_4_description": "Imprimimos y entregamos tu pedido a tiempo"
+  },
+  "common": {
+    "learn_more": "Saber Más",
+    "start_designing": "Comenzar a Diseñar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "displaying_sample": "Mostrando productos de muestra en su lugar."
+  },
+  "home_services": {
+    "digital_printing": "Impresión Digital",
+    "digital_printing_description": "Impresiones de alta resolución para folletos, volantes y diseños personalizados.",
+    "large_format": "Gran Formato",
+    "large_format_description": "Banners, pósters y letreros para máximo impacto.",
+    "design_studio": "Estudio de Diseño",
+    "design_studio_description": "Crea diseños impresionantes con nuestras herramientas de IA o ayuda profesional."
+  },
+  "products": {
+    "add_to_cart": "Agregar al Carrito",
+    "catalog": {
+      "title": "Catálogo de Productos",
+      "description": "Explora nuestra colección de productos personalizables"
+    },
+    "search": {
+      "placeholder": "Buscar productos..."
+    },
+    "filters": {
+      "allCategories": "Todas las Categorías",
+      "sortBy": "Ordenar por",
+      "name": "Nombre",
+      "priceLowToHigh": "Precio: Menor a Mayor",
+      "priceHighToLow": "Precio: Mayor a Menor",
+      "newest": "Más Recientes"
+    },
+    "card": {
+      "customizable": "Personalizable",
+      "customize": "Personalizar"
+    },
+    "noProductsFound": "No se encontraron productos que coincidan con tus criterios"
+  },
+  "services": {
+    "hero": {
+      "title": "Servicios de Impresión Profesional",
+      "description": "Soluciones de impresión de alta calidad para todas tus necesidades comerciales y personales",
+      "getStarted": "Comenzar",
+      "requestQuote": "Solicitar Cotización"
+    },
+    "ourServices": {
+      "title": "Nuestros Servicios",
+      "description": "Descubre nuestra gama completa de servicios de impresión profesional"
+    },
+    "features": "Características",
+    "startingFrom": "Desde",
+    "explore": "Explorar",
+    "whyChoose": {
+      "title": "¿Por Qué Elegir Nuestros Servicios?",
+      "description": "Ofrecemos calidad superior, entrega rápida y precios competitivos"
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "description": "Pasos simples para completar tu proyecto de impresión",
+      "steps": {
+        "chooseService": {
+          "title": "Elegir Servicio",
+          "description": "Selecciona el servicio de impresión que se adapte a tus necesidades"
+        },
+        "configureUpload": {
+          "title": "Configurar y Subir",
+          "description": "Personaliza las opciones y sube tus archivos de diseño"
+        },
+        "reviewOrder": {
+          "title": "Revisar y Ordenar",
+          "description": "Revisa los detalles de tu pedido y completa el pago"
+        },
+        "productionDelivery": {
+          "title": "Producción y Entrega",
+          "description": "Imprimimos y entregamos tu pedido a tiempo"
+        }
+      }
+    },
+    "cta": {
+      "title": "¿Listo para Comenzar tu Proyecto?",
+      "description": "Obtén servicios de impresión profesional con calidad garantizada y entrega rápida",
+      "startDigitalPrinting": "Comenzar Impresión Digital",
+      "requestCustomQuote": "Solicitar Cotización Personalizada"
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "Bienvenido de vuelta, {{name}}",
+    "welcomeDesc": "Gestiona tus pedidos, diseños y configuración de cuenta desde aquí.",
+    "welcome": {
+      "title": "¡Bienvenido {{name}}",
+      "message": "Tu cuenta ha sido creada exitosamente. ¡Explora nuestros servicios y comienza a crear!"
+    },
+    "authRequired": "Autenticación Requerida",
+    "authRequiredDesc": "Debes iniciar sesión para acceder al panel de control.",
+    "goToLogin": "Ir a Iniciar Sesión",
+    "tabs": {
+      "myOrders": "Mis Pedidos",
+      "myDesigns": "Mis Diseños",
+      "digitalProducts": "Productos Digitales",
+      "account": "Cuenta"
+    },
+    "orders": {
+      "recentOrders": "Pedidos Recientes",
+      "trackOrders": "Rastrea y gestiona tus pedidos",
+      "noOrders": "No tienes pedidos aún",
+      "startShopping": "Comenzar a Comprar"
+    },
+    "designs": {
+      "title": "Mis Diseños",
+      "description": "Gestiona tus diseños personalizados",
+      "noDesigns": "No tienes diseños aún",
+      "createDesign": "Crear Diseño"
+    },
+    "digital": {
+      "title": "Productos Digitales",
+      "purchased": "Comprados",
+      "unpurchased": "Sin Comprar",
+      "createNew": "Crear Nuevo",
+      "noUnpurchased": "No tienes productos digitales sin comprar",
+      "createNewDesign": "Crear Nuevo Diseño",
+      "noPurchased": "No tienes productos digitales comprados",
+      "createFirstDesign": "Crear tu Primer Diseño",
+      "unpurchasedBadge": "Sin Comprar",
+      "purchasedBadge": "Comprado",
+      "created": "Creado el {{date}}",
+      "addToCart": "Agregar al Carrito - ${{price}}",
+      "downloadFormat": "Descargar {{format}}",
+      "downloading": "Descargando..."
+    },
+    "account": {
+      "title": "Información de la Cuenta",
+      "description": "Gestiona tu información personal",
+      "email": "Email",
+      "name": "Nombre",
+      "role": "Rol"
+    },
+    "download": {
+      "complete": "Descarga Completa",
+      "success": "{{name}} se ha descargado exitosamente"
+    },
+    "downloadFailed": "Error en la Descarga",
+    "downloadError": "Hubo un error al descargar el archivo. Por favor, inténtalo de nuevo.",
+    "cart": {
+      "error": "Error del Carrito",
+      "errorDesc": "Hubo un error al agregar el artículo al carrito"
+    }
+  },
+  "notifications": {
+    "addedToCart": "Agregado al Carrito",
+    "paymentSuccessful": "Pago Exitoso",
+    "paymentSuccessfulDesc": "Tu pago de PayPal ha sido procesado exitosamente.",
+    "designSaved": "¡Diseño Guardado Exitosamente! 🎨",
+    "requestSubmitted": "¡Solicitud Enviada Exitosamente!"
+  },
+  "designEditor": {
+    "title": "Editor de Diseño",
+    "errorLoading": "Error al Cargar el Editor de Diseño",
+    "uploadImageFile": "Por favor sube un archivo de imagen (PNG, JPG, JPEG, WEBP, GIF)",
+    "fileSizeLimit": "El tamaño del archivo debe ser menor a 10MB",
+    "designSaved": "¡Diseño Guardado Exitosamente! 🎨"
+  },
+  "forms": {
+    "validation": {
+      "nameRequired": "El nombre es obligatorio",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "phoneRequired": "El teléfono es obligatorio",
+      "messageRequired": "El mensaje es obligatorio",
+      "invalidEmail": "Por favor ingresa un correo electrónico válido",
+      "invalidPhone": "Por favor ingresa un número de teléfono válido"
+    },
+    "placeholders": {
+      "enterName": "Ingresa tu nombre",
+      "enterEmail": "Ingresa tu correo electrónico",
+      "enterPhone": "Ingresa tu número de teléfono",
+      "enterMessage": "Ingresa tu mensaje",
+      "searchOrders": "Buscar pedidos...",
+      "searchProducts": "Buscar productos...",
+      "filterByStatus": "Filtrar por estado",
+      "filterByDate": "Filtrar por fecha"
+    },
+    "buttons": {
+      "submit": "Enviar",
+      "submitQuoteRequest": "Enviar Solicitud de Cotización",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "update": "Actualizar",
+      "create": "Crear",
+      "addNew": "Agregar Nuevo",
+      "viewAll": "Ver Todo",
+      "loadMore": "Cargar Más",
+      "tryAgain": "Intentar de Nuevo",
+      "goBack": "Volver"
+    }
+  },
+  "modals": {
+    "quoteRequest": {
+      "title": "Solicitar Cotización",
+      "description": "Completa el formulario a continuación para solicitar una cotización personalizada"
+    },
+    "digitalProductChoice": {
+      "title": "Elige tu Opción de Entrega",
+      "description": "¿Cómo te gustaría recibir tu {{product}} generado por IA?",
+      "digitalDownload": "Descarga Digital",
+      "professionalPrinting": "Impresión Profesional"
+    }
+  },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página",
+    "of": "de",
+    "showing": "Mostrando",
+    "to": "a",
+    "results": "resultados"
+  },
+  "breadcrumb": {
+    "home": "Inicio",
+    "services": "Servicios",
+    "products": "Productos",
+    "dashboard": "Panel",
+    "admin": "Administración"
+  },
+  "sidebar": {
+    "dashboard": "Panel de Control",
+    "orders": "Pedidos",
+    "products": "Productos",
+    "users": "Usuarios",
+    "settings": "Configuración",
+    "analytics": "Analíticas",
+    "reports": "Reportes"
+  },
+  "testApp": {
+    "title": "Probar Aplicación Completa",
+    "tests": {
+      "authFlow": "Flujo de Autenticación",
+      "productCatalog": "Catálogo de Productos",
+      "cartFunctionality": "Funcionalidad del Carrito",
+      "checkoutProcess": "Proceso de Pago",
+      "orderManagement": "Gestión de Pedidos"
+    },
+    "status": {
+      "passed": "Aprobado",
+      "failed": "Fallido",
+      "running": "Ejecutándose",
+      "pending": "Pendiente"
+    },
+    "messages": {
+      "allTestsPassed": "¡Todas las pruebas pasaron exitosamente!",
+      "someTestsFailed": "Algunas pruebas fallaron. Por favor revisa los detalles.",
+      "testsRunning": "Las pruebas se están ejecutando actualmente...",
+      "noTestsRun": "No se han ejecutado pruebas aún."
+    }
+  },
+  "digitalDownloads": {
+    "tabs": {
+      "all": "Todo",
+      "images": "Imágenes",
+      "logos": "Logos",
+      "fonts": "Fuentes"
+    },
+    "badges": {
+      "new": "Nuevo",
+      "popular": "Popular",
+      "destacado": "Destacado"
+    },
+    "headings": {
+      "aiGeneratedImages": "Imágenes Generadas por IA",
+      "customLogos": "Logos Personalizados",
+      "premiumFonts": "Fuentes Premium"
+    }
+  }
+}

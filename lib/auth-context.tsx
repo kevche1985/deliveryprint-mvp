@@ -92,7 +92,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (data: SignUpData) => {
-    // ... your existing signUp implementation
+    try {
+      // Basic client-side validation (redundant with form but defensive)
+      if (!data.email || !data.password) {
+        throw new Error('Email and password are required')
+      }
+
+      // Perform Supabase sign up with user metadata
+      const { data: signUpResult, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            first_name: data.firstName,
+            last_name: data.lastName,
+            role: data.role,
+          },
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/auth/confirmed`,
+        },
+      })
+
+      if (error) {
+        console.error('Sign up error:', error)
+        throw error
+      }
+
+      // If sign-up succeeded, trigger confirmation email via API (custom flow)
+      const createdUser = signUpResult.user
+      const email = createdUser?.email || data.email
+
+      try {
+        await fetch('/api/auth/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: createdUser?.id,
+            email,
+            userName: data.firstName || email,
+          }),
+        })
+      } catch (mailErr) {
+        // Non-blocking: log but continue to check-email page
+        console.warn('Failed to trigger confirmation email:', mailErr)
+      }
+
+      // Navigate user to the check-email page
+      router.push(`/auth/check-email?email=${encodeURIComponent(email)}`)
+    } catch (err: any) {
+      // Map common errors to clearer messages
+      const msg = err?.message || 'Registration failed'
+      if (msg.toLowerCase().includes('already registered')) {
+        throw new Error('This email is already registered. Please sign in or use a different email.')
+      }
+      throw err
+    }
   }
 
   const signOut = async () => {
@@ -259,55 +312,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // ALL useEffect HOOKS
   useEffect(() => {
     initializeAuth()
   }, [])
 
-  useEffect(() => {
-    // Reduce frequency and add error handling for session checks
-    const interval = setInterval(async () => {
-      try {
-        const startTime = performance.now()
-        const { data: { session }, error } = await supabase.auth.getSession()
-        const endTime = performance.now()
-        
-        if (error) {
-          console.error('❌ Session check error:', error)
-          return
-        }
-        
-        console.log(`⏱️ Session check completed in ${(endTime - startTime).toFixed(2)}ms`)
-        
-        if (!session && user) {
-          console.log('🔄 Session expired, redirecting to login')
-          setUser(null)
-          setProfile(null)
-          router.push('/auth/login')
-        }
-      } catch (error) {
-        console.error('❌ Session check failed:', error)
-      }
-    }, 300000) // Increased to 5 minutes instead of 1 minute
-    
-    return () => clearInterval(interval)
-  }, [user, router])
-
-  // CONDITIONAL LOGIC LAST (AFTER ALL HOOKS)
-  const contextValue = {
-    user: initError ? null : user,
-    profile: initError ? null : profile,
-    loading: initError ? false : loading,
-    role: initError ? "customer" : role,
-    canManageStatus: initError ? false : canManageStatus,
-    signIn: initError ? async () => { throw new Error('Auth not available') } : signIn,
-    signUp: initError ? async () => { throw new Error('Auth not available') } : signUp,
-    signOut: initError ? async () => { throw new Error('Auth not available') } : signOut,
-    refreshRole: initError ? async () => { throw new Error('Auth not available') } : refreshRole,
-  }
-
+  // PROVIDER RETURN LAST
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        role,
+        canManageStatus,
+        signIn,
+        signUp,
+        signOut,
+        refreshRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -316,8 +339,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {
-    console.error('useAuth called outside AuthProvider')
-    return defaultContextValue
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }

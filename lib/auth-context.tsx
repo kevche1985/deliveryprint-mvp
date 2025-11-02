@@ -98,6 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Email and password are required')
       }
 
+      // Compute site URL and ensure it has protocol
+      const siteUrlRaw = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      const siteUrl = siteUrlRaw?.startsWith('http') ? siteUrlRaw : (siteUrlRaw ? `https://${siteUrlRaw}` : '')
+
       // Perform Supabase sign up with user metadata
       const { data: signUpResult, error } = await supabase.auth.signUp({
         email: data.email,
@@ -108,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             last_name: data.lastName,
             role: data.role,
           },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/auth/confirmed`,
+          emailRedirectTo: siteUrl ? `${siteUrl}/auth/confirmed` : undefined,
         },
       })
 

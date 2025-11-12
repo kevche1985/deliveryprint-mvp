@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loader2, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 
 export default function PaymentCompletePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +26,7 @@ export default function PaymentCompletePage() {
   useEffect(() => {
     const handlePaymentCompletion = async () => {
       if (!orderId) {
-        setError("Missing order ID")
+        setError(t("common.error"))
         setLoading(false)
         return
       }
@@ -32,7 +34,7 @@ export default function PaymentCompletePage() {
       if (status === "success" && type === "paypal" && paypalOrderId) {
         try {
           console.log("Capturing PayPal payment:", { paypalOrderId, orderId })
-          setProcessingDetails("Verifying payment with PayPal...")
+          setProcessingDetails(t("payment.3ds.verifying"))
 
           // Capture the PayPal payment
           const response = await fetch("/api/payments/paypal/capture-order", {
@@ -60,21 +62,21 @@ export default function PaymentCompletePage() {
           }
 
           if (data.success) {
-            setProcessingDetails("Payment confirmed! Updating your order...")
+            setProcessingDetails(t("payment.3ds.processing.title"))
             setSuccess(true)
             toast({
-              title: "Payment Successful",
-              description: "Your PayPal payment has been processed successfully.",
+              title: t("payment.success.title"),
+              description: t("payment.3ds.success.message"),
             })
           } else {
             throw new Error(data.error || data.details || "Failed to capture payment")
           }
         } catch (err: any) {
           console.error("Payment capture error:", err)
-          setError(err.message || "Failed to process payment")
+          setError(err.message || t("payment.error.processingFailed"))
           toast({
-            title: "Payment Error",
-            description: err.message || "Failed to process your payment.",
+            title: t("payment.error.title"),
+            description: err.message || t("payment.error.processingFailed"),
             variant: "destructive",
           })
         }
@@ -82,14 +84,9 @@ export default function PaymentCompletePage() {
         // For other payment types that are already processed
         setSuccess(true)
       } else if (status === "cancel" && type === "paypal") {
-        setError("Payment was cancelled")
-        toast({
-          title: "Payment Cancelled",
-          description: "You cancelled the PayPal payment process.",
-          variant: "destructive",
-        })
+        setError(t("common.error"))
       } else {
-        setError("Payment was cancelled or failed")
+        setError(t("payment.3ds.failed.message"))
       }
 
       setLoading(false)
@@ -104,9 +101,9 @@ export default function PaymentCompletePage() {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Processing Payment</h2>
+            <h2 className="text-lg font-semibold mb-2">{t("payment.3ds.processing.title")}</h2>
             <p className="text-gray-600 text-center">
-              {processingDetails || "Please wait while we confirm your payment..."}
+              {processingDetails || t("payment.3ds.processing.message")}
             </p>
           </CardContent>
         </Card>
@@ -126,36 +123,34 @@ export default function PaymentCompletePage() {
             )}
           </div>
           <CardTitle className={success ? "text-green-700" : "text-red-700"}>
-            {success ? "Payment Successful!" : "Payment Failed"}
+            {success ? t("payment.3ds.success.title") : t("payment.3ds.failed.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           {success ? (
             <>
-              <p className="text-gray-600">
-                Your payment has been processed successfully. You will receive a confirmation email shortly.
-              </p>
+              <p className="text-gray-600">{t("payment.3ds.success.message")}</p>
               <div className="space-y-2">
                 <Button
                   onClick={() => router.push(`/orders/${orderId}/confirmation`)}
                   className="w-full bg-[#8B0000] hover:bg-[#6B0000]"
                 >
-                  View Order Details
+                  {t("payment.3ds.viewOrder")}
                 </Button>
                 <Button onClick={() => router.push("/orders")} variant="outline" className="w-full">
-                  View All Orders
+                  {t("payment.3ds.viewAllOrders")}
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-gray-600">{error || "There was an issue processing your payment."}</p>
+              <p className="text-gray-600">{error || t("payment.3ds.failed.message")}</p>
               <div className="space-y-2">
                 <Button onClick={() => router.push("/checkout")} className="w-full bg-[#8B0000] hover:bg-[#6B0000]">
-                  Try Again
+                  {t("payment.3ds.tryAgain")}
                 </Button>
                 <Button onClick={() => router.push("/orders")} variant="outline" className="w-full">
-                  View Orders
+                  {t("payment.3ds.viewAllOrders")}
                 </Button>
               </div>
             </>

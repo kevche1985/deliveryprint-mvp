@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileImage, Ruler, Building2, Lightbulb, ArrowRight, CheckCircle, Clock, Shield } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
 const services = [
   {
@@ -72,21 +73,18 @@ const benefits = [
 ]
 
 export default function ServicesPage() {
+  const { t } = useLanguage()
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-900 to-red-700 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">Professional Printing Services</h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Complete printing solutions for your business needs - from digital printing to illuminated signage
-          </p>
+          <h1 className="text-5xl font-bold mb-6">{t("services.page.heroTitle")}</h1>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">{t("services.page.heroSubtitle")}</p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" className="bg-white text-red-900 hover:bg-gray-100">
-              Get Started
-            </Button>
+            <Button size="lg" className="bg-white text-red-900 hover:bg-gray-100">{t("services.page.ctaGetStarted")}</Button>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-900">
-              Request Quote
+              {t("services.page.ctaRequestQuote")}
             </Button>
           </div>
         </div>
@@ -96,10 +94,8 @@ export default function ServicesPage() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Our Services</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Choose from our comprehensive range of printing services, each designed to meet specific business needs
-            </p>
+            <h2 className="text-3xl font-bold mb-4">{t("services.page.sectionTitle")}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">{t("services.page.sectionSubtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -130,7 +126,7 @@ export default function ServicesPage() {
 
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="font-medium mb-2">Features:</h4>
+                      <h4 className="font-medium mb-2">{t("services.page.featuresLabel")}</h4>
                       <div className="flex flex-wrap gap-2">
                         {service.features.map((feature, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
@@ -142,12 +138,12 @@ export default function ServicesPage() {
 
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-500">Starting from</p>
+                        <p className="text-sm text-gray-500">{t("services.page.startingFrom")}</p>
                         <p className="text-lg font-bold text-red-600">{service.priceRange}</p>
                       </div>
                       <Link href={service.href}>
                         <Button className="bg-red-600 hover:bg-red-700 group-hover:translate-x-1 transition-transform">
-                          Explore
+                          {t("services.page.explore")}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </Link>
@@ -164,10 +160,8 @@ export default function ServicesPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose Our Services?</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We're committed to delivering exceptional quality and service for all your printing needs
-            </p>
+            <h2 className="text-3xl font-bold mb-4">{t("services.page.whyChooseTitle")}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">{t("services.page.whyChooseSubtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -191,16 +185,16 @@ export default function ServicesPage() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Simple steps to get your printing project completed</p>
+            <h2 className="text-3xl font-bold mb-4">{t("services.page.howItWorksTitle")}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">{t("services.page.howItWorksSubtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { step: "1", title: "Choose Service", description: "Select the printing service that fits your needs" },
-              { step: "2", title: "Configure & Upload", description: "Customize options and upload your design files" },
-              { step: "3", title: "Review & Order", description: "Review your order details and complete payment" },
-              { step: "4", title: "Production & Delivery", description: "We print and deliver your order on time" },
+              { step: "1", title: t("services.page.steps.chooseService"), description: t("services.page.steps.descChooseService") },
+              { step: "2", title: t("services.page.steps.configureUpload"), description: t("services.page.steps.descConfigureUpload") },
+              { step: "3", title: t("services.page.steps.reviewOrder"), description: t("services.page.steps.descReviewOrder") },
+              { step: "4", title: t("services.page.steps.productionDelivery"), description: t("services.page.steps.descProductionDelivery") },
             ].map((item, index) => (
               <div key={index} className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-red-600 text-white rounded-full font-bold text-lg mb-4">
@@ -217,19 +211,17 @@ export default function ServicesPage() {
       {/* CTA Section */}
       <section className="bg-red-900 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Start Your Project?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Get professional printing services with fast turnaround times and competitive pricing
-          </p>
+          <h2 className="text-3xl font-bold mb-6">{t("services.page.ctaTitle")}</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">{t("services.page.ctaSubtitle")}</p>
           <div className="flex gap-4 justify-center">
             <Link href="/services/digital-printing">
               <Button size="lg" className="bg-white text-red-900 hover:bg-gray-100">
-                Start Digital Printing
+                {t("services.page.ctaStartDigitalPrinting")}
               </Button>
             </Link>
             <Link href="/quote">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-900">
-                Request Custom Quote
+                {t("services.page.ctaRequestCustomQuote")}
               </Button>
             </Link>
           </div>

@@ -1,0 +1,23 @@
+{
+  "home": {
+    "title": "Impresión bajo demanda para tu negocio",
+    "subtitle": "Diseña, ordena y recibe impresiones de alta calidad",
+    "ctaShopNow": "Comprar ahora",
+    "ctaViewProducts": "Ver productos",
+    "features": {
+      "quality": "Materiales de calidad premium",
+      "fast": "Producción y entrega rápidas",
+      "custom": "Totalmente personalizable"
+    },
+    "notifications": {
+      "addedToCart": "Producto agregado al carrito",
+      "error": "Ocurrió un error"
+    },
+    "navigation": {
+      "products": "Productos",
+      "services": "Servicios",
+      "aiStudio": "Estudio IA",
+      "contact": "Contacto"
+    }
+  }
+}

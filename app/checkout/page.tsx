@@ -21,6 +21,7 @@ import { createOrder } from "@/lib/database"
 import WompiPaymentModal from "@/components/wompi-payment-modal"
 import PayPalButton from "@/components/paypal-button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useLanguage } from "@/lib/language-context"
 
 const shippingMethods = [
   { id: "standard", name: "Regular Shipping", price: 3, description: "5-7 business days", value: "standard" },
@@ -56,6 +57,7 @@ const paymentMethods = [
 
 // Add this after the paymentMethods constant
 export default function CheckoutPage() {
+  const { t } = useLanguage()
   const [activePaymentMethods, setActivePaymentMethods] = useState(paymentMethods)
   const router = useRouter()
   const { user, profile, loading } = useAuth()
@@ -468,8 +470,8 @@ export default function CheckoutPage() {
       console.log("Payment confirmation successful:", confirmationData)
 
       toast({
-        title: "Payment Successful",
-        description: "Your PayPal payment has been processed successfully.",
+        title: t("payment.success.title"),
+        description: t("payment.3ds.success.message"),
       })
 
       clearCart()
@@ -478,8 +480,8 @@ export default function CheckoutPage() {
     } catch (error) {
       console.error("Error in PayPal confirmation:", error)
       toast({
-        title: "Payment Processing Error",
-        description: error instanceof Error ? error.message : "There was an error confirming your payment.",
+        title: t("payment.error.title"),
+        description: error instanceof Error ? error.message : t("payment.error.processingFailed"),
         variant: "destructive",
       })
 
@@ -496,8 +498,8 @@ export default function CheckoutPage() {
     console.error("PayPal payment error:", error)
     setPaypalError(error.message || "There was an error processing your PayPal payment. Please try again.")
     toast({
-      title: "Payment Failed",
-      description: error.message || "There was an error processing your PayPal payment. Please try again.",
+      title: t("payment.3ds.failed.title"),
+      description: error.message || t("payment.error.processingFailed"),
       variant: "destructive",
     })
   }
@@ -505,8 +507,8 @@ export default function CheckoutPage() {
   const handlePayPalCancel = () => {
     console.log("PayPal payment cancelled")
     toast({
-      title: "Payment Cancelled",
-      description: "You cancelled the PayPal payment process.",
+      title: t("common.cancel"),
+      description: t("payment.error.processingFailed"),
     })
     setShowPayPalButtons(false)
   }
@@ -554,11 +556,11 @@ export default function CheckoutPage() {
           .json()
           .catch(() => ({ error: "Failed to parse error response from API" }))
         console.error("Payment confirmation failed. API Response:", errorData)
-        toast({
-          title: "Payment Confirmation Failed",
-          description: errorData.error || "Could not confirm payment with the server.",
-          variant: "destructive",
-        })
+      toast({
+        title: t("payment.error.title"),
+        description: errorData.error || t("payment.error.processingFailed"),
+        variant: "destructive",
+      })
         // Similar to PayPal, consider the flow on failure.
         // Original code proceeds to clear cart and redirect.
         clearCart()
@@ -573,8 +575,8 @@ export default function CheckoutPage() {
       console.log("Payment confirmation successful. API Response:", confirmationData)
 
       toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully.",
+        title: t("payment.success.title"),
+        description: t("payment.3ds.success.message"),
       })
       clearCart()
       clearDigitalCart()
@@ -583,8 +585,8 @@ export default function CheckoutPage() {
       console.error("Error in payment confirmation:", error)
       // Still redirect to success page even if confirmation fails
       toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully.",
+        title: t("payment.success.title"),
+        description: t("payment.3ds.success.message"),
       })
       clearCart()
       clearDigitalCart()
@@ -594,7 +596,7 @@ export default function CheckoutPage() {
 
   const handleWompiError = (error: string) => {
     toast({
-      title: "Payment Failed",
+      title: t("payment.3ds.failed.title"),
       description: error,
       variant: "destructive",
     })
@@ -610,7 +612,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="container mx-auto px-4 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading...</p>
+          <p>{t("common.loading")}</p>
         </div>
       </div>
     )
@@ -633,10 +635,10 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p className="mb-6">Add some products to your cart before proceeding to checkout.</p>
+          <h1 className="text-2xl font-bold mb-4">{t("cart.empty")}</h1>
+          <p className="mb-6">{t("cart.emptyDescription")}</p>
           <Button asChild className="bg-[#8B0000] hover:bg-[#6B0000]">
-            <a href="/products">Browse Products</a>
+            <a href="/products">{t("cart.browseProducts")}</a>
           </Button>
         </div>
       </div>
@@ -647,17 +649,17 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
-          <p className="text-gray-600">Complete your order by providing your information below</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("checkout.title")}</h1>
+          <p className="text-gray-600">{t("checkout.subtitle")}</p>
 
           {isDigitalOnly && (
             <Alert className="mt-4 bg-purple-50 border-purple-200">
               <div className="flex items-center gap-2">
-                <span className="font-medium">Digital Products Order</span>
-                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Digital Download</span>
+                <span className="font-medium">{t("checkout.digitalOrderTitle")}</span>
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">{t("checkout.digitalOrderBadge")}</span>
               </div>
               <AlertDescription>
-                Your digital products will be available for download after payment is complete.
+                {t("checkout.digitalOrderDescription")}
               </AlertDescription>
             </Alert>
           )}
@@ -674,16 +676,16 @@ export default function CheckoutPage() {
           <div className="max-w-md mx-auto mb-8">
             <Card>
               <CardHeader>
-                <CardTitle>Complete Payment with PayPal</CardTitle>
-                <CardDescription>Click one of the PayPal buttons below to complete your payment</CardDescription>
+                <CardTitle>{t("checkout.completePaymentWithPayPal")}</CardTitle>
+                <CardDescription>{t("checkout.clickPayPalButtons")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
                   <div className="flex justify-between mb-2">
-                    <span>Order Total:</span>
+                    <span>{t("checkout.orderTotal")}</span>
                     <span className="font-bold">${combinedTotal.toFixed(2)}</span>
                   </div>
-                  <div className="text-sm text-gray-500">Order #{currentOrder.id}</div>
+                  <div className="text-sm text-gray-500">{t("checkout.orderNumberLabel")} {currentOrder.id}</div>
                 </div>
 
                 <PayPalButton
@@ -700,7 +702,7 @@ export default function CheckoutPage() {
                 />
 
                 <Button variant="outline" className="w-full mt-4" onClick={() => setShowPayPalButtons(false)}>
-                  Back to Checkout
+                  {t("checkout.backToCheckout")}
                 </Button>
               </CardContent>
             </Card>
@@ -711,13 +713,13 @@ export default function CheckoutPage() {
               {/* Billing Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Billing Information</CardTitle>
-                  <CardDescription>Please enter your billing details</CardDescription>
+                  <CardTitle>{t("checkout.billingTitle")}</CardTitle>
+                  <CardDescription>{t("checkout.billingDescription")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
+                      <Label htmlFor="firstName">{t("checkout.firstName")}</Label>
                       <Input
                         id="firstName"
                         name="firstName"
@@ -727,7 +729,7 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Label htmlFor="lastName">{t("checkout.lastName")}</Label>
                       <Input
                         id="lastName"
                         name="lastName"
@@ -740,7 +742,7 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">{t("checkout.email")}</Label>
                       <Input
                         id="email"
                         name="email"
@@ -751,7 +753,7 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phone">{t("checkout.phone")}</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -764,7 +766,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Street Address *</Label>
+                    <Label htmlFor="address">{t("checkout.address")}</Label>
                     <Input
                       id="address"
                       name="address"
@@ -776,7 +778,7 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
+                      <Label htmlFor="city">{t("checkout.city")}</Label>
                       <Input
                         id="city"
                         name="city"
@@ -786,7 +788,7 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state">State/Province *</Label>
+                      <Label htmlFor="state">{t("checkout.state")}</Label>
                       <Input
                         id="state"
                         name="state"
@@ -799,7 +801,7 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="zipCode">Postal/Zip Code *</Label>
+                      <Label htmlFor="zipCode">{t("checkout.zipCode")}</Label>
                       <Input
                         id="zipCode"
                         name="zipCode"
@@ -809,7 +811,7 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">Country *</Label>
+                      <Label htmlFor="country">{t("checkout.country")}</Label>
                       <Input
                         id="country"
                         name="country"
@@ -826,8 +828,8 @@ export default function CheckoutPage() {
               {!isDigitalOnly && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Shipping Information</CardTitle>
-                    <CardDescription>Where should we send your order?</CardDescription>
+                    <CardTitle>{t("checkout.shippingTitle")}</CardTitle>
+                    <CardDescription>{t("checkout.shippingDescription")}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center space-x-2">
@@ -837,7 +839,7 @@ export default function CheckoutPage() {
                         onCheckedChange={(checked) => setSameAsBilling(!!checked)}
                       />
                       <Label htmlFor="sameAsBilling" className="font-normal">
-                        Same as billing address
+                        {t("checkout.sameAsBilling")}
                       </Label>
                     </div>
 
@@ -845,7 +847,7 @@ export default function CheckoutPage() {
                       <div className="space-y-4 pt-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="shippingFirstName">First Name *</Label>
+                            <Label htmlFor="shippingFirstName">{t("checkout.firstName")}</Label>
                             <Input
                               id="shippingFirstName"
                               name="firstName"
@@ -855,7 +857,7 @@ export default function CheckoutPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="shippingLastName">Last Name *</Label>
+                            <Label htmlFor="shippingLastName">{t("checkout.lastName")}</Label>
                             <Input
                               id="shippingLastName"
                               name="lastName"
@@ -867,7 +869,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="shippingPhone">Phone Number *</Label>
+                          <Label htmlFor="shippingPhone">{t("checkout.phone")}</Label>
                           <Input
                             id="shippingPhone"
                             name="phone"
@@ -879,7 +881,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="shippingAddress">Street Address *</Label>
+                          <Label htmlFor="shippingAddress">{t("checkout.address")}</Label>
                           <Input
                             id="shippingAddress"
                             name="address"
@@ -891,7 +893,7 @@ export default function CheckoutPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="shippingCity">City *</Label>
+                            <Label htmlFor="shippingCity">{t("checkout.city")}</Label>
                             <Input
                               id="shippingCity"
                               name="city"
@@ -901,7 +903,7 @@ export default function CheckoutPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="shippingState">State/Province *</Label>
+                            <Label htmlFor="shippingState">{t("checkout.state")}</Label>
                             <Input
                               id="shippingState"
                               name="state"
@@ -914,7 +916,7 @@ export default function CheckoutPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="shippingZipCode">Postal/Zip Code *</Label>
+                            <Label htmlFor="shippingZipCode">{t("checkout.zipCode")}</Label>
                             <Input
                               id="shippingZipCode"
                               name="zipCode"
@@ -924,7 +926,7 @@ export default function CheckoutPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="shippingCountry">Country *</Label>
+                            <Label htmlFor="shippingCountry">{t("checkout.country")}</Label>
                             <Input
                               id="shippingCountry"
                               name="country"
@@ -939,11 +941,11 @@ export default function CheckoutPage() {
 
                     <div className="pt-4">
                       <Label htmlFor="notes" className="mb-2 block">
-                        Order Notes (Optional)
+                        {t("checkout.orderNotesLabel")}
                       </Label>
                       <Textarea
                         id="notes"
-                        placeholder="Special instructions for delivery or order details..."
+                        placeholder={t("checkout.orderNotesPlaceholder")}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         rows={3}
@@ -956,11 +958,11 @@ export default function CheckoutPage() {
               {/* Delivery Method */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Delivery Method</CardTitle>
+                  <CardTitle>{t("checkout.deliveryMethodTitle")}</CardTitle>
                   <CardDescription>
                     {isDigitalOnly
-                      ? "Your digital products will be available for download"
-                      : "Choose how you want your order delivered"}
+                      ? t("checkout.digitalOrderDescription")
+                      : t("checkout.deliveryMethodDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -968,7 +970,7 @@ export default function CheckoutPage() {
                     <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
                       <h3 className="font-medium mb-2 flex items-center gap-2">
                         <Download className="h-4 w-4" />
-                        Digital Download
+                        {t("checkout.shippingMethods.download.name")}
                         <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">FREE</span>
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -997,9 +999,9 @@ export default function CheckoutPage() {
                               {(method as any).icon && <div className="text-gray-600 mr-2">{(method as any).icon}</div>}
                               <div>
                                 <Label htmlFor={`shipping-${method.id}`} className="font-medium">
-                                  {method.name}
+                                  {t(`checkout.shippingMethods.${method.id}.name`)}
                                 </Label>
-                                <p className="text-sm text-gray-500">{method.description}</p>
+                                <p className="text-sm text-gray-500">{t(`checkout.shippingMethods.${method.id}.description`)}</p>
                               </div>
                             </div>
                           </div>
@@ -1016,8 +1018,8 @@ export default function CheckoutPage() {
               {/* Payment Method */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Payment Method</CardTitle>
-                  <CardDescription>Select how you want to pay for your order</CardDescription>
+                  <CardTitle>{t("checkout.paymentMethodTitle")}</CardTitle>
+                  <CardDescription>{t("checkout.paymentMethodDescription")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -1028,9 +1030,9 @@ export default function CheckoutPage() {
                           {method.icon && <div className="text-gray-600">{method.icon}</div>}
                           <div>
                             <Label htmlFor={`payment-${method.id}`} className="font-medium">
-                              {method.name}
+                              {t(`checkout.paymentMethods.${method.id}.name`)}
                             </Label>
-                            <p className="text-sm text-gray-500">{method.description}</p>
+                            <p className="text-sm text-gray-500">{t(`checkout.paymentMethods.${method.id}.description`)}</p>
                             {method.id === "wompi" && (
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Secure</span>
@@ -1056,8 +1058,8 @@ export default function CheckoutPage() {
             <div className="space-y-6">
               <Card className="sticky top-6">
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                  <CardDescription>Review your order before checking out</CardDescription>
+                  <CardTitle>{t("checkout.orderSummaryTitle")}</CardTitle>
+                  <CardDescription>{t("checkout.orderSummaryDescription")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -1073,7 +1075,7 @@ export default function CheckoutPage() {
                       <div key={item.id} className="flex justify-between text-sm py-2">
                         <span className="flex items-center gap-2">
                           {item.name}
-                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Digital</span>
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">{t("checkout.digitalOrderBadge")}</span>
                         </span>
                         <span>${(item.finalPrice || item.basePrice || 0).toFixed(2)}</span>
                       </div>
@@ -1084,15 +1086,15 @@ export default function CheckoutPage() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Subtotal</span>
+                      <span>{t("checkout.subtotalLabel")}</span>
                       <span>${combinedSubtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Shipping</span>
+                      <span>{t("checkout.shippingLabel")}</span>
                       <span>${shippingCost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tax (13%)</span>
+                      <span>{t("checkout.taxLabel")}</span>
                       <span>${combinedTaxAmount.toFixed(2)}</span>
                     </div>
                   </div>
@@ -1100,7 +1102,7 @@ export default function CheckoutPage() {
                   <Separator />
 
                   <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
+                    <span>{t("checkout.totalLabel")}</span>
                     <span>${combinedTotal.toFixed(2)}</span>
                   </div>
 
@@ -1112,14 +1114,7 @@ export default function CheckoutPage() {
                         onCheckedChange={(checked) => setAgreeToTerms(!!checked)}
                       />
                       <Label htmlFor="agreeToTerms" className="font-normal text-sm">
-                        I agree to the{" "}
-                        <a href="/terms" className="text-[#8B0000] hover:underline">
-                          Terms of Service
-                        </a>{" "}
-                        and{" "}
-                        <a href="/privacy" className="text-[#8B0000] hover:underline">
-                          Privacy Policy
-                        </a>
+                        {t("checkout.agreeToTerms")}
                       </Label>
                     </div>
 
@@ -1131,10 +1126,10 @@ export default function CheckoutPage() {
                       {internalLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
+                          {t("common.loading")}
                         </>
                       ) : (
-                        `Complete Order • $${combinedTotal.toFixed(2)}`
+                        `${t("checkout.completeOrder")} • $${combinedTotal.toFixed(2)}`
                       )}
                     </Button>
                   </div>

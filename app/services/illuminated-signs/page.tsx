@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useCart } from "@/lib/cart-context"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 import { Zap, Eye, Clock } from "lucide-react"
 
 const illuminatedSignProducts = [
@@ -129,8 +130,9 @@ export default function IlluminatedSignsPage() {
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   const [showDesignEditor, setShowDesignEditor] = useState(false)
 
-  const { addToCart } = useCart()
+  const { addItem } = useCart()
   const { toast } = useToast()
+  const { t } = useLanguage()
 
   const handleProductChange = (productId: string) => {
     const product = illuminatedSignProducts.find((p) => p.id === productId)
@@ -155,13 +157,15 @@ export default function IlluminatedSignsPage() {
   }
 
   const handleAddToCart = () => {
+    const localizedProductName = t(`services.illuminatedSignsPage.products.${selectedProduct.id}.name`)
+    const cartItemName = `${localizedProductName} - ${selectedSize.name}`
     const cartItem = {
-      id: `${selectedProduct.id}-${selectedSize.name.replace(/\s+/g, "-").toLowerCase()}`,
-      name: `${selectedProduct.name} - ${selectedSize.name}`,
-      price: selectedSize.price,
+      productId: `illuminated-sign-${selectedProduct.id}`,
+      variantId: `${selectedProduct.id}-${selectedSize.name.replace(/\s+/g, "-").toLowerCase()}`,
       quantity,
-      image: selectedProduct.image,
-      category: selectedProduct.category,
+      price: selectedSize.price,
+      name: cartItemName,
+      image: selectedProduct.image || "/placeholder.svg?height=200&width=300",
       customizations: {
         size: selectedSize.name,
         dimensions: selectedSize.dimensions,
@@ -170,13 +174,17 @@ export default function IlluminatedSignsPage() {
         installationNeeded: customizations.installationNeeded,
         rushOrder: customizations.rushOrder,
         designFile: customizations.designFile?.name,
+        specifications: {
+          material: localizedProductName,
+          dimensions: selectedSize.dimensions,
+        },
       },
     }
 
-    addToCart(cartItem)
+    addItem(cartItem)
     toast({
-      title: "Added to Cart",
-      description: `${cartItem.name} has been added to your cart.`,
+      title: t("common.toast.addedToCartTitle"),
+      description: `${cartItem.name} ${t("common.toast.addedToCartDescSuffix")}`,
     })
   }
 
@@ -188,23 +196,20 @@ export default function IlluminatedSignsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Illuminated Signs</h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Professional illuminated signage solutions to make your business shine day and night with energy-efficient LED
-          technology
-        </p>
+        <h1 className="text-4xl font-bold mb-4">{t("services.illuminatedSignsPage.headerTitle")}</h1>
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">{t("services.illuminatedSignsPage.headerSubtitle")}</p>
         <div className="flex justify-center items-center space-x-6 mt-6">
           <div className="flex items-center space-x-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            <span className="text-sm">Energy Efficient</span>
+            <span className="text-sm">{t("services.illuminatedSignsPage.badges.energyEfficient")}</span>
           </div>
           <div className="flex items-center space-x-2">
             <Eye className="h-5 w-5 text-blue-600" />
-            <span className="text-sm">High Visibility</span>
+            <span className="text-sm">{t("services.illuminatedSignsPage.badges.highVisibility")}</span>
           </div>
           <div className="flex items-center space-x-2">
             <Clock className="h-5 w-5 text-green-600" />
-            <span className="text-sm">24/7 Impact</span>
+            <span className="text-sm">{t("services.illuminatedSignsPage.badges.impact247")}</span>
           </div>
         </div>
       </div>
@@ -214,13 +219,13 @@ export default function IlluminatedSignsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Select Your Illuminated Sign</CardTitle>
-              <CardDescription>Choose from our professional illuminated signage options</CardDescription>
+              <CardTitle>{t("services.illuminatedSignsPage.selectTitle")}</CardTitle>
+              <CardDescription>{t("services.illuminatedSignsPage.selectDescription")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Product Selection */}
               <div className="space-y-4">
-                <Label>Sign Type</Label>
+                <Label>{t("services.illuminatedSignsPage.signType")}</Label>
                 <div className="grid grid-cols-1 gap-3">
                   {illuminatedSignProducts.map((product) => (
                     <div
@@ -235,19 +240,19 @@ export default function IlluminatedSignsPage() {
                       <div className="flex items-start space-x-4">
                         <img
                           src={product.image || "/placeholder.svg"}
-                          alt={product.name}
+                          alt={t(`services.illuminatedSignsPage.products.${product.id}.name`)}
                           className="w-16 h-16 object-cover rounded"
                           onError={(e) => {
                             e.currentTarget.src = "/placeholder.svg?height=64&width=64"
                           }}
                         />
                         <div className="flex-1">
-                          <h3 className="font-semibold">{product.name}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                          <h3 className="font-semibold">{t(`services.illuminatedSignsPage.products.${product.id}.name`)}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{t(`services.illuminatedSignsPage.products.${product.id}.description`)}</p>
                           <div className="flex items-center justify-between mt-2">
-                            <Badge variant="outline">{product.category}</Badge>
+                            <Badge variant="outline">{t(`services.illuminatedSignsPage.products.${product.id}.category`)}</Badge>
                             <span className="font-semibold text-red-600">
-                              From ${product.basePrice} {product.unit}
+                              {t("common.from")} ${product.basePrice} {t(`services.illuminatedSignsPage.products.${product.id}.unit`)}
                             </span>
                           </div>
                         </div>
@@ -259,7 +264,7 @@ export default function IlluminatedSignsPage() {
 
               {/* Size Selection */}
               <div className="space-y-3">
-                <Label>Size & Configuration</Label>
+                <Label>{t("services.illuminatedSignsPage.sizeConfig")}</Label>
                 <Select value={selectedProduct.sizes.indexOf(selectedSize).toString()} onValueChange={handleSizeChange}>
                   <SelectTrigger>
                     <SelectValue />
@@ -270,19 +275,19 @@ export default function IlluminatedSignsPage() {
                         <div className="flex justify-between items-center w-full">
                           <span>{size.name}</span>
                           <span className="ml-4 font-semibold">
-                            {size.price > 0 ? `$${size.price}` : "Quote"}
+                            {size.price > 0 ? `$${size.price}` : t("common.quote")}
                           </span>
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-gray-600">Dimensions: {selectedSize.dimensions}</p>
+                <p className="text-sm text-gray-600">{t("services.illuminatedSignsPage.dimensions")} {selectedSize.dimensions}</p>
               </div>
 
               {/* Quantity */}
               <div className="space-y-3">
-                <Label>Quantity</Label>
+                <Label>{t("services.illuminatedSignsPage.quantity")}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -295,9 +300,9 @@ export default function IlluminatedSignsPage() {
 
               {/* Color Preference */}
               <div className="space-y-3">
-                <Label>Color Preference</Label>
+                <Label>{t("services.illuminatedSignsPage.colorPreference")}</Label>
                 <Input
-                  placeholder="e.g., Warm White, Cool White, Red, Blue, etc."
+                  placeholder={t("services.illuminatedSignsPage.colorPreferencePlaceholder")}
                   value={customizations.colorPreference}
                   onChange={(e) => setCustomizations({ ...customizations, colorPreference: e.target.value })}
                 />
@@ -305,9 +310,9 @@ export default function IlluminatedSignsPage() {
 
               {/* Design Notes */}
               <div className="space-y-3">
-                <Label>Design Requirements</Label>
+                <Label>{t("services.illuminatedSignsPage.designRequirements")}</Label>
                 <Textarea
-                  placeholder="Describe your text, logos, graphics, mounting requirements, etc."
+                  placeholder={t("services.illuminatedSignsPage.designRequirementsPlaceholder")}
                   value={customizations.designNotes}
                   onChange={(e) => setCustomizations({ ...customizations, designNotes: e.target.value })}
                   rows={4}
@@ -323,7 +328,7 @@ export default function IlluminatedSignsPage() {
                   onChange={(e) => setCustomizations({ ...customizations, installationNeeded: e.target.checked })}
                   className="rounded"
                 />
-                <Label htmlFor="installation">Professional Installation (+$200)</Label>
+                <Label htmlFor="installation">{t("services.illuminatedSignsPage.installationLabel")}</Label>
               </div>
 
               {/* Rush Order */}
@@ -335,7 +340,7 @@ export default function IlluminatedSignsPage() {
                   onChange={(e) => setCustomizations({ ...customizations, rushOrder: e.target.checked })}
                   className="rounded"
                 />
-                <Label htmlFor="rushOrder">Rush Order (+50% fee)</Label>
+                <Label htmlFor="rushOrder">{t("services.illuminatedSignsPage.rushOrderLabel")}</Label>
               </div>
             </CardContent>
           </Card>
@@ -348,20 +353,25 @@ export default function IlluminatedSignsPage() {
             <CardContent className="p-6">
               <img
                 src={selectedProduct.image || "/placeholder.svg"}
-                alt={selectedProduct.name}
+                alt={t(`services.illuminatedSignsPage.products.${selectedProduct.id}.name`)}
                 className="w-full h-64 object-cover rounded-lg mb-4"
                 onError={(e) => {
                   e.currentTarget.src = "/placeholder.svg?height=256&width=400"
                 }}
               />
-              <h2 className="text-2xl font-bold mb-2">{selectedProduct.name}</h2>
-              <p className="text-gray-600 mb-4">{selectedProduct.description}</p>
+              <h2 className="text-2xl font-bold mb-2">{t(`services.illuminatedSignsPage.products.${selectedProduct.id}.name`)}</h2>
+              <p className="text-gray-600 mb-4">{t(`services.illuminatedSignsPage.products.${selectedProduct.id}.description`)}</p>
 
               {/* Features */}
               <div className="space-y-2">
-                <h3 className="font-semibold">Features:</h3>
+                <h3 className="font-semibold">{t("services.illuminatedSignsPage.featuresLabel")}</h3>
                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                  {selectedProduct.features.map((feature, index) => (
+                  {[
+                    t(`services.illuminatedSignsPage.products.${selectedProduct.id}.features.item1`),
+                    t(`services.illuminatedSignsPage.products.${selectedProduct.id}.features.item2`),
+                    t(`services.illuminatedSignsPage.products.${selectedProduct.id}.features.item3`),
+                    t(`services.illuminatedSignsPage.products.${selectedProduct.id}.features.item4`),
+                  ].map((feature, index) => (
                     <li key={index}>{feature}</li>
                   ))}
                 </ul>

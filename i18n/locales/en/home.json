@@ -1,0 +1,23 @@
+{
+  "home": {
+    "title": "Print-On-Demand for your business",
+    "subtitle": "Design, order, and receive high-quality prints",
+    "ctaShopNow": "Shop Now",
+    "ctaViewProducts": "View Products",
+    "features": {
+      "quality": "Premium quality materials",
+      "fast": "Fast production & delivery",
+      "custom": "Fully customizable"
+    },
+    "notifications": {
+      "addedToCart": "Product added to cart",
+      "error": "Something went wrong"
+    },
+    "navigation": {
+      "products": "Products",
+      "services": "Services",
+      "aiStudio": "AI Studio",
+      "contact": "Contact"
+    }
+  }
+}

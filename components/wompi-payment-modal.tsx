@@ -117,21 +117,13 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
     return "unknown"
   }
 
-  // Get test scenario info
-  const getTestScenario = (cardNumber: string) => {
-    const lastFour = cardNumber.replace(/\s/g, "").slice(-4)
-    switch (lastFour) {
-      case "0000":
-        return { type: "error", message: t("payment.testCard.insufficientFunds") }
-      case "1111":
-        return { type: "info", message: t("payment.testCard.3dsAuth") }
-      case "2222":
-        return { type: "error", message: t("payment.testCard.declined") }
-      case "3333":
-        return { type: "error", message: t("payment.testCard.expired") }
-      default:
-        return { type: "success", message: t("payment.testCard.success") }
+  // Get test scenario info (Wompi test mode uses CVV: "111" -> declined, any other CVV -> success)
+  const getTestScenario = (cvv: string) => {
+    if (!cvv) return null
+    if (cvv === "111") {
+      return { type: "error", message: t("payment.testCard.declined") }
     }
+    return { type: "success", message: t("payment.testCard.othersSuccess") }
   }
 
   // Validate form
@@ -339,7 +331,7 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
   }
 
   const cardType = getCardType(cardData.cardNumber)
-  const testScenario = cardData.cardNumber.length >= 16 ? getTestScenario(cardData.cardNumber) : null
+  const testScenario = getTestScenario(cardData.cvv)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -408,13 +400,6 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
               )}
             </div>
             {errors.cardNumber && <p className="text-sm text-red-500">{errors.cardNumber}</p>}
-            {testScenario && (
-              <p
-                className={`text-xs ${testScenario.type === "success" ? "text-green-600" : testScenario.type === "info" ? "text-blue-600" : "text-orange-600"}`}
-              >
-                {testScenario.message}
-              </p>
-            )}
           </div>
 
           {/* Expiry and CVV */}
@@ -479,6 +464,13 @@ export default function WompiPaymentModal({ isOpen, onClose, orderData, onSucces
                 maxLength={4}
                 className={errors.cvv ? "border-red-500" : ""}
               />
+              {testScenario && (
+                <p
+                  className={`text-xs ${testScenario.type === "success" ? "text-green-600" : testScenario.type === "info" ? "text-blue-600" : "text-orange-600"}`}
+                >
+                  {testScenario.message}
+                </p>
+              )}
             </div>
           </div>
           {errors.expiry && <p className="text-sm text-red-500">{errors.expiry}</p>}

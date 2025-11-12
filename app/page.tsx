@@ -10,6 +10,16 @@ import { type Product, getProducts } from "@/lib/database"
 import { useCart } from "@/lib/cart-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
+
+// Minimal product shape used for fallback/sample items alongside DB Products
+type MinimalProduct = {
+  id: string
+  name: string
+  description?: string
+  price: number
+  image?: string
+}
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
@@ -18,6 +28,7 @@ export default function HomePage() {
   const { addItem } = useCart()
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLanguage()
 
   useEffect(() => {
     async function fetchFeaturedProducts() {
@@ -26,7 +37,7 @@ export default function HomePage() {
         setFeaturedProducts(products)
       } catch (err) {
         console.error("Error fetching featured products:", err)
-        setError("Failed to load featured products. Please try again later.")
+        setError(t("home.errors.failedToLoadFeatured"))
       } finally {
         setLoading(false)
       }
@@ -34,19 +45,20 @@ export default function HomePage() {
     fetchFeaturedProducts()
   }, [])
 
-  const handleAddToCartAndCheckout = (product: Product) => {
+  const handleAddToCartAndCheckout = (product: Product | MinimalProduct) => {
     addItem({
-      id: product.id,
+      productId: product.id,
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: product.image || "/placeholder.svg",
+      image: (product as any).image || "/placeholder.svg",
       customizations: {}, // No customizations for direct product add
-      design_id: null,
+      // No design associated when adding directly from home page
+      designId: undefined,
     })
     toast({
-      title: "Item Added",
-      description: `${product.name} added to cart. Redirecting to checkout...`,
+      title: t("common.toast.addedToCartTitle"),
+      description: `${product.name} ${t("common.toast.addedToCartDescSuffix")}`,
     })
     router.push("/checkout")
   }
@@ -95,14 +107,14 @@ export default function HomePage() {
         </div>
         <div className="relative z-10 text-center px-4">
           <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 drop-shadow-lg">
-            Your Vision, Printed.
+            {t("home.heroTitle")}
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto opacity-90">
-            High-quality custom printing for all your needs. From apparel to large format, we bring your ideas to life.
+            {t("home.heroSubtitle")}
           </p>
           <Link href="/products" passHref>
             <Button size="lg" className="bg-white text-red-800 hover:bg-gray-100 hover:text-red-900 shadow-lg">
-              Explore Products
+              {t("home.exploreProducts")}
             </Button>
           </Link>
         </div>
@@ -111,20 +123,20 @@ export default function HomePage() {
       {/* Services Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Services</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">{t("home.servicesTitle")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="text-center">
               <CardHeader>
                 <Printer className="h-12 w-12 text-red-600 mx-auto mb-4" />
-                <CardTitle>Digital Printing</CardTitle>
+                <CardTitle>{t("services.digitalPrinting")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>High-resolution prints for brochures, flyers, and custom designs.</CardDescription>
+                <CardDescription>{t("services.digitalPrintingDesc")}</CardDescription>
               </CardContent>
               <CardFooter>
                 <Link href="/services/digital-printing" className="w-full">
                   <Button variant="outline" className="w-full bg-transparent">
-                    Learn More
+                    {t("common.learnMore")}
                   </Button>
                 </Link>
               </CardFooter>
@@ -132,15 +144,15 @@ export default function HomePage() {
             <Card className="text-center">
               <CardHeader>
                 <Package className="h-12 w-12 text-red-600 mx-auto mb-4" />
-                <CardTitle>Large Format</CardTitle>
+                <CardTitle>{t("services.largeFormat")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>Banners, posters, and signs for maximum impact.</CardDescription>
+                <CardDescription>{t("services.largeFormatDesc")}</CardDescription>
               </CardContent>
               <CardFooter>
                 <Link href="/services/large-format" className="w-full">
                   <Button variant="outline" className="w-full bg-transparent">
-                    Learn More
+                    {t("common.learnMore")}
                   </Button>
                 </Link>
               </CardFooter>
@@ -148,17 +160,15 @@ export default function HomePage() {
             <Card className="text-center">
               <CardHeader>
                 <FileText className="h-12 w-12 text-red-600 mx-auto mb-4" />
-                <CardTitle>Design Studio</CardTitle>
+                <CardTitle>{t("services.designStudio")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>
-                  Create stunning designs with our AI-powered tools or professional help.
-                </CardDescription>
+                <CardDescription>{t("services.designStudioDesc")}</CardDescription>
               </CardContent>
               <CardFooter>
                 <Link href="/ai-studio" className="w-full">
                   <Button variant="outline" className="w-full bg-transparent">
-                    Start Designing
+                    {t("common.startDesigning")}
                   </Button>
                 </Link>
               </CardFooter>
@@ -170,7 +180,7 @@ export default function HomePage() {
       {/* Featured Products */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Featured Products</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">{t("home.featuredProductsTitle")}</h2>
 
           {loading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -195,13 +205,13 @@ export default function HomePage() {
           {error && (
             <div className="text-center text-red-500 py-8">
               <p>{error}</p>
-              <p>Displaying sample products instead.</p>
+              <p>{t("home.errors.displayingSample")}</p>
             </div>
           )}
 
           {!loading && featuredProducts.length === 0 && !error && (
             <div className="text-center text-gray-500 py-8">
-              <p>No featured products found. Displaying sample products.</p>
+              <p>{t("home.noFeatured")}</p>
             </div>
           )}
 
@@ -230,14 +240,14 @@ export default function HomePage() {
                       <CardContent className="p-4">
                         <CardTitle className="text-xl font-semibold mb-2">{product.name}</CardTitle>
                         <CardDescription className="text-gray-600 line-clamp-2">
-                          {product.description || "No description available."}
+                          {product.description || t("home.noDescription")}
                         </CardDescription>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center p-4 pt-0">
                         <span className="text-2xl font-bold text-red-600">${product.price.toFixed(2)}</span>
                         <Button onClick={() => handleAddToCartAndCheckout(product)}>
                           <ShoppingCart className="h-4 w-4 mr-2" />
-                          Add to Cart
+                          {t("common.addToCart")}
                         </Button>
                       </CardFooter>
                     </Card>
@@ -254,14 +264,14 @@ export default function HomePage() {
       {/* Call to Action */}
       <section className="bg-red-800 text-white py-16 text-center">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-4">Ready to Print Your Ideas?</h2>
+          <h2 className="text-4xl font-bold mb-4">{t("home.ctaTitle")}</h2>
           <p className="text-xl mb-8">
-            Get started with our easy-to-use design tools or contact us for a custom quote.
+            {t("home.ctaSubtitle")}
           </p>
           <div className="flex justify-center space-x-4">
             <Link href="/ai-studio" passHref>
               <Button size="lg" className="bg-white text-red-800 hover:bg-gray-100 hover:text-red-900 shadow-lg">
-                Start Designing
+                {t("common.startDesigning")}
               </Button>
             </Link>
             <Link href="/quote" passHref>
@@ -270,7 +280,7 @@ export default function HomePage() {
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-red-800 shadow-lg bg-transparent"
               >
-                Get a Quote
+                {t("home.ctaGetQuote")}
               </Button>
             </Link>
           </div>

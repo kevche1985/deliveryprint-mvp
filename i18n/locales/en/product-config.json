@@ -1,0 +1,34 @@
+{
+  "product": {
+    "config": {
+      "title": "Configure your product",
+      "size": "Size",
+      "material": "Material",
+      "color": "Color",
+      "quantity": "Quantity",
+      "price": "Price",
+      "addToCart": "Add to Cart",
+      "updateCart": "Update Cart",
+      "inStock": "In Stock",
+      "outOfStock": "Out of Stock"
+    },
+    "tooltips": {
+      "size": "Select the dimensions for your print",
+      "material": "Choose the material best suited for your use",
+      "color": "Pick a color variant"
+    },
+    "placeholders": {
+      "search": "Search products",
+      "notes": "Add special instructions (optional)"
+    },
+    "validation": {
+      "required": "This field is required",
+      "minQuantity": "Minimum quantity is 1"
+    },
+    "alerts": {
+      "added": "Item added to cart successfully",
+      "updated": "Cart updated",
+      "error": "Failed to add item"
+    }
+  }
+}

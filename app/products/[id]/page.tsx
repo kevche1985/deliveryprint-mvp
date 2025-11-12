@@ -10,13 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Loader2, ShoppingCart, Heart, Share2 } from "lucide-react"
 import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import { getProductById, getProductImages, getProductVariants } from "@/lib/database"
+import { useLanguage } from "@/lib/language-context"
 import type { Product, ProductImage, ProductVariant } from "@/lib/database"
 import { useCart } from "@/lib/cart-context"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/lib/auth-context"
 
 // Replace the existing dynamic imports with this:
 const DesignEditor = dynamic(
@@ -49,8 +53,35 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("details")
   const [editorError, setEditorError] = useState(false)
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
 
+  // Heuristic: treat apparel/wearables as products that should show standard size options
+  const isWearable = React.useMemo(() => {
+    const category = (product?.category || "").toLowerCase()
+    const name = (product?.name || "").toLowerCase()
+    return /wearables|apparel|clothing/.test(category) || /t\s?-?shirt|hoodie|sweatshirt|tank|tee|polo/.test(name)
+  }, [product])
+
+  const fallbackSizes = ["XS", "S", "M", "L", "XL", "XXL"]
+
+  const sizes = React.useMemo(() => {
+    const sizeList = variants
+      .map((v) => (v.attributes && typeof v.attributes.size === "string" ? v.attributes.size : null))
+      .filter((s): s is string => !!s)
+    return Array.from(new Set(sizeList))
+  }, [variants])
+
+  const sizePrices = React.useMemo(() => {
+    const m: Record<string, number> = {}
+    variants.forEach((v) => {
+      const s = v.attributes && typeof v.attributes.size === "string" ? (v.attributes.size as string) : null
+      if (s) m[s] = v.price
+    })
+    return m
+  }, [variants])
   const { addItem } = useCart()
+  const { t } = useLanguage()
+  const { user } = useAuth()
 
   useEffect(() => {
     async function loadProductData() {
@@ -70,6 +101,20 @@ export default function ProductDetailPage() {
         setVariants(variantsData)
         if (variantsData.length > 0) {
           setSelectedVariant(variantsData[0].id)
+          const firstWithSize = variantsData.find((v) => v.attributes && typeof v.attributes.size === "string")
+          if (firstWithSize) {
+            setSelectedSize(firstWithSize.attributes.size as string)
+            setSelectedVariant(firstWithSize.id)
+          }
+        }
+        // If no variants with sizes and product appears to be a wearable, use fallback sizes
+        if ((variantsData.length === 0 || !variantsData.some((v) => typeof v.attributes?.size === "string")) && productData) {
+          const category = (productData.category || "").toLowerCase()
+          const name = (productData.name || "").toLowerCase()
+          const looksWearable = /wearables|apparel|clothing/.test(category) || /t\s?-?shirt|hoodie|sweatshirt|tank|tee|polo/.test(name)
+          if (looksWearable) {
+            setSelectedSize((prev) => prev || "M")
+          }
         }
       } catch (error) {
         console.error("Error loading product data:", error)
@@ -102,8 +147,9 @@ export default function ProductDetailPage() {
       variantId: selectedVariant || undefined,
       quantity,
       price: variant ? variant.price : product.price,
-      name: product.name + (variant ? ` - ${variant.name}` : ""),
+      name: product.name + (variant ? ` - ${variant.name}` : selectedSize ? ` - ${selectedSize}` : ""),
       image: selectedImage || product.image || "/placeholder.svg?height=300&width=300",
+      customizations: selectedSize ? { size: selectedSize } : undefined,
     })
   }
 
@@ -120,15 +166,113 @@ export default function ProductDetailPage() {
       designId: undefined, // This would be set if saving a design to the database
       quantity,
       price: variant ? variant.price : product.price,
-      name: product.name + (variant ? ` - ${variant.name}` : ""),
+      name: product.name + (variant ? ` - ${variant.name}` : selectedSize ? ` - ${selectedSize}` : ""),
       image: selectedImage || product.image || "/placeholder.svg?height=300&width=300",
-      customizations: designData, // Add the design data to customizations
+      customizations: { ...(designData || {}), ...(selectedSize ? { size: selectedSize } : {}) },
     })
 
     toast({
       title: "Design saved and added to cart",
       description: "Your customized product has been added to your cart",
     })
+  }
+
+  // NEW: Save and Share handlers
+  const handleSaveProduct = async () => {
+    if (!product) {
+      toast({
+        title: t("productDetail.notFoundTitle") || "Product not loaded",
+        description: t("productDetail.notFoundDescription") || "Open a valid product from the products list",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+      if (!user) {
+        toast({
+          title: t("auth.loginRequiredTitle") || "Sign in required",
+          description: t("auth.loginRequiredDescription") || "You must sign in to save products",
+          variant: "destructive",
+        })
+        window.location.href = "/auth/login"
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("digital_products")
+        .insert([
+          {
+            user_id: user.id,
+            type: "image",
+            name: product.name,
+            description: "Saved product",
+            base_price: product.price,
+            preview_url: selectedImage || product.image || "/placeholder.svg?height=600&width=600",
+            status: "unpurchased",
+            metadata: {
+              product_id: product.id,
+              variant_id: selectedVariant,
+              quantity,
+              source: "product_save",
+              saved_at: new Date().toISOString(),
+            },
+          },
+        ])
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Error saving product:", error)
+        toast({
+          title: t("productDetail.saveError") || "Error al guardar",
+          description: error.message,
+          variant: "destructive",
+        })
+        return
+      }
+
+      toast({
+        title: t("productDetail.saveSuccess") || "Saved",
+        description: t("productDetail.saveSuccessDesc") || `${product.name} saved to your library.`,
+      })
+    } catch (e: any) {
+      console.error(e)
+      toast({
+        title: t("productDetail.saveError") || "Error al guardar",
+        description: e?.message || "No se pudo guardar el producto",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleShare = async () => {
+    try {
+      const url = window.location.href
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url)
+        toast({ title: t("productDetail.linkCopied") || "Link copiado", description: url })
+      } else {
+        // Fallback
+        const textarea = document.createElement("textarea")
+        textarea.value = url
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand("copy")
+        document.body.removeChild(textarea)
+        toast({ title: t("productDetail.linkCopied") || "Link copiado", description: url })
+      }
+
+      // Exploratory: Web Share API (no social integrations yet)
+      if ((navigator as any).share) {
+        // Non-blocking attempt; if it fails we already copied
+        ;(navigator as any)
+          .share({ title: product?.name || "Producto", text: product?.description || "", url })
+          .catch(() => {})
+      }
+    } catch (e: any) {
+      console.error("Share error", e)
+      toast({ title: t("productDetail.shareError") || "No se pudo compartir", variant: "destructive" })
+    }
   }
 
   if (loading) {
@@ -142,10 +286,10 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-        <p className="mb-6">The product you're looking for doesn't exist or has been removed.</p>
+        <h1 className="text-2xl font-bold mb-4">{t("productDetail.notFoundTitle")}</h1>
+        <p className="mb-6">{t("productDetail.notFoundDescription")}</p>
         <Button asChild>
-          <a href="/products">Back to Products</a>
+          <a href="/products">{t("productDetail.backToProducts")}</a>
         </Button>
       </div>
     )
@@ -198,7 +342,7 @@ export default function ProductDetailPage() {
 
               <p className="text-gray-600 mb-6">{product.description}</p>
 
-              {variants.length > 0 && (
+              {variants.length > 0 && sizes.length === 0 && (
                 <div className="mb-6">
                   <Label className="mb-2 block">Options</Label>
                   <RadioGroup
@@ -218,9 +362,54 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
+              {sizes.length > 0 && (
+                <div className="mb-6">
+                  <Label className="mb-2 block">{t("productDetail.size") || t("product.config.size") || "Size"}</Label>
+                  <Select
+                    value={selectedSize ?? ""}
+                    onValueChange={(value) => {
+                      setSelectedSize(value)
+                      const match = variants.find((v) => v.attributes && v.attributes.size === value)
+                      if (match) setSelectedVariant(match.id)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sizes.map((sz) => (
+                        <SelectItem key={sz} value={sz}>
+                          {sz}{sizePrices[sz] !== undefined ? ` - $${sizePrices[sz].toFixed(2)}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {sizes.length === 0 && variants.length === 0 && isWearable && (
+                <div className="mb-6">
+                  <Label className="mb-2 block">{t("productDetail.size") || t("product.config.size") || "Size"}</Label>
+                  <Select
+                    value={selectedSize ?? ""}
+                    onValueChange={(value) => setSelectedSize(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fallbackSizes.map((sz) => (
+                        <SelectItem key={sz} value={sz}>
+                          {sz}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="mb-6">
                 <Label htmlFor="quantity" className="mb-2 block">
-                  Quantity
+                  {t("productDetail.quantity")}
                 </Label>
                 <div className="flex w-1/3">
                   <Button
@@ -253,16 +442,16 @@ export default function ProductDetailPage() {
               <div className="flex flex-col space-y-3">
                 <Button onClick={handleAddToCart} className="bg-[#8B0000] hover:bg-[#6B0000]">
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  Add to Cart
+                  {t("productDetail.addToCart")}
                 </Button>
                 <div className="flex space-x-2">
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="outline" className="flex-1" onClick={handleSaveProduct} disabled={!product || loading}>
                     <Heart className="mr-2 h-4 w-4" />
-                    Save
+                    {t("productDetail.save")}
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button variant="outline" className="flex-1" onClick={handleShare}>
                     <Share2 className="mr-2 h-4 w-4" />
-                    Share
+                    {t("productDetail.share")}
                   </Button>
                 </div>
               </div>
@@ -273,40 +462,40 @@ export default function ProductDetailPage() {
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details">Product Details</TabsTrigger>
-              <TabsTrigger value="customize">Customize Design</TabsTrigger>
+              <TabsTrigger value="details">{t("productDetail.tabDetails")}</TabsTrigger>
+              <TabsTrigger value="customize">{t("productDetail.tabCustomize")}</TabsTrigger>
             </TabsList>
             <TabsContent value="details">
               <CardContent className="p-6">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Product Specifications</h3>
+                    <h3 className="text-lg font-semibold mb-3">{t("productDetail.specificationsTitle")}</h3>
                     <ul className="space-y-2 text-gray-600">
                       <li>
-                        <span className="font-medium">Material:</span> Premium Quality
+                        <span className="font-medium">{t("productDetail.materialLabel")}</span> {t("productDetail.materialValue")}
                       </li>
                       <li>
-                        <span className="font-medium">Dimensions:</span> Varies by size
+                        <span className="font-medium">{t("productDetail.dimensionsLabel")}</span> {t("productDetail.dimensionsValue")}
                       </li>
                       <li>
-                        <span className="font-medium">Print Area:</span> Front and back
+                        <span className="font-medium">{t("productDetail.printAreaLabel")}</span> {t("productDetail.printAreaValue")}
                       </li>
                       <li>
-                        <span className="font-medium">Care:</span> Machine washable
+                        <span className="font-medium">{t("productDetail.careLabel")}</span> {t("productDetail.careValue")}
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Shipping Information</h3>
+                    <h3 className="text-lg font-semibold mb-3">{t("productDetail.shippingInfoTitle")}</h3>
                     <ul className="space-y-2 text-gray-600">
                       <li>
-                        <span className="font-medium">Production Time:</span> 2-3 business days
+                        <span className="font-medium">{t("productDetail.productionTimeLabel")}</span> {t("productDetail.productionTimeValue")}
                       </li>
                       <li>
-                        <span className="font-medium">Shipping:</span> 3-5 business days
+                        <span className="font-medium">{t("productDetail.shippingLabel")}</span> {t("productDetail.shippingValue")}
                       </li>
                       <li>
-                        <span className="font-medium">Returns:</span> 30-day return policy
+                        <span className="font-medium">{t("productDetail.returnsLabel")}</span> {t("productDetail.returnsValue")}
                       </li>
                     </ul>
                   </div>
@@ -334,7 +523,7 @@ export default function ProductDetailPage() {
                         productName={product.name}
                         product={product}
                         variants={variants}
-                        selectedVariant={selectedVariant}
+                        selectedVariant={selectedVariant || undefined}
                       />
                     </React.Suspense>
                   </ErrorBoundary>
@@ -359,40 +548,28 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    // Update state so the next render shows the fallback UI
     return { hasError: true, error }
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error("DesignEditor Error:", error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo)
+    // Notify parent component to handle error
     this.props.onError()
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <div className="text-center p-6">
-            <div className="text-red-500 mb-2">
-              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Design Editor Unavailable</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              The design editor couldn't load. You can still add this product to your cart.
-            </p>
-            <Button onClick={() => this.setState({ hasError: false, error: null })} variant="outline" size="sm">
-              Try Again
-            </Button>
+        <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="text-center">
+            <p className="text-sm text-gray-600">There was an error loading the design editor.</p>
+            <p className="text-xs text-gray-500 mt-2">Error: {this.state.error?.message}</p>
           </div>
         </div>
       )
     }
+
     return this.props.children
   }
 }

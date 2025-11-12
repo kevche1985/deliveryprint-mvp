@@ -13,6 +13,7 @@ import DesignServiceEditor from "@/components/design-service-editor" // New impo
 import type { DesignOutputData } from "@/components/design-editor" // New import
 import { useCart } from "@/lib/cart-context"
 import QuoteRequestModal from "@/components/quote-request-modal"
+import { useLanguage } from "@/lib/language-context"
 
 const largeFormatProducts = [
   {
@@ -40,6 +41,7 @@ const largeFormatProducts = [
 ]
 
 export default function LargeFormatPage() {
+  const { t } = useLanguage()
   const [selectedProduct, setSelectedProduct] = useState(largeFormatProducts[0])
   const [customWidth, setCustomWidth] = useState(selectedProduct.baseSize.width)
   const [customHeight, setCustomHeight] = useState(selectedProduct.baseSize.height)
@@ -60,7 +62,7 @@ export default function LargeFormatPage() {
       designId: customDesign?.id || undefined,
       quantity: quantity,
       price: calculatePrice(),
-      name: `${selectedProduct.name} - ${customWidth}x${customHeight} ${selectedProduct.baseSize.unit}`,
+      name: `${t(`services.largeFormatPage.products.${selectedProduct.id}.name`)} - ${customWidth}x${customHeight} ${t(`services.largeFormatPage.products.${selectedProduct.id}.unit`)}`,
       image: customDesign?.customizedProductImage || selectedProduct.image || "/placeholder.svg?height=200&width=300",
       customizations: {
         product: selectedProduct,
@@ -77,15 +79,15 @@ export default function LargeFormatPage() {
             }
           : undefined,
         specifications: {
-          material: selectedProduct.name,
-          dimensions: `${customWidth} × ${customHeight} ${selectedProduct.baseSize.unit}`,
+          material: t(`services.largeFormatPage.products.${selectedProduct.id}.name`),
+          dimensions: `${customWidth} × ${customHeight} ${t(`services.largeFormatPage.products.${selectedProduct.id}.unit`)}`,
           area: calculateArea(),
         },
       },
     }
 
     addItem(cartItem)
-    alert(`Added ${selectedProduct.name} to cart!`)
+    alert(`${t("common.toast.addedToCartTitle")}: ${t(`services.largeFormatPage.products.${selectedProduct.id}.name`)}`)
   }
 
   const calculatePrice = () => {
@@ -126,13 +128,13 @@ export default function LargeFormatPage() {
       {/* Header */}
       <section className="bg-red-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">Large Format Printing</h1>
-          <p className="text-xl">Professional banners, posters, and specialty large-scale printing</p>
+          <h1 className="text-4xl font-bold mb-4">{t("services.largeFormatPage.headerTitle")}</h1>
+          <p className="text-xl">{t("services.largeFormatPage.headerSubtitle")}</p>
           {customDesign && (
             <div className="mt-4 p-3 bg-white/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                <span>Custom Design Ready for Printing</span>
+                <span>{t("services.largeFormatPage.customDesignReady")}</span>
               </div>
             </div>
           )}
@@ -150,7 +152,7 @@ export default function LargeFormatPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Palette className="h-5 w-5 text-red-600" />
-                      Your Custom Design
+                      {t("services.largeFormatPage.customDesignCardTitle")}
                     </CardTitle>
                     <Button
                       variant="ghost"
@@ -172,10 +174,10 @@ export default function LargeFormatPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">Custom Design for {selectedProduct.name}</h3>
-                      <p className="text-sm text-gray-600 capitalize mb-2">Manually Created</p>
+                      <h3 className="font-semibold text-lg">{t("services.largeFormatPage.customDesignCardTitle")} {t(`services.largeFormatPage.products.${selectedProduct.id}.name`)}</h3>
+                      <p className="text-sm text-gray-600 capitalize mb-2">{t("services.largeFormatPage.manuallyCreated")}</p>
                       <Badge variant="secondary" className="bg-red-100 text-red-800">
-                        Ready for Printing
+                        {t("services.largeFormatPage.readyForPrinting")}
                       </Badge>
                     </div>
                   </div>
@@ -188,7 +190,7 @@ export default function LargeFormatPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Ruler className="h-5 w-5" />
-                  Select Product Type
+                  {t("services.largeFormatPage.selectProductType")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -211,25 +213,25 @@ export default function LargeFormatPage() {
                       <div className="flex items-start gap-4">
                         <img
                           src={product.image || "/placeholder.svg"}
-                          alt={product.name}
+                          alt={t(`services.largeFormatPage.products.${product.id}.name`)}
                           className="w-20 h-20 object-cover rounded"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{product.name}</h3>
+                            <h3 className="font-semibold text-lg">{t(`services.largeFormatPage.products.${product.id}.name`)}</h3>
                             {product.weatherResistant && (
                               <Badge variant="secondary" className="text-xs">
-                                Weather Resistant
+                                {t("services.largeFormatPage.weatherResistant")}
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                          <p className="text-sm text-gray-600 mb-2">{t(`services.largeFormatPage.products.${product.id}.description`)}</p>
                           <div className="flex items-center gap-4">
                             <span className="text-sm font-medium text-red-600">
-                              ${product.price.toFixed(2)} {product.priceUnit}
+                              ${product.price.toFixed(2)} {t(`services.largeFormatPage.products.${product.id}.priceUnit`)}
                             </span>
                             <span className="text-xs text-gray-500">
-                              Base: {product.baseSize.width} × {product.baseSize.height} {product.baseSize.unit}
+                              {t("services.largeFormatPage.baseLabel")} {product.baseSize.width} × {product.baseSize.height} {t(`services.largeFormatPage.products.${product.id}.unit`)}
                             </span>
                           </div>
                         </div>
@@ -243,14 +245,14 @@ export default function LargeFormatPage() {
             {/* Size Configuration */}
             <Card>
               <CardHeader>
-                <CardTitle>Size Configuration</CardTitle>
+                <CardTitle>{t("services.largeFormatPage.sizeConfigTitle")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {selectedProduct.customSize ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="width" className="text-sm font-medium mb-2 block">
-                        Width ({selectedProduct.baseSize.unit})
+                        {t("services.largeFormatPage.width")} ({t(`services.largeFormatPage.products.${selectedProduct.id}.unit`)})
                       </Label>
                       <Input
                         id="width"
@@ -264,7 +266,7 @@ export default function LargeFormatPage() {
                     </div>
                     <div>
                       <Label htmlFor="height" className="text-sm font-medium mb-2 block">
-                        Height ({selectedProduct.baseSize.unit})
+                        {t("services.largeFormatPage.height")} ({t(`services.largeFormatPage.products.${selectedProduct.id}.unit`)})
                       </Label>
                       <Input
                         id="height"
@@ -280,7 +282,7 @@ export default function LargeFormatPage() {
                 ) : (
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      Standard size: {selectedProduct.baseSize.width}" × {selectedProduct.baseSize.height}"
+                      {t("services.largeFormatPage.standardSize")}: {selectedProduct.baseSize.width}" × {selectedProduct.baseSize.height}"
                     </p>
                   </div>
                 )}
@@ -288,14 +290,14 @@ export default function LargeFormatPage() {
                 {calculateArea() && (
                   <div className="p-4 bg-red-50 rounded-lg">
                     <p className="text-sm text-red-800">
-                      <strong>Total Area:</strong> {calculateArea()?.toFixed(2)} square meters
+                      <strong>{t("services.largeFormatPage.totalArea")}:</strong> {calculateArea()?.toFixed(2)} {t("services.largeFormatPage.squareMeters")}
                     </p>
                   </div>
                 )}
 
                 <div>
                   <Label htmlFor="quantity" className="text-sm font-medium mb-2 block">
-                    Quantity
+                    {t("services.largeFormatPage.quantity")}
                   </Label>
                   <Input
                     id="quantity"
@@ -310,11 +312,11 @@ export default function LargeFormatPage() {
 
                 <div>
                   <Label htmlFor="instructions" className="text-sm font-medium mb-2 block">
-                    Special Instructions (Optional)
+                    {t("services.largeFormatPage.specialInstructionsLabel")}
                   </Label>
                   <Textarea
                     id="instructions"
-                    placeholder="Grommets, hemming, mounting requirements, etc."
+                    placeholder={t("services.largeFormatPage.specialInstructionsPlaceholder")}
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
                     rows={3}
@@ -326,23 +328,23 @@ export default function LargeFormatPage() {
             {/* File Upload / Design Editor */}
             <Card>
               <CardHeader>
-                <CardTitle>Upload or Create Your Design</CardTitle>
+                <CardTitle>{t("services.largeFormatPage.uploadCreateTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {!customDesign ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-400 transition-colors">
                     <FileImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Drop your files here</h3>
-                    <p className="text-gray-600 mb-4">Support: PDF, PNG, JPG, AI, PSD (Max 100MB)</p>
-                    <Button variant="outline">Choose Files</Button>
+                    <h3 className="text-lg font-medium mb-2">{t("services.largeFormatPage.dropFilesHere")}</h3>
+                    <p className="text-gray-600 mb-4">{t("services.largeFormatPage.supportFormats")}</p>
+                    <Button variant="outline">{t("services.largeFormatPage.chooseFiles")}</Button>
                     <Separator className="my-6" />
-                    <p className="text-gray-600 mb-4">Or create a custom design:</p>
+                    <p className="text-gray-600 mb-4">{t("services.largeFormatPage.orCreateCustomDesign")}</p>
                     <Button
                       onClick={() => setShowDesignEditor(true)}
                       className="bg-red-600 hover:bg-red-700 text-white"
                     >
                       <Palette className="mr-2 h-5 w-5" />
-                      Customize Design
+                      {t("services.largeFormatPage.customizeDesign")}
                     </Button>
                   </div>
                 ) : (
@@ -354,12 +356,12 @@ export default function LargeFormatPage() {
                         className="w-16 h-16 object-cover rounded border"
                       />
                       <div>
-                        <p className="font-medium">Design Loaded</p>
-                        <p className="text-sm text-gray-600">Your custom design is ready.</p>
+                        <p className="font-medium">{t("services.largeFormatPage.designLoaded")}</p>
+                        <p className="text-sm text-gray-600">{t("services.largeFormatPage.designReady")}</p>
                       </div>
                     </div>
                     <Button variant="outline" onClick={() => setShowDesignEditor(true)}>
-                      Edit Design
+                      {t("services.largeFormatPage.editDesign")}
                     </Button>
                   </div>
                 )}
@@ -367,12 +369,12 @@ export default function LargeFormatPage() {
                   <div className="flex items-start gap-2">
                     <Info className="h-5 w-5 text-red-600 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-red-900">Large Format Guidelines:</p>
+                      <p className="font-medium text-red-900">{t("services.largeFormatPage.guidelinesTitle")}</p>
                       <ul className="text-red-700 mt-1 space-y-1">
-                        <li>• Minimum 150 DPI at final size</li>
-                        <li>• Vector files preferred for scalability</li>
-                        <li>• Include bleed for edge-to-edge printing</li>
-                        <li>• Consider viewing distance for text size</li>
+                        <li>{t("services.largeFormatPage.guidelines.bullet1")}</li>
+                        <li>{t("services.largeFormatPage.guidelines.bullet2")}</li>
+                        <li>{t("services.largeFormatPage.guidelines.bullet3")}</li>
+                        <li>{t("services.largeFormatPage.guidelines.bullet4")}</li>
                       </ul>
                     </div>
                   </div>
@@ -387,35 +389,35 @@ export default function LargeFormatPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  Order Summary
+                  {t("services.largeFormatPage.orderSummaryTitle")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="font-medium">{selectedProduct.name}</span>
+                    <span className="font-medium">{t(`services.largeFormatPage.products.${selectedProduct.id}.name`)}</span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
-                      <span>Size:</span>
+                      <span>{t("services.largeFormatPage.size")}</span>
                       <span>
-                        {customWidth} × {customHeight} {selectedProduct.baseSize.unit}
+                        {customWidth} × {customHeight} {t(`services.largeFormatPage.products.${selectedProduct.id}.unit`)}
                       </span>
                     </div>
                     {calculateArea() && (
                       <div className="flex justify-between">
-                        <span>Area:</span>
-                        <span>{calculateArea()?.toFixed(2)} sq m</span>
+                        <span>{t("services.largeFormatPage.area")}</span>
+                        <span>{calculateArea()?.toFixed(2)} {t("services.largeFormatPage.sqMetersShort")}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span>Quantity:</span>
+                      <span>{t("services.largeFormatPage.quantity")}</span>
                       <span>{quantity}</span>
                     </div>
                     {customDesign && (
                       <div className="flex justify-between">
-                        <span>Design:</span>
-                        <span className="text-red-600">Custom</span>
+                        <span>{t("services.largeFormatPage.design")}</span>
+                        <span className="text-red-600">{t("services.largeFormatPage.custom")}</span>
                       </div>
                     )}
                   </div>
@@ -425,24 +427,24 @@ export default function LargeFormatPage() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Unit Price:</span>
+                    <span>{t("services.largeFormatPage.unitPrice")}</span>
                     <span>${selectedProduct.price.toFixed(2)}</span>
                   </div>
                   {selectedProduct.id === "banner" && (
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>Area Cost:</span>
+                      <span>{t("services.largeFormatPage.areaCost")}</span>
                       <span>${(calculateArea()! * selectedProduct.price).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
+                    <span>{t("services.largeFormatPage.total")}</span>
                     <span className="text-red-600">${calculatePrice().toFixed(2)}</span>
                   </div>
                 </div>
 
                 <Button onClick={handleAddToCart} className="w-full bg-red-600 hover:bg-red-700" size="lg">
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Add to Cart
+                  {t("common.addToCart")}
                 </Button>
 
                 <div className="text-center space-y-2">
@@ -452,7 +454,7 @@ export default function LargeFormatPage() {
                     variant="outline"
                     className="w-full border-red-600 text-red-600 hover:bg-red-50"
                   >
-                    Request Detailed Quote
+                    {t("services.largeFormatPage.requestDetailedQuote")}
                   </Button>
                 </div>
               </CardContent>
@@ -461,24 +463,24 @@ export default function LargeFormatPage() {
             {/* Production Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Production Info</CardTitle>
+                <CardTitle className="text-lg">{t("services.largeFormatPage.productionInfoTitle")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Turnaround:</span>
-                  <span className="font-medium">2-3 business days</span>
+                  <span className="text-gray-600">{t("services.largeFormatPage.turnaround")}</span>
+                  <span className="font-medium">{t("services.largeFormatPage.turnaroundValue")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Material:</span>
-                  <span className="font-medium">13oz Vinyl</span>
+                  <span className="text-gray-600">{t("services.largeFormatPage.material")}</span>
+                  <span className="font-medium">{t("services.largeFormatPage.materialValue")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Finishing:</span>
-                  <span className="font-medium">Grommets available</span>
+                  <span className="text-gray-600">{t("services.largeFormatPage.finishing")}</span>
+                  <span className="font-medium">{t("services.largeFormatPage.finishingValue")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Installation:</span>
-                  <span className="font-medium">Available</span>
+                  <span className="text-gray-600">{t("services.largeFormatPage.installation")}</span>
+                  <span className="font-medium">{t("services.largeFormatPage.installationValue")}</span>
                 </div>
               </CardContent>
             </Card>
@@ -491,7 +493,7 @@ export default function LargeFormatPage() {
           isOpen={showDesignEditor}
           onClose={() => setShowDesignEditor(false)}
           productImage={selectedProduct.image}
-          productName={selectedProduct.name}
+          productName={t(`services.largeFormatPage.products.${selectedProduct.id}.name`)}
           initialDesign={
             customDesign
               ? {
@@ -507,7 +509,7 @@ export default function LargeFormatPage() {
         <QuoteRequestModal
           isOpen={showQuoteModal}
           onClose={() => setShowQuoteModal(false)}
-          serviceType="Large Format Printing"
+          serviceType={t("services.largeFormat")}
           prefilledData={{
             product: selectedProduct,
             width: customWidth,

@@ -20,6 +20,7 @@ import { motion } from "framer-motion"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
+import { useLanguage } from "@/lib/language-context"
 
 type OrderItem = {
   id: string
@@ -71,6 +72,7 @@ type Order = {
 }
 
 export default function OrderManagement() {
+  const { t } = useLanguage()
   const { toast } = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -137,8 +139,8 @@ export default function OrderManagement() {
     } catch (error) {
       console.error("Error loading orders:", error)
       toast({
-        title: "Error",
-        description: "Failed to load orders",
+        title: t("common.error"),
+        description: t("admin.orders.toasts.errorLoadingOrders"),
         variant: "destructive",
       })
     } finally {
@@ -170,14 +172,14 @@ export default function OrderManagement() {
       }
 
       toast({
-        title: "Success",
-        description: `Order status updated to ${newStatus}`,
+        title: t("common.success"),
+        description: `${t("admin.orders.toasts.statusUpdatedPrefix")} ${t("admin.orders.statuses." + newStatus)}`,
       })
     } catch (error) {
       console.error("Error updating order status:", error)
       toast({
-        title: "Error",
-        description: "Failed to update order status",
+        title: t("common.error"),
+        description: t("admin.orders.toasts.updateStatusError"),
         variant: "destructive",
       })
     }
@@ -192,8 +194,8 @@ export default function OrderManagement() {
     
     if (!downloadUrl) {
       toast({
-        title: "No Design File",
-        description: "No design file available for this item",
+        title: t("admin.orders.toasts.noDesignFileTitle"),
+        description: t("admin.orders.toasts.noDesignFileDesc"),
         variant: "destructive",
       })
       return
@@ -210,14 +212,14 @@ export default function OrderManagement() {
       document.body.removeChild(link)
 
       toast({
-        title: "Download Started",
-        description: `Downloading ${item.digital_product ? 'digital' : 'design'} file for ${item.name}`,
+        title: t("admin.orders.toasts.downloadStartedTitle"),
+        description: `${t("admin.orders.toasts.downloadStartedDescPrefix")} ${item.name}`,
       })
     } catch (error) {
       console.error("Error downloading design file:", error)
       toast({
-        title: "Download Failed",
-        description: "Failed to download design file",
+        title: t("admin.orders.toasts.downloadFailedTitle"),
+        description: t("admin.orders.toasts.downloadFailedDesc"),
         variant: "destructive",
       })
     } finally {
@@ -250,14 +252,14 @@ export default function OrderManagement() {
       }
 
       toast({
-        title: "Invoice Generated",
-        description: `Invoice ${invoiceNumber} is ready for printing`,
+        title: t("admin.orders.toasts.invoiceGeneratedTitle"),
+        description: `${t("admin.orders.toasts.invoiceGeneratedDescPrefix")} ${invoiceNumber} ${t("admin.orders.toasts.invoiceGeneratedDescSuffix")}`,
       })
     } catch (error) {
       console.error("Error generating invoice:", error)
       toast({
-        title: "Error",
-        description: "Failed to generate invoice",
+        title: t("common.error"),
+        description: t("admin.orders.toasts.invoiceGenerateError"),
         variant: "destructive",
       })
     } finally {
@@ -270,7 +272,7 @@ export default function OrderManagement() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Invoice ${invoiceNumber}</title>
+        <title>${t("admin.orders.invoicePage.titlePrefix")} ${invoiceNumber}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 30px; }
@@ -285,20 +287,20 @@ export default function OrderManagement() {
       </head>
       <body>
         <div class="header">
-          <h1>INVOICE</h1>
+          <h1>${t("admin.orders.invoice")}</h1>
           <h2>DeliveryPrint</h2>
         </div>
         
         <div class="invoice-details">
-          <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
-          <p><strong>Order Number:</strong> ${order.order_number}</p>
-          <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
-          <p><strong>Payment Method:</strong> ${order.payment_method.toUpperCase()}</p>
-          <p><strong>Transaction ID:</strong> ${order.payment_transaction_id || 'N/A'}</p>
+          <p><strong>${t("admin.orders.invoicePage.invoiceNumberLabel")}</strong> ${invoiceNumber}</p>
+          <p><strong>${t("admin.orders.invoicePage.orderNumberLabel")}</strong> ${order.order_number}</p>
+          <p><strong>${t("admin.orders.invoicePage.dateLabel")}</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
+          <p><strong>${t("admin.orders.invoicePage.paymentMethodLabel")}</strong> ${t(`checkout.paymentMethods.${order.payment_method}.name`)}</p>
+          <p><strong>${t("admin.orders.invoicePage.transactionIdLabel")}</strong> ${order.payment_transaction_id || t("admin.orders.na")}</p>
         </div>
         
         <div class="customer-info">
-          <h3>Bill To:</h3>
+          <h3>${t("admin.orders.invoicePage.billTo")}</h3>
           <p>${order.shipping_address?.firstName} ${order.shipping_address?.lastName}</p>
           <p>${order.email}</p>
           <p>${order.shipping_address?.address}</p>
@@ -309,10 +311,10 @@ export default function OrderManagement() {
         <table class="items-table">
           <thead>
             <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Unit Price</th>
-              <th>Total</th>
+              <th>${t("admin.orders.invoicePage.tableHeaders.item")}</th>
+              <th>${t("admin.orders.invoicePage.tableHeaders.quantity")}</th>
+              <th>${t("admin.orders.invoicePage.tableHeaders.unitPrice")}</th>
+              <th>${t("admin.orders.invoicePage.tableHeaders.total")}</th>
             </tr>
           </thead>
           <tbody>
@@ -328,14 +330,14 @@ export default function OrderManagement() {
         </table>
         
         <div class="totals">
-          <p>Subtotal: $${order.subtotal.toFixed(2)}</p>
-          <p>Shipping: $${order.shipping.toFixed(2)}</p>
-          <p>Tax: $${order.tax.toFixed(2)}</p>
-          <p class="total-row">Total: $${order.total.toFixed(2)}</p>
+          <p>${t("admin.orders.subtotalLabel")}: $${order.subtotal.toFixed(2)}</p>
+          <p>${t("admin.orders.shippingLabel")}: $${order.shipping.toFixed(2)}</p>
+          <p>${t("admin.orders.taxLabel")}: $${order.tax.toFixed(2)}</p>
+          <p class="total-row">${t("admin.orders.totalLabel")}: $${order.total.toFixed(2)}</p>
         </div>
         
         <div style="margin-top: 30px; text-align: center; color: #666;">
-          <p>Thank you for your business!</p>
+          <p>${t("admin.orders.invoicePage.thankYouNote")}</p>
         </div>
       </body>
       </html>
@@ -394,19 +396,19 @@ export default function OrderManagement() {
   return (
     <div className="space-y-6">
      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-        <p className="text-gray-600">Track and manage customer orders</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("admin.orders.headerTitle")}</h1>
+        <p className="text-gray-600">{t("admin.orders.subtitle")}</p>
       </div> 
 
       {/* Order Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: "Total", value: orderStats.total, color: "bg-gray-600" },
-          { label: "Pending", value: orderStats.pending, color: "bg-[#8B0000]" },
-          { label: "Processing", value: orderStats.processing, color: "bg-blue-600" },
-          { label: "Shipped", value: orderStats.shipped, color: "bg-purple-600" },
-          { label: "Completed", value: orderStats.completed, color: "bg-green-600" },
-          { label: "Cancelled", value: orderStats.cancelled, color: "bg-red-600" },
+          { label: t("admin.orders.stats.total"), value: orderStats.total, color: "bg-gray-600" },
+          { label: t("admin.orders.stats.pending"), value: orderStats.pending, color: "bg-[#8B0000]" },
+          { label: t("admin.orders.stats.processing"), value: orderStats.processing, color: "bg-blue-600" },
+          { label: t("admin.orders.stats.shipped"), value: orderStats.shipped, color: "bg-purple-600" },
+          { label: t("admin.orders.stats.completed"), value: orderStats.completed, color: "bg-green-600" },
+          { label: t("admin.orders.stats.cancelled"), value: orderStats.cancelled, color: "bg-red-600" },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -436,7 +438,7 @@ export default function OrderManagement() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search by order number or email..."
+                  placeholder={t("admin.orders.searchPlaceholder")}
                   className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -445,15 +447,15 @@ export default function OrderManagement() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("admin.orders.filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">{t("admin.orders.allStatuses")}</SelectItem>
+                <SelectItem value="pending">{t("admin.orders.statuses.pending")}</SelectItem>
+                <SelectItem value="processing">{t("admin.orders.statuses.processing")}</SelectItem>
+                <SelectItem value="shipped">{t("admin.orders.statuses.shipped")}</SelectItem>
+                <SelectItem value="completed">{t("admin.orders.statuses.completed")}</SelectItem>
+                <SelectItem value="cancelled">{t("admin.orders.statuses.cancelled")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -463,27 +465,27 @@ export default function OrderManagement() {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Orders ({filteredOrders.length})</CardTitle>
-          <CardDescription>Manage customer orders and track their progress</CardDescription>
+          <CardTitle>{t("admin.orders.title")} ({filteredOrders.length})</CardTitle>
+          <CardDescription>{t("admin.orders.tableDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("admin.orders.table.order")}</TableHead>
+                <TableHead>{t("admin.orders.table.customer")}</TableHead>
+                <TableHead>{t("admin.orders.table.status")}</TableHead>
+                <TableHead>{t("admin.orders.table.total")}</TableHead>
+                <TableHead>{t("admin.orders.table.payment")}</TableHead>
+                <TableHead>{t("admin.orders.table.date")}</TableHead>
+                <TableHead className="text-right">{t("admin.orders.table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">
-                    <p className="text-gray-500">Loading orders...</p>
+                    <p className="text-gray-500">{t("admin.orders.loading")}</p>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -495,7 +497,7 @@ export default function OrderManagement() {
                         <div>
                           <p className="font-medium">{order.order_number}</p>
                           <p className="text-sm text-gray-500">
-                            {order.shipping_method?.charAt(0).toUpperCase() + order.shipping_method?.slice(1)} shipping
+                            {t(`checkout.shippingMethods.${order.shipping_method}.name`)}
                           </p>
                         </div>
                       </TableCell>
@@ -511,14 +513,14 @@ export default function OrderManagement() {
                         <div className="flex items-center space-x-2">
                           <StatusIcon className="h-4 w-4" />
                           <Badge className={getStatusColor(order.status)}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            {t(`admin.orders.statuses.${order.status}`)}
                           </Badge>
                         </div>
                       </TableCell>
                       <TableCell>${order.total.toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {order.payment_method.charAt(0).toUpperCase() + order.payment_method.slice(1)}
+                          {t(`checkout.paymentMethods.${order.payment_method}.name`)}
                         </Badge>
                       </TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
@@ -532,8 +534,8 @@ export default function OrderManagement() {
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
-                                <DialogTitle>Order Details - {order.order_number}</DialogTitle>
-                                <DialogDescription>View and manage order information</DialogDescription>
+                                <DialogTitle>{t("admin.orders.orderDetailsTitle").replace("{orderNumber}", order.order_number)}</DialogTitle>
+                                <DialogDescription>{t("admin.orders.orderDetailsDescription")}</DialogDescription>
                               </DialogHeader>
                               {selectedOrder && (
                                 <div className="space-y-6 max-h-[70vh] overflow-y-auto">
@@ -541,11 +543,11 @@ export default function OrderManagement() {
                                   <div className="flex justify-between items-start">
                                     <div>
                                       <Badge className={getStatusColor(selectedOrder.status)}>
-                                        {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                                        {t(`admin.orders.statuses.${selectedOrder.status}`)}
                                       </Badge>
                                       {selectedOrder.payment_status && (
                                         <Badge variant="outline" className="ml-2">
-                                          Payment: {selectedOrder.payment_status}
+                                          {t("admin.orders.paymentLabel")}: {selectedOrder.payment_status}
                                         </Badge>
                                       )}
                                     </div>
@@ -557,9 +559,9 @@ export default function OrderManagement() {
                                         disabled={generatingInvoice}
                                       >
                                         {generatingInvoice ? (
-                                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+                                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("admin.orders.generating")}</>
                                         ) : (
-                                          <><FileText className="h-4 w-4 mr-2" />Invoice</>
+                                          <><FileText className="h-4 w-4 mr-2" />{t("admin.orders.invoice")}</>
                                         )}
                                       </Button>
                                     </div>
@@ -568,21 +570,21 @@ export default function OrderManagement() {
                                   {/* Customer & Order Info */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                      <h4 className="font-semibold mb-3">Customer Information</h4>
+                                      <h4 className="font-semibold mb-3">{t("admin.orders.customerInformation")}</h4>
                                       <div className="space-y-2 text-sm">
-                                        <p><strong>Email:</strong> {selectedOrder.email}</p>
-                                        <p><strong>Name:</strong> {selectedOrder.shipping_address?.firstName} {selectedOrder.shipping_address?.lastName}</p>
-                                        <p><strong>Phone:</strong> {selectedOrder.shipping_address?.phone}</p>
+                                        <p><strong>{t("admin.orders.emailLabel")} </strong> {selectedOrder.email}</p>
+                                        <p><strong>{t("admin.orders.nameLabel")} </strong> {selectedOrder.shipping_address?.firstName} {selectedOrder.shipping_address?.lastName}</p>
+                                        <p><strong>{t("admin.orders.phoneLabel")} </strong> {selectedOrder.shipping_address?.phone}</p>
                                       </div>
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold mb-3">Payment & Delivery</h4>
+                                      <h4 className="font-semibold mb-3">{t("admin.orders.paymentDelivery")}</h4>
                                       <div className="space-y-2 text-sm">
-                                        <p><strong>Payment:</strong> {selectedOrder.payment_method.toUpperCase()}</p>
-                                        <p><strong>Shipping:</strong> {selectedOrder.shipping_method}</p>
-                                        <p><strong>Transaction:</strong> {selectedOrder.payment_transaction_id || 'N/A'}</p>
+                                        <p><strong>{t("admin.orders.paymentLabel")} </strong> {t(`checkout.paymentMethods.${selectedOrder.payment_method}.name`)}</p>
+                                        <p><strong>{t("admin.orders.shippingLabel")} </strong> {t(`checkout.shippingMethods.${selectedOrder.shipping_method}.name`)}</p>
+                                        <p><strong>{t("admin.orders.transactionLabel")} </strong> {selectedOrder.payment_transaction_id || t("admin.orders.na")}</p>
                                         {selectedOrder.invoice_number && (
-                                          <p><strong>Invoice:</strong> {selectedOrder.invoice_number}</p>
+                                          <p><strong>{t("admin.orders.invoiceLabel")} </strong> {selectedOrder.invoice_number}</p>
                                         )}
                                       </div>
                                     </div>
@@ -590,7 +592,7 @@ export default function OrderManagement() {
 
                                   {/* Shipping Address */}
                                   <div>
-                                    <h4 className="font-semibold mb-3">Shipping Address</h4>
+                                    <h4 className="font-semibold mb-3">{t("admin.orders.shippingAddress")}</h4>
                                     <address className="text-sm not-italic bg-gray-50 p-3 rounded">
                                       {selectedOrder.shipping_address?.address}<br />
                                       {selectedOrder.shipping_address?.city}, {selectedOrder.shipping_address?.state} {selectedOrder.shipping_address?.zipCode}<br />
@@ -600,7 +602,7 @@ export default function OrderManagement() {
 
                                   {/* Order Items */}
                                   <div>
-                                    <h4 className="font-semibold mb-3">Order Items ({selectedOrder.order_items?.length || 0})</h4>
+                                    <h4 className="font-semibold mb-3">{t("admin.orders.orderItems")} ({selectedOrder.order_items?.length || 0})</h4>
                                     <div className="space-y-3">
                                       {selectedOrder.order_items?.map((item) => (
                                         <div key={item.id} className="border rounded-lg p-4">
@@ -628,15 +630,15 @@ export default function OrderManagement() {
                                               })()}
                                               <div>
                                                 <h5 className="font-medium">{item.name}</h5>
-                                                <p className="text-sm text-gray-600">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
-                                                <p className="text-sm font-medium">Total: ${(item.quantity * item.price).toFixed(2)}</p>
+                                                <p className="text-sm text-gray-600">{t("admin.orders.qtyLabel")} {item.quantity} × ${item.price.toFixed(2)}</p>
+                                                <p className="text-sm font-medium">{t("admin.orders.itemTotalLabel")} ${(item.quantity * item.price).toFixed(2)}</p>
                                                 {item.digital_product && (
                                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
-                                                    Digital {item.digital_product.type}
+                                                    {t("admin.orders.digitalBadgePrefix")} {item.digital_product.type}
                                                   </span>
                                                 )}
                                                 {item.customizations && (
-                                                  <p className="text-xs text-gray-500 mt-1">Customized</p>
+                                                  <p className="text-xs text-gray-500 mt-1">{t("admin.orders.customizedLabel")}</p>
                                                 )}
                                               </div>
                                             </div>
@@ -670,7 +672,7 @@ export default function OrderManagement() {
                                           </div>
                                           {item.customizations && (
                                             <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
-                                              <strong>Customizations:</strong>
+                                              <strong>{t("admin.orders.customizationsLabel")}</strong>
                                               <pre className="mt-1 whitespace-pre-wrap">
                                                 {JSON.stringify(item.customizations, null, 2)}
                                               </pre>
@@ -678,35 +680,35 @@ export default function OrderManagement() {
                                           )}
                                         </div>
                                       )) || (
-                                        <p className="text-gray-500 text-center py-4">No items found</p>
+                                        <p className="text-gray-500 text-center py-4">{t("admin.orders.noItemsFound")}</p>
                                       )}
                                     </div>
                                   </div>
 
                                   {/* Order Summary */}
                                   <div>
-                                    <h4 className="font-semibold mb-3">Order Summary</h4>
+                                    <h4 className="font-semibold mb-3">{t("admin.orders.orderSummary")}</h4>
                                     <div className="bg-gray-50 p-4 rounded space-y-2">
                                       <div className="flex justify-between text-sm">
-                                        <span>Subtotal:</span>
+                                        <span>{t("admin.orders.subtotalLabel")}</span>
                                         <span>${selectedOrder.subtotal.toFixed(2)}</span>
                                       </div>
                                       <div className="flex justify-between text-sm">
-                                        <span>Shipping:</span>
+                                        <span>{t("admin.orders.shippingLabel")}</span>
                                         <span>${selectedOrder.shipping.toFixed(2)}</span>
                                       </div>
                                       <div className="flex justify-between text-sm">
-                                        <span>Tax:</span>
+                                        <span>{t("admin.orders.taxLabel")}</span>
                                         <span>${selectedOrder.tax.toFixed(2)}</span>
                                       </div>
                                       {selectedOrder.discount > 0 && (
                                         <div className="flex justify-between text-sm text-green-600">
-                                          <span>Discount:</span>
+                                          <span>{t("admin.orders.discountLabel")}</span>
                                           <span>-${selectedOrder.discount.toFixed(2)}</span>
                                         </div>
                                       )}
                                       <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                                        <span>Total:</span>
+                                        <span>{t("admin.orders.totalLabel")}</span>
                                         <span>${selectedOrder.total.toFixed(2)}</span>
                                       </div>
                                     </div>
@@ -714,10 +716,10 @@ export default function OrderManagement() {
 
                                   {/* Status Management */}
                                   <div>
-                                    <h4 className="font-semibold mb-3">Order Management</h4>
+                                    <h4 className="font-semibold mb-3">{t("admin.orders.orderManagement")}</h4>
                                     <div className="space-y-3">
                                       <div>
-                                        <label className="text-sm font-medium mb-2 block">Update Status:</label>
+                                        <label className="text-sm font-medium mb-2 block">{t("admin.orders.updateStatus")}</label>
                                         <Select
                                           value={selectedOrder.status}
                                           onValueChange={(value) => updateOrderStatus(selectedOrder.id, value)}
@@ -726,19 +728,19 @@ export default function OrderManagement() {
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                                            <SelectItem value="processing">Processing</SelectItem>
-                                            <SelectItem value="printing">Printing</SelectItem>
-                                            <SelectItem value="shipped">Shipped</SelectItem>
-                                            <SelectItem value="completed">Completed</SelectItem>
-                                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            <SelectItem value="pending">{t("admin.orders.statuses.pending")}</SelectItem>
+                                            <SelectItem value="confirmed">{t("admin.orders.statuses.confirmed")}</SelectItem>
+                                            <SelectItem value="processing">{t("admin.orders.statuses.processing")}</SelectItem>
+                                            <SelectItem value="printing">{t("admin.orders.statuses.printing")}</SelectItem>
+                                            <SelectItem value="shipped">{t("admin.orders.statuses.shipped")}</SelectItem>
+                                            <SelectItem value="completed">{t("admin.orders.statuses.completed")}</SelectItem>
+                                            <SelectItem value="cancelled">{t("admin.orders.statuses.cancelled")}</SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
                                       {selectedOrder.notes && (
                                         <div>
-                                          <label className="text-sm font-medium mb-2 block">Customer Notes:</label>
+                                          <label className="text-sm font-medium mb-2 block">{t("admin.orders.customerNotesLabel")}</label>
                                           <p className="text-sm bg-yellow-50 p-2 rounded">{selectedOrder.notes}</p>
                                         </div>
                                       )}
@@ -763,7 +765,7 @@ export default function OrderManagement() {
           </Table>
           {!loading && filteredOrders.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500">No orders found</p>
+              <p className="text-gray-500">{t("admin.orders.noOrdersFound")}</p>
             </div>
           )}
         </CardContent>

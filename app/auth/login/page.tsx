@@ -16,7 +16,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 
 export default function LoginPage() {
-  const { t } = useLanguage() // Add this line
+  const { t } = useLanguage()
   const { signIn } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -30,12 +30,12 @@ export default function LoginPage() {
     
     // Add explicit validation
     if (!email.trim()) {
-      setError("Email is required")
+      setError(t("auth.emailLabel") + " is required")
       return
     }
     
     if (!password.trim()) {
-      setError("Password is required")
+      setError(t("auth.passwordLabel") + " is required")
       return
     }
     
@@ -65,7 +65,7 @@ export default function LoginPage() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -77,7 +77,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.passwordLabel")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -103,7 +103,7 @@ export default function LoginPage() {
             </div>
             <div className="flex justify-end">
               <Link href="/auth/forgot-password" className="text-sm text-[#8B0000] hover:underline">
-                Forgot password?
+                {t("auth.forgotPassword")}
               </Link>
             </div>
           </CardContent>
@@ -112,16 +112,16 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing you in...
+                  {t("auth.signingIn")}
                 </>
               ) : (
-                "Sign In"
+                t("auth.signIn")
               )}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{" "}
+              {t("auth.noAccount")} {" "}
               <Link href="/auth/register" className="text-[#8B0000] hover:underline">
-                Create account
+                {t("auth.createAccount")}
               </Link>
             </p>
           </CardFooter>

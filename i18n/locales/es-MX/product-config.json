@@ -1,0 +1,34 @@
+{
+  "product": {
+    "config": {
+      "title": "Configura tu producto",
+      "size": "Tamaño",
+      "material": "Material",
+      "color": "Color",
+      "quantity": "Cantidad",
+      "price": "Precio",
+      "addToCart": "Agregar al carrito",
+      "updateCart": "Actualizar carrito",
+      "inStock": "En existencia",
+      "outOfStock": "Sin existencia"
+    },
+    "tooltips": {
+      "size": "Selecciona las dimensiones de tu impresión",
+      "material": "Elige el material más adecuado para tu uso",
+      "color": "Selecciona una variante de color"
+    },
+    "placeholders": {
+      "search": "Buscar productos",
+      "notes": "Agrega instrucciones especiales (opcional)"
+    },
+    "validation": {
+      "required": "Este campo es obligatorio",
+      "minQuantity": "La cantidad mínima es 1"
+    },
+    "alerts": {
+      "added": "Artículo agregado al carrito correctamente",
+      "updated": "Carrito actualizado",
+      "error": "Error al agregar el artículo"
+    }
+  }
+}

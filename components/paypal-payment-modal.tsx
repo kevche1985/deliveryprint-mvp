@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Shield, CheckCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 
 interface OrderData {
   total: number
@@ -33,6 +34,7 @@ export default function PayPalPaymentModal({
   onError,
 }: PayPalPaymentModalProps) {
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<"login" | "confirm" | "processing">("login")
   const [paypalEmail, setPaypalEmail] = useState("")
@@ -85,8 +87,8 @@ export default function PayPalPaymentModal({
 
       if (result.success) {
         toast({
-          title: "Payment Successful",
-          description: "Your PayPal payment has been processed successfully.",
+          title: t("payment.success.title"),
+          description: t("payment.3ds.success.message"),
         })
         onSuccess(result.transactionId)
       } else {

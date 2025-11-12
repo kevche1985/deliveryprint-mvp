@@ -3,7 +3,13 @@
 import { useLanguage } from '@/lib/language-context'
 
 export default function DebugTranslationsPage() {
-  const { t, language, setLanguage, availableLanguages } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
+  
+  // Define available languages locally since it's not in the context
+  const availableLanguages = [
+    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
+    { code: 'es' as const, name: 'Español', flag: '🇪🇸' }
+  ]
 
   return (
     <div className="p-8 max-w-4xl mx-auto">

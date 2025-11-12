@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, ShoppingCart, Users, Package, TrendingUp, TrendingDown, Clock, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 
 // Sample data - in a real app, this would come from your database
 const revenueData = [
@@ -27,6 +28,7 @@ const orderStatusData = [
 ]
 
 export default function AdminDashboard() {
+  const { t } = useLanguage()
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -86,28 +88,28 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      title: "Total Revenue",
+      title: t("admin.dashboard.statCards.totalRevenue"),
       value: `$${stats.totalRevenue.toFixed(2)}`,
       change: "+12.5%",
       changeType: "positive",
       icon: DollarSign,
     },
     {
-      title: "Total Orders",
+      title: t("admin.dashboard.statCards.totalOrders"),
       value: stats.totalOrders.toString(),
       change: "+8.2%",
       changeType: "positive",
       icon: ShoppingCart,
     },
     {
-      title: "Total Users",
+      title: t("admin.dashboard.statCards.totalUsers"),
       value: stats.totalUsers.toString(),
       change: "+15.3%",
       changeType: "positive",
       icon: Users,
     },
     {
-      title: "Total Products",
+      title: t("admin.dashboard.statCards.totalProducts"),
       value: stats.totalProducts.toString(),
       change: "+2.1%",
       changeType: "positive",
@@ -117,28 +119,28 @@ export default function AdminDashboard() {
 
   const quickStats = [
     {
-      title: "Pending Orders",
+      title: t("admin.dashboard.quickStats.pendingOrders"),
       value: stats.pendingOrders,
       icon: Clock,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
     },
     {
-      title: "Completed Orders",
+      title: t("admin.dashboard.quickStats.completedOrders"),
       value: stats.completedOrders,
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
-      title: "Pending Quotes",
+      title: t("admin.dashboard.quickStats.pendingQuotes"),
       value: stats.pendingQuotes,
       icon: Clock,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
-      title: "Active Users",
+      title: t("admin.dashboard.quickStats.activeUsers"),
       value: stats.activeUsers,
       icon: Users,
       color: "text-purple-600",
@@ -149,8 +151,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 -mt-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Welcome to the DeliveryPrint admin panel</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("admin.dashboard.headerTitle")}</h1>
+        <p className="text-gray-500">{t("admin.dashboard.headerSubtitle")}</p>
       </div>
 
       {/* Stats Cards */}

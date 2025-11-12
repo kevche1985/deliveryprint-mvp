@@ -26,6 +26,7 @@ import { Plus, Edit, Trash2, Search, Package, Upload, Download, MoreHorizontal, 
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useLanguage } from "@/lib/language-context"
 
 type Product = {
   id: string
@@ -40,6 +41,7 @@ type Product = {
 }
 
 export default function ProductManagement() {
+  const { t } = useLanguage()
   const { toast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,8 +78,8 @@ export default function ProductManagement() {
     } catch (error) {
       console.error("Error loading products:", error)
       toast({
-        title: "Error",
-        description: "Failed to load products",
+        title: t("common.error"),
+        description: t("admin.products.toasts.errorLoadingProducts"),
         variant: "destructive",
       })
     } finally {
@@ -114,19 +116,20 @@ export default function ProductManagement() {
       const { data: publicUrlData } = supabase.storage.from("product-images").getPublicUrl(filePath)
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
-        throw new Error("Failed to get public URL for uploaded image.")
+        // Localize error message to ensure consistent user-facing language
+        throw new Error(t("admin.products.toasts.imageUploadFailedDesc"))
       }
 
       toast({
-        title: "Image Uploaded",
-        description: "Product image uploaded successfully.",
+        title: t("admin.products.toasts.imageUploadedTitle"),
+        description: t("admin.products.toasts.imageUploadedDesc"),
       })
       return publicUrlData.publicUrl
     } catch (error: any) {
       console.error("Error uploading image:", error)
       toast({
-        title: "Image Upload Failed",
-        description: error.message || "An error occurred during image upload.",
+        title: t("admin.products.toasts.imageUploadFailedTitle"),
+        description: error.message || t("admin.products.toasts.imageUploadFailedDesc"),
         variant: "destructive",
       })
       return null
@@ -147,8 +150,8 @@ export default function ProductManagement() {
       } else {
         // If upload failed, prevent form submission or show error
         toast({
-          title: "Submission Failed",
-          description: "Image upload failed, please try again.",
+          title: t("admin.products.toasts.submissionFailedTitle"),
+          description: t("admin.products.toasts.submissionFailedDesc"),
           variant: "destructive",
         })
         return // Stop form submission
@@ -169,11 +172,11 @@ export default function ProductManagement() {
       if (editingProduct) {
         const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id)
         if (error) throw error
-        toast({ title: "Success", description: "Product updated successfully" })
+        toast({ title: t("common.success"), description: t("admin.products.toasts.productUpdated") })
       } else {
         const { error } = await supabase.from("products").insert([productData])
         if (error) throw error
-        toast({ title: "Success", description: "Product created successfully" })
+        toast({ title: t("common.success"), description: t("admin.products.toasts.productCreated") })
       }
 
       handleDialogClose() // Use the new close handler
@@ -181,8 +184,8 @@ export default function ProductManagement() {
     } catch (error) {
       console.error("Error saving product:", error)
       toast({
-        title: "Error",
-        description: "Failed to save product",
+        title: t("common.error"),
+        description: t("admin.products.toasts.saveProductFailed"),
         variant: "destructive",
       })
     }
@@ -222,7 +225,7 @@ export default function ProductManagement() {
   }
 
   const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return
+    if (!confirm(t("admin.products.toasts.deleteConfirm"))) return
 
     try {
       const { error } = await supabase.from("products").delete().eq("id", productId)
@@ -230,15 +233,15 @@ export default function ProductManagement() {
       if (error) throw error
 
       toast({
-        title: "Success",
-        description: "Product deleted successfully",
+        title: t("common.success"),
+        description: t("admin.products.toasts.productDeleted"),
       })
       loadProducts()
     } catch (error) {
       console.error("Error deleting product:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete product",
+        title: t("common.error"),
+        description: t("admin.products.toasts.deleteProductFailed"),
         variant: "destructive",
       })
     }
@@ -268,8 +271,8 @@ export default function ProductManagement() {
   const handleImport = async () => {
     if (!importFileRef.current?.files?.length) {
       toast({
-        title: "No file selected",
-        description: "Please select a CSV file to import.",
+        title: t("admin.products.toasts.noFileSelectedTitle"),
+        description: t("admin.products.toasts.noFileSelectedDesc"),
         variant: "destructive",
       })
       return
@@ -281,8 +284,8 @@ export default function ProductManagement() {
 
     try {
       toast({
-        title: "Importing Products",
-        description: "Uploading and processing your CSV file...",
+        title: t("admin.products.toasts.importingProductsTitle"),
+        description: t("admin.products.toasts.importingProductsDesc"),
       })
 
       const response = await fetch("/api/admin/products/import", {
@@ -291,22 +294,30 @@ export default function ProductManagement() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to import products.")
+        let errMsg: string | undefined
+        try {
+          const errorData = await response.json()
+          errMsg = errorData.error
+        } catch (_) {
+          // If response is not JSON, fallback to a localized message
+        }
+        throw new Error(errMsg || t("admin.products.toasts.importFailedDesc"))
       }
 
       const result = await response.json()
       toast({
-        title: "Import Complete",
-        description: `Successfully imported ${result.created} new products and updated ${result.updated} existing products.`,
+        title: t("admin.products.toasts.importCompleteTitle"),
+        description: t("admin.products.toasts.importCompleteDesc")
+          .replace("{created}", String(result.created))
+          .replace("{updated}", String(result.updated)),
       })
       setIsImportDialogOpen(false)
       loadProducts() // Reload products after import
     } catch (error: any) {
       console.error("Error during import:", error)
       toast({
-        title: "Import Failed",
-        description: error.message || "An error occurred during product import.",
+        title: t("admin.products.toasts.importFailedTitle"),
+        description: error.message || t("admin.products.toasts.importFailedDesc"),
         variant: "destructive",
       })
     }
@@ -315,8 +326,8 @@ export default function ProductManagement() {
   const handleExport = async (exportType: "all" | "selected") => {
     try {
       toast({
-        title: "Exporting Products",
-        description: "Preparing your product data for download...",
+        title: t("admin.products.toasts.exportingProductsTitle"),
+        description: t("admin.products.toasts.exportingProductsDesc"),
       })
 
       let url = "/api/admin/products/export"
@@ -324,8 +335,8 @@ export default function ProductManagement() {
         url += `?ids=${Array.from(selectedProductIds).join(",")}`
       } else if (exportType === "selected" && selectedProductIds.size === 0) {
         toast({
-          title: "No Products Selected",
-          description: 'Please select products to export, or choose "Export All".',
+          title: t("admin.products.toasts.noProductsSelectedTitle"),
+          description: t("admin.products.toasts.noProductsSelectedDesc"),
           variant: "destructive",
         })
         return
@@ -334,8 +345,14 @@ export default function ProductManagement() {
       const response = await fetch(url)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to export products.")
+        let errMsg: string | undefined
+        try {
+          const errorData = await response.json()
+          errMsg = errorData.error
+        } catch (_) {
+          // If response is not JSON, fallback to a localized message
+        }
+        throw new Error(errMsg || t("admin.products.toasts.exportFailedDesc"))
       }
 
       const blob = await response.blob()
@@ -349,14 +366,14 @@ export default function ProductManagement() {
       window.URL.revokeObjectURL(downloadUrl)
 
       toast({
-        title: "Export Complete",
-        description: "Product data downloaded successfully.",
+        title: t("admin.products.toasts.exportCompleteTitle"),
+        description: t("admin.products.toasts.exportCompleteDesc"),
       })
     } catch (error: any) {
       console.error("Error during export:", error)
       toast({
-        title: "Export Failed",
-        description: error.message || "An error occurred during product export.",
+        title: t("admin.products.toasts.exportFailedTitle"),
+        description: error.message || t("admin.products.toasts.exportFailedDesc"),
         variant: "destructive",
       })
     }
@@ -379,38 +396,35 @@ export default function ProductManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t("admin.products.headerTitle")}</h1>
+          <p className="text-gray-600">{t("admin.products.headerDescription")}</p>
         </div>
         <div className="flex space-x-2">
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
-                Import
+                {t("admin.products.importDialog.triggerLabel")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Import Products from CSV</DialogTitle>
-                <DialogDescription>Upload a CSV file to create or update products.</DialogDescription>
+                <DialogTitle>{t("admin.products.importDialog.title")}</DialogTitle>
+                <DialogDescription>{t("admin.products.importDialog.description")}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="csv-file">CSV File</Label>
+                  <Label htmlFor="csv-file">{t("admin.products.importDialog.csvFileLabel")}</Label>
                   <Input id="csv-file" type="file" accept=".csv" ref={importFileRef} />
                 </div>
-                <p className="text-sm text-gray-500">
-                  Your CSV should contain columns like `id` (optional for updates), `name`, `description`, `price`,
-                  `category`, `image`, `is_active` (true/false), `is_featured` (true/false).
-                </p>
+                <p className="text-sm text-gray-500">{t("admin.products.importDialog.csvGuidelines")}</p>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)}>
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button type="button" className="bg-[#8B0000] hover:bg-[#6B0000]" onClick={handleImport}>
-                  Upload CSV
+                  {t("admin.products.importDialog.uploadButton")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -420,14 +434,14 @@ export default function ProductManagement() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
                 <Download className="mr-2 h-4 w-4" />
-                Export
+                {t("admin.products.exportMenu.triggerLabel")}
                 <MoreHorizontal className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport("all")}>Export All Products</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("all")}>{t("admin.products.exportMenu.exportAll")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport("selected")} disabled={selectedProductIds.size === 0}>
-                Export Selected ({selectedProductIds.size})
+                {t("admin.products.exportMenu.exportSelectedWithCount").replace("{count}", String(selectedProductIds.size))}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -436,21 +450,21 @@ export default function ProductManagement() {
             <DialogTrigger asChild>
               <Button className="bg-[#8B0000] hover:bg-[#6B0000]">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Product
+                {t("admin.products.addButtonLabel")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                <DialogTitle>{editingProduct ? t("admin.products.editDialog.titleEdit") : t("admin.products.editDialog.titleAddNew")}</DialogTitle>
                 <DialogDescription>
-                  {editingProduct ? "Update product information" : "Create a new product for your catalog"}
+                  {editingProduct ? t("admin.products.editDialog.descEdit") : t("admin.products.editDialog.descAddNew")}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 py-4">
                   {/* Image Upload Section */}
                   <div className="space-y-2">
-                    <Label htmlFor="image-upload">Product Image</Label>
+                    <Label htmlFor="image-upload">{t("admin.products.form.imageLabel")}</Label>
                     <div
                       className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
                       onDragOver={(e) => e.preventDefault()}
@@ -465,16 +479,16 @@ export default function ProductManagement() {
                       {imagePreviewUrl ? (
                         <img
                           src={imagePreviewUrl || "/placeholder.svg"}
-                          alt="Product Preview"
+                          alt={t("admin.products.imageUpload.previewAlt")}
                           className="max-h-full max-w-full object-contain"
                         />
                       ) : (
                         <>
                           <UploadCloud className="w-12 h-12 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
+                            <span className="font-semibold">{t("admin.products.imageUpload.clickToUpload")}</span> {t("admin.products.imageUpload.orDragAndDrop")}
                           </p>
-                          <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                          <p className="text-xs text-gray-500">{t("admin.products.imageUpload.supportedFormats")}</p>
                         </>
                       )}
                       <input
@@ -491,32 +505,32 @@ export default function ProductManagement() {
                     </div>
                     {imagePreviewUrl && (
                       <Button variant="outline" size="sm" onClick={() => handleImageSelect(null)} className="mt-2">
-                        Remove Image
+                        {t("admin.products.imageUpload.removeImage")}
                       </Button>
                     )}
                   </div>
 
                   {/* Existing Image URL input - make it read-only if a file is selected */}
                   <div className="space-y-2">
-                    <Label htmlFor="image">Image URL</Label>
+                    <Label htmlFor="image">{t("admin.products.form.imageUrlLabel")}</Label>
                     <Input
                       id="image"
                       value={formData.image}
                       onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
+                      placeholder={t("admin.products.form.imageUrlPlaceholder")}
                       readOnly={!!selectedImageFile} // Make read-only if a file is selected for upload
                       disabled={isImageUploading} // Disable while uploading
                     />
-                    {selectedImageFile && (
+                      {selectedImageFile && (
                       <p className="text-sm text-gray-500">
-                        Image will be uploaded from selected file. Manual URL input disabled.
+                        {t("admin.products.form.imageSelectedInfo")}
                       </p>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Product Name *</Label>
+                      <Label htmlFor="name">{t("admin.products.form.productNameLabel")}</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -526,7 +540,7 @@ export default function ProductManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="price">Price *</Label>
+                      <Label htmlFor="price">{t("admin.products.form.priceLabel")}</Label>
                       <Input
                         id="price"
                         type="number"
@@ -539,7 +553,7 @@ export default function ProductManagement() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t("admin.products.form.descriptionLabel")}</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
@@ -550,12 +564,12 @@ export default function ProductManagement() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
+                      <Label htmlFor="category">{t("admin.products.form.categoryLabel")}</Label>
                       <Input
                         id="category"
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        placeholder="e.g., Apparel, Accessories"
+                      placeholder={t("admin.products.form.categoryPlaceholder")}
                         disabled={isImageUploading} // Disable while uploading
                       />
                     </div>
@@ -569,7 +583,7 @@ export default function ProductManagement() {
                         onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                         disabled={isImageUploading} // Disable while uploading
                       />
-                      <Label htmlFor="is_active">Active</Label>
+                      <Label htmlFor="is_active">{t("admin.products.form.activeLabel")}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Switch
@@ -578,16 +592,20 @@ export default function ProductManagement() {
                         onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
                         disabled={isImageUploading} // Disable while uploading
                       />
-                      <Label htmlFor="is_featured">Featured</Label>
+                      <Label htmlFor="is_featured">{t("admin.products.form.featuredLabel")}</Label>
                     </div>
                   </div>
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={handleDialogClose} disabled={isImageUploading}>
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button type="submit" className="bg-[#8B0000] hover:bg-[#6B0000]" disabled={isImageUploading}>
-                    {isImageUploading ? "Uploading Image..." : editingProduct ? "Update Product" : "Create Product"}
+                    {isImageUploading
+                      ? t("admin.products.imageUpload.uploading")
+                      : editingProduct
+                      ? t("admin.products.editDialog.buttons.update")
+                      : t("admin.products.editDialog.buttons.create")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -604,7 +622,7 @@ export default function ProductManagement() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder={t("admin.products.searchPlaceholder")}
                   className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -613,10 +631,10 @@ export default function ProductManagement() {
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filter by category" />
+                <SelectValue placeholder={t("admin.products.filterByCategory")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("admin.products.allCategories")}</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category!}>
                     {category}
@@ -631,8 +649,8 @@ export default function ProductManagement() {
       {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
-          <CardDescription>Manage your product inventory</CardDescription>
+          <CardTitle>{t("admin.products.cardTitleWithCount").replace("{count}", String(filteredProducts.length))}</CardTitle>
+          <CardDescription>{t("admin.products.tableDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -642,16 +660,16 @@ export default function ProductManagement() {
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={handleSelectAllProducts}
-                    aria-label="Select all products"
+                    aria-label={t("admin.products.aria.selectAll")}
                     className={isSomeSelected ? "indeterminate" : ""}
                   />
                 </TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("admin.products.table.product")}</TableHead>
+                <TableHead>{t("admin.products.table.category")}</TableHead>
+                <TableHead>{t("admin.products.table.price")}</TableHead>
+                <TableHead>{t("admin.products.table.status")}</TableHead>
+                <TableHead>{t("admin.products.table.created")}</TableHead>
+                <TableHead className="text-right">{t("admin.products.table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -661,7 +679,7 @@ export default function ProductManagement() {
                     <Checkbox
                       checked={selectedProductIds.has(product.id)}
                       onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                      aria-label={`Select product ${product.name}`}
+                      aria-label={t("admin.products.aria.selectProduct").replace("{name}", product.name)}
                     />
                   </TableCell>
                   <TableCell>
@@ -683,17 +701,17 @@ export default function ProductManagement() {
                         <p className="font-medium">{product.name}</p>
                         {product.is_featured && (
                           <Badge variant="secondary" className="text-xs">
-                            Featured
+                            {t("admin.products.labels.featured")}
                           </Badge>
                         )}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.category || "—"}</TableCell>
+                  <TableCell>{product.category || t("admin.products.na")}</TableCell>
                   <TableCell>${product.price.toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge variant={product.is_active ? "default" : "secondary"}>
-                      {product.is_active ? "Active" : "Inactive"}
+                      {product.is_active ? t("admin.products.statuses.active") : t("admin.products.statuses.inactive")}
                     </Badge>
                   </TableCell>
                   <TableCell>{new Date(product.created_at).toLocaleDateString()}</TableCell>
@@ -718,7 +736,7 @@ export default function ProductManagement() {
           </Table>
           {filteredProducts.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500">No products found</p>
+              <p className="text-gray-500">{t("admin.products.noProductsFound")}</p>
             </div>
           )}
         </CardContent>

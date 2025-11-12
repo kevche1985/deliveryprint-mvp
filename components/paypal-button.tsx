@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js"
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/language-context"
 
 interface PayPalButtonProps {
   amount: number
@@ -37,6 +38,7 @@ export default function PayPalButton({
   onCancel,
 }: PayPalButtonProps) {
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -96,8 +98,8 @@ export default function PayPalButton({
       onSuccess(transactionId)
 
       toast({
-        title: "Payment Successful",
-        description: "Your PayPal payment has been processed successfully.",
+        title: t("payment.success.title"),
+        description: t("payment.3ds.success.message"),
       })
     } catch (err: any) {
       console.error("Error recording transaction:", err)
@@ -120,7 +122,7 @@ export default function PayPalButton({
       {processing && (
         <div className="flex justify-center items-center py-4">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Processing payment...</span>
+          <span>{t("payment.3ds.processing.title")}</span>
         </div>
       )}
 

@@ -80,26 +80,26 @@ export default function Navigation() {
                   } hover:text-[#8B0000]`}
                 >
                   <Printer className="mr-1 h-4 w-4" />
-                  Services
+                  {t("navigation.services")}
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem asChild>
-                  <Link href="/services">All Services</Link>
+                  <Link href="/services">{t("services.all")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/services/digital-printing">Digital Printing</Link>
+                  <Link href="/services/digital-printing">{t("services.digitalPrinting")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/services/large-format">Large Format</Link>
+                  <Link href="/services/large-format">{t("services.largeFormat")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/services/event-stands">Event Stands</Link>
+                  <Link href="/services/event-stands">{t("services.eventStands")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/services/illuminated-signs">Illuminated Signs</Link>
+                  <Link href="/services/illuminated-signs">{t("services.illuminatedSigns")}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -149,10 +149,10 @@ export default function Navigation() {
                     <Link href="/admin/quotes">{t("quotes.title")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/transactions">Payment Transactions</Link>
+                    <Link href="/admin/transactions">{t("admin.paymentTransactions")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/email-settings">Email Settings</Link>
+                    <Link href="/admin/email-settings">{t("admin.emailSettings")}</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -289,7 +289,7 @@ export default function Navigation() {
                   <SheetFooter className="border-t pt-4">
                     <div className="w-full space-y-4">
                       <div className="flex justify-between font-medium">
-                        <span>Subtotal</span>
+                        <span>{t("cart.subtotal")}</span>
                         <span>
                           ${(subtotal + digitalItems.reduce((sum, item) => sum + item.finalPrice, 0)).toFixed(2)}
                         </span>
@@ -326,7 +326,7 @@ export default function Navigation() {
                     <Link href="/orders">{t("orders.myOrders")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/digital-downloads">Digital Downloads</Link>
+                    <Link href="/digital-downloads">{t("navigation.digitalDownloads")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/settings">{t("navigation.settings")}</Link>
@@ -518,7 +518,7 @@ export default function Navigation() {
               }`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              Services
+              {t("navigation.services")}
             </Link>
             <Link
               href="/ai-studio"
@@ -556,7 +556,7 @@ export default function Navigation() {
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Digital Downloads
+                  {t("navigation.digitalDownloads")}
                 </Link>
                 {profile?.role === "supplier" && (
                   <Link
@@ -613,14 +613,14 @@ export default function Navigation() {
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Payment Transactions
+                      {t("admin.nav.transactions")}
                     </Link>
                     <Link
                       href="/admin/email-settings"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Email Settings
+                      {t("admin.nav.emailSettings")}
                     </Link>
                   </>
                 )}

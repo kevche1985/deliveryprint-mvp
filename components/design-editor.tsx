@@ -88,7 +88,7 @@ interface DesignElement {
   aspectRatio?: number
 }
 
-interface DesignOutputData {
+export interface DesignOutputData {
   elements: DesignElement[]
   printArea: { x: number; y: number; width: number; height: number }
   baseProductImage: string
@@ -484,7 +484,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
           hasEmail: !!user?.email,
           email: user?.email
         })
-        throw new Error("Please log in to save your design")
+        throw new Error("Please log in to be able to personalize products")
       }
       
       console.log("✅ User authenticated:", user.email)
@@ -735,7 +735,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
         } else if (errorMsg.includes("network") || errorMsg.includes("fetch")) {
           userFriendlyMessage = "Network error. Please check your connection and try again."
         } else if (errorMsg.includes("unauthorized") || errorMsg.includes("401")) {
-          userFriendlyMessage = "Please log in again to save your design."
+          userFriendlyMessage = "Please log in to be able to personalize products"
         } else if (errorMsg.includes("too large")) {
           userFriendlyMessage = error.message
         } else if (error.message.length < 100) {

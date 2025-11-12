@@ -24,6 +24,7 @@ import { Plus, Edit, Search, Shield, User, Crown, Package, Trash } from "lucide-
 import { motion } from "framer-motion"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 
 type UserProfile = {
   id: string
@@ -39,6 +40,7 @@ type UserProfile = {
 }
 
 export default function UserManagement() {
+  const { t } = useLanguage()
   const { toast } = useToast()
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
@@ -279,7 +281,7 @@ export default function UserManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t("admin.users.headerTitle")}</h1>
           <p className="text-gray-600">Manage users and their roles</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -424,7 +426,7 @@ export default function UserManagement() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder={t("admin.users.searchPlaceholder")}
                   className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -433,7 +435,7 @@ export default function UserManagement() {
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Filter by role" />
+                <SelectValue placeholder={t("admin.users.filterByRole")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -445,7 +447,7 @@ export default function UserManagement() {
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("admin.users.filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -461,7 +463,7 @@ export default function UserManagement() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
+          <CardTitle>{t("admin.users.title")} ({filteredUsers.length})</CardTitle>
           <CardDescription>Manage user accounts and permissions</CardDescription>
         </CardHeader>
         <CardContent>

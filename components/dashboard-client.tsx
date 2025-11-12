@@ -5,14 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, PlusCircle, Download, Edit, Trash2, ShoppingCart, Heart, AlertCircle } from "lucide-react"
+import { Loader2, PlusCircle, Download, Edit, Trash2, ShoppingCart, Heart, AlertCircle, Save } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { getUserOrders } from "@/lib/database"
 import type { Order } from "@/lib/database"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import { useDigitalCart, type DigitalProductType } from "@/lib/digital-cart-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -137,6 +137,73 @@ export default function DashboardClient() {
       toast({
         title: "Error",
         description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+  
+  // NEW: Save unpurchased/purchased design (adds a saved flag in metadata)
+  const handleSaveDesign = async (design: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("digital_products")
+        .update({
+          metadata: {
+            ...(design.metadata || {}),
+            saved: true,
+            saved_at: new Date().toISOString(),
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", design.id)
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      toast({
+        title: "Saved",
+        description: `${design.name} saved to your library.`,
+      })
+      
+      // Update local state copies
+      setUnpurchasedDesigns((prev) => prev.map((d) => (d.id === design.id ? { ...d, ...(data || {}) } : d)))
+      setPurchasedDesigns((prev) => prev.map((d) => (d.id === design.id ? { ...d, ...(data || {}) } : d)))
+    } catch (error: any) {
+      console.error('Save failed:', error)
+      toast({
+        title: "Save Failed",
+        description: error.message || 'Could not save design.',
+        variant: "destructive",
+      })
+    }
+  }
+
+  // NEW: Delete a design (unpurchased or purchased)
+  const handleDeleteDesign = async (design: any) => {
+    try {
+      const confirmed = window.confirm(`Delete "${design.name}"? This action cannot be undone.`)
+      if (!confirmed) return
+      
+      const { error } = await supabase
+        .from("digital_products")
+        .delete()
+        .eq("id", design.id)
+      
+      if (error) throw error
+      
+      toast({
+        title: "Deleted",
+        description: `${design.name} was deleted.`,
+      })
+      
+      setUnpurchasedDesigns((prev) => prev.filter((d) => d.id !== design.id))
+      setPurchasedDesigns((prev) => prev.filter((d) => d.id !== design.id))
+    } catch (error: any) {
+      console.error('Delete failed:', error)
+      toast({
+        title: "Delete Failed",
+        description: error.message || 'Could not delete design.',
         variant: "destructive",
       })
     }
@@ -331,6 +398,9 @@ export default function DashboardClient() {
                           <Badge className="absolute top-2 left-2 bg-amber-500">
                             Unpurchased
                           </Badge>
+                          {design?.metadata?.saved && (
+                            <Badge className="absolute top-12 left-2 bg-green-600">Saved</Badge>
+                          )}
                         </div>
                         <CardContent className="p-4">
                           <h3 className="font-semibold mb-2">{design.name}</h3>
@@ -338,6 +408,24 @@ export default function DashboardClient() {
                             Created {new Date(design.created_at).toLocaleDateString()}
                           </p>
                           <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => handleSaveDesign(design)}
+                                className="flex-1"
+                              >
+                                <Save className="mr-2 h-4 w-4" />
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleDeleteDesign(design)}
+                                className="flex-1"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </Button>
+                            </div>
                             <Button
                               onClick={() => handleAddToCart(design)}
                               className="w-full bg-purple-600 hover:bg-purple-700"
@@ -385,6 +473,9 @@ export default function DashboardClient() {
                           <Badge className="absolute top-2 left-2 bg-green-500">
                             Purchased
                           </Badge>
+                          {design?.metadata?.saved && (
+                            <Badge className="absolute top-12 left-2 bg-green-600">Saved</Badge>
+                          )}
                         </div>
                         <CardContent className="p-4">
                           <h3 className="font-semibold mb-2">{design.name}</h3>
@@ -425,6 +516,24 @@ export default function DashboardClient() {
                               : `Download ${(selectedFormats[design.id] || 'PNG').toUpperCase()}`
                             }
                           </Button>
+                          <div className="mt-2 flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleSaveDesign(design)}
+                              className="flex-1"
+                            >
+                              <Save className="mr-2 h-4 w-4" />
+                              Save
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleDeleteDesign(design)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     </motion.div>

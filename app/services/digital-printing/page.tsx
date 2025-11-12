@@ -18,6 +18,7 @@ import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/components/ui/use-toast"
 import DesignServiceEditor from "@/components/design-service-editor" // New import
+import { useLanguage } from "@/lib/language-context"
 // Define the DesignOutputData type locally since it's not exported
 type DesignOutputData = {
   elements: any[]
@@ -181,6 +182,7 @@ export default function DigitalPrintingPage() {
   const cartContext = useCart()
   const { addItem } = cartContext || { addItem: () => {} }
   const { user } = useAuth()
+  const { t } = useLanguage()
 
   const handleAddToCart = () => {
     if (!cartContext) {
@@ -203,13 +205,19 @@ export default function DigitalPrintingPage() {
       cartImage = customDesign.customizedProductImage
     }
 
+    const sidesLabel = printSides === "double"
+      ? t("services.digitalPrintingPage.doubleSided")
+      : t("services.digitalPrintingPage.singleSided")
+
+    const localizedProductName = t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)
+
     const cartItem = {
       productId: `digital-print-${selectedProduct.id}`,
       variantId: `${selectedSize.width}x${selectedSize.height}-${printSides}`,
       designId: designToUse?.id || undefined,
       quantity: quantity,
       price: calculatePrice(),
-      name: `${selectedProduct.name} - ${selectedSize.width}" × ${selectedSize.height}" (${printSides}-sided)`,
+      name: `${localizedProductName} - ${selectedSize.width}" × ${selectedSize.height}" (${sidesLabel})`,
       image: cartImage, // Now uses AI design image when available
       customizations: {
         product: selectedProduct,
@@ -226,7 +234,7 @@ export default function DigitalPrintingPage() {
             }
           : undefined,
         specifications: {
-          material: selectedProduct.name,
+          material: localizedProductName,
           dimensions: `${selectedSize.width} × ${selectedSize.height}`,
           sides: printSides,
           doubleSidedAvailable: selectedProduct.double_sided_available,
@@ -235,7 +243,10 @@ export default function DigitalPrintingPage() {
     }
 
     addItem(cartItem)
-    alert(`Added ${selectedProduct.name} to cart!`)
+    toast({
+      title: t("common.toast.addedToCartTitle"),
+      description: `${localizedProductName} ${t("common.toast.addedToCartDescSuffix")}`,
+    })
   }
 
   const calculatePrice = () => {
@@ -371,13 +382,15 @@ export default function DigitalPrintingPage() {
       {/* Header */}
       <section className="bg-red-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">Digital Printing Services</h1>
-          <p className="text-xl">High-quality standard format printing for all your business needs</p>
+          <h1 className="text-4xl font-bold mb-4">{t("services.digitalPrintingPage.headerTitle")}</h1>
+          <p className="text-xl">{t("services.digitalPrintingPage.headerSubtitle")}</p>
           {(aiDesign || customDesign) && (
             <div className="mt-4 p-3 bg-white/10 rounded-lg">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5" />
-                <span>{aiDesign ? "AI-Generated Design" : "Custom Design"} Ready for Printing</span>
+                <span>
+                  {aiDesign ? t("services.digitalPrintingPage.aiGeneratedLabel") : t("services.digitalPrintingPage.customDesignLabel")} {t("services.digitalPrintingPage.readyForPrinting")}
+                </span>
               </div>
             </div>
           )}
@@ -395,7 +408,7 @@ export default function DigitalPrintingPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-purple-600" />
-                      Your AI-Generated Design
+                      {t("services.digitalPrintingPage.yourAIGeneratedDesign")}
                     </CardTitle>
                     <Button
                       variant="ghost"
@@ -418,16 +431,16 @@ export default function DigitalPrintingPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{aiDesign.name}</h3>
-                      <p className="text-sm text-gray-600 capitalize mb-2">{aiDesign.type} • AI Generated</p>
+                      <p className="text-sm text-gray-600 capitalize mb-2">{aiDesign.type} • {t("services.digitalPrintingPage.aiGenerated")}</p>
                       <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                        Ready for Printing
+                        {t("services.digitalPrintingPage.readyForPrinting")}
                       </Badge>
                     </div>
                   </div>
                   <Alert className="mt-4 border-purple-200 bg-purple-50">
                     <Info className="h-4 w-4 text-purple-600" />
                     <AlertDescription className="text-purple-800">
-                      Your AI-generated design is ready to be printed. Select your preferred material and size below.
+                      {t("services.digitalPrintingPage.readyForPrinting")}
                     </AlertDescription>
                   </Alert>
                 </CardContent>
@@ -441,7 +454,7 @@ export default function DigitalPrintingPage() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Palette className="h-5 w-5 text-red-600" />
-                      Your Custom Design
+                      {t("services.digitalPrintingPage.yourCustomDesign")}
                     </CardTitle>
                     <Button
                       variant="ghost"
@@ -463,10 +476,10 @@ export default function DigitalPrintingPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">Custom Design for {selectedProduct.name}</h3>
-                      <p className="text-sm text-gray-600 capitalize mb-2">Manually Created</p>
+                          <h3 className="font-semibold text-lg">{t("services.digitalPrintingPage.customDesignLabel")} for {t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}</h3>
+                      <p className="text-sm text-gray-600 capitalize mb-2">{t("services.digitalPrintingPage.manuallyCreated")}</p>
                       <Badge variant="secondary" className="bg-red-100 text-red-800">
-                        Ready for Printing
+                        {t("services.digitalPrintingPage.readyForPrinting")}
                       </Badge>
                     </div>
                   </div>
@@ -485,7 +498,7 @@ export default function DigitalPrintingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileImage className="h-5 w-5" />
-                  Select Material
+                  {t("services.digitalPrintingPage.selectMaterial")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -503,19 +516,19 @@ export default function DigitalPrintingPage() {
                       <div className="flex items-start gap-3">
                         <img
                           src={product.image || "/placeholder.svg"}
-                          alt={product.name}
+                          alt={t(`services.digitalPrintingPage.products.${product.id}.name`)}
                           className="w-16 h-16 object-cover rounded"
                         />
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{product.name}</h3>
-                          <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                          <h3 className="font-semibold text-lg">{t(`services.digitalPrintingPage.products.${product.id}.name`)}</h3>
+                          <p className="text-sm text-gray-600 mb-2">{t(`services.digitalPrintingPage.products.${product.id}.description`)}</p>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-red-600">
-                              From ${Math.min(...product.sizes.map((s) => s.price_single))}
+                              {t("common.from")} ${Math.min(...product.sizes.map((s) => s.price_single))}
                             </span>
                             {product.double_sided_available && (
                               <Badge variant="secondary" className="text-xs">
-                                Double-sided
+                                {t("services.digitalPrintingPage.doubleSided")}
                               </Badge>
                             )}
                           </div>
@@ -530,12 +543,12 @@ export default function DigitalPrintingPage() {
             {/* Size Selection */}
             <Card>
               <CardHeader>
-                <CardTitle>Size & Options</CardTitle>
+                <CardTitle>{t("services.digitalPrintingPage.sizeOptionsTitle")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="size-select" className="text-sm font-medium mb-2 block">
-                    Material Size
+                    {t("services.digitalPrintingPage.materialSize")}
                   </Label>
                   <Select
                     value={selectedProduct.sizes.findIndex(size => 
@@ -552,7 +565,7 @@ export default function DigitalPrintingPage() {
                       {selectedProduct.sizes.map((size, index) => (
                         <SelectItem key={index} value={index.toString()}>
                           {size.width}" × {size.height}" - ${size.price_single}
-                          {'price_double' in size && ` / $${(size as any).price_double} (double)`}
+                          {'price_double' in size && ` / $${(size as any).price_double} (${t("services.digitalPrintingPage.doubleSided")})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -561,16 +574,16 @@ export default function DigitalPrintingPage() {
 
                 {selectedProduct.double_sided_available && (
                   <div>
-                    <Label className="text-sm font-medium mb-3 block">Print Sides</Label>
+                    <Label className="text-sm font-medium mb-3 block">{t("services.digitalPrintingPage.printSides")}</Label>
                     <RadioGroup value={printSides} onValueChange={(value: "single" | "double") => setPrintSides(value)}>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="single" id="single" />
-                        <Label htmlFor="single">Single-sided - ${selectedSize.price_single}</Label>
+                        <Label htmlFor="single">{t("services.digitalPrintingPage.singleSided")} - ${selectedSize.price_single}</Label>
                       </div>
                       {'price_double' in selectedSize && (
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="double" id="double" />
-                          <Label htmlFor="double">Double-sided - ${selectedSize.price_double}</Label>
+                          <Label htmlFor="double">{t("services.digitalPrintingPage.doubleSided")} - ${selectedSize.price_double}</Label>
                         </div>
                       )}
                     </RadioGroup>
@@ -579,7 +592,7 @@ export default function DigitalPrintingPage() {
 
                 <div>
                   <Label htmlFor="quantity" className="text-sm font-medium mb-2 block">
-                    Quantity
+                    {t("services.digitalPrintingPage.quantity")}
                   </Label>
                   <Input
                     id="quantity"
@@ -597,7 +610,7 @@ export default function DigitalPrintingPage() {
             {/* File Upload / Design Editor */}
             <Card>
               <CardHeader>
-                <CardTitle>Upload or Create Your Design</CardTitle>
+                <CardTitle>{t("services.digitalPrintingPage.uploadCreateTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <input
@@ -620,15 +633,15 @@ export default function DigitalPrintingPage() {
                       onDrop={handleDrop}
                     >
                       <FileImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Drop your files here</h3>
-                      <p className="text-gray-600 mb-4">Support: PDF, PNG, JPG, AI, PSD, ZIP (Max 50MB)</p>
+                      <h3 className="text-lg font-medium mb-2">{t("services.digitalPrintingPage.dropFilesHere")}</h3>
+                      <p className="text-gray-600 mb-4">{t("services.digitalPrintingPage.supportFormatsShort")}</p>
                       <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                        Choose Files
+                        {t("services.digitalPrintingPage.chooseFiles")}
                       </Button>
 
                       {uploadedFiles.length > 0 && (
                         <div className="mt-6 space-y-2">
-                          <h4 className="font-medium text-left">Uploaded Files:</h4>
+                          <h4 className="font-medium text-left">{t("services.digitalPrintingPage.uploadedFilesLabel")}</h4>
                           {uploadedFiles.map((file, index) => (
                             <div
                               key={index}
@@ -650,7 +663,7 @@ export default function DigitalPrintingPage() {
                     </div>
                     <Separator className="my-6" />
                     <div className="text-center">
-                      <p className="text-gray-600 mb-4">Or create a custom design:</p>
+                      <p className="text-gray-600 mb-4">{t("services.digitalPrintingPage.orCreateCustomDesign")}</p>
                       <Button
                         onClick={() => {
                           console.log("🎨 Design editor button clicked", {
@@ -663,8 +676,8 @@ export default function DigitalPrintingPage() {
                           if (!user?.email) {
                             console.log("❌ User not logged in, showing login toast")
                             toast({
-                              title: "Login Required",
-                              description: "Please log in to create custom designs.",
+                              title: t("common.loginRequired.title"),
+                              description: t("common.loginRequired.description"),
                               variant: "destructive",
                             })
                             return
@@ -676,7 +689,7 @@ export default function DigitalPrintingPage() {
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >
                         <Palette className="mr-2 h-5 w-5" />
-                        Customize Design
+                        {t("services.digitalPrintingPage.customizeDesign")}
                       </Button>
                     </div>
                   </>
@@ -693,10 +706,10 @@ export default function DigitalPrintingPage() {
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium">
-                          {aiDesign ? aiDesign.name : "Custom Design"}
+                          {aiDesign ? aiDesign.name : t("services.digitalPrintingPage.customDesignLabel")}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {aiDesign ? "AI Generated" : "Custom Upload"} • Ready for Printing
+                          {aiDesign ? t("services.digitalPrintingPage.aiGenerated") : t("services.digitalPrintingPage.customUpload")} • {t("services.digitalPrintingPage.readyForPrinting")}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -705,7 +718,7 @@ export default function DigitalPrintingPage() {
                           size="sm"
                           onClick={() => fileInputRef.current?.click()}
                         >
-                          Replace
+                          {t("services.digitalPrintingPage.replace")}
                         </Button>
                         <Button
                           variant="outline"
@@ -713,8 +726,8 @@ export default function DigitalPrintingPage() {
                           onClick={() => {
                             if (!user?.email) {
                               toast({
-                                title: "Login Required",
-                                description: "Please log in to create custom designs.",
+                                title: t("common.loginRequired.title"),
+                                description: t("common.loginRequired.description"),
                                 variant: "destructive",
                               })
                               return
@@ -723,7 +736,7 @@ export default function DigitalPrintingPage() {
                           }}
                         >
                           <Palette className="mr-2 h-4 w-4" />
-                          Edit
+                          {t("services.digitalPrintingPage.edit")}
                         </Button>
                       </div>
                     </div>
@@ -784,9 +797,9 @@ export default function DigitalPrintingPage() {
                         })()}
                       </div>
                       <div>
-                        <p className="font-medium">Design Loaded</p>
+                        <p className="font-medium">{t("services.digitalPrintingPage.designLoaded")}</p>
                         <p className="text-sm text-gray-600">
-                          {customDesign ? "Your custom design" : "AI-generated design"} is ready.
+                          {customDesign ? t("services.digitalPrintingPage.designReady") : `${t("services.digitalPrintingPage.aiGenerated")} ${t("common.ready")}.`}
                         </p>
                         {/* Enhanced debug info */}
                          {process.env.NODE_ENV === 'development' && (() => {
@@ -806,7 +819,7 @@ export default function DigitalPrintingPage() {
                       </div>
                     </div>
                     <Button variant="outline" onClick={() => setShowDesignEditor(true)}>
-                      Edit Design
+                      {t("services.digitalPrintingPage.editDesign")}
                     </Button>
                   </div>
                 )}
@@ -814,11 +827,11 @@ export default function DigitalPrintingPage() {
                   <div className="flex items-start gap-2">
                     <Info className="h-5 w-5 text-red-600 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-red-900">Design Guidelines:</p>
+                      <p className="font-medium text-red-900">{t("services.digitalPrintingPage.designGuidelinesTitle")}</p>
                       <ul className="text-red-700 mt-1 space-y-1">
-                        <li>• Minimum 300 DPI resolution</li>
-                        <li>• Include 0.125" bleed for full-coverage designs</li>
-                        <li>• CMYK color mode preferred</li>
+                        <li>{t("services.digitalPrintingPage.guidelines.bullet1")}</li>
+                        <li>{t("services.digitalPrintingPage.guidelines.bullet2")}</li>
+                        <li>{t("services.digitalPrintingPage.guidelines.bullet3")}</li>
                       </ul>
                     </div>
                   </div>
@@ -833,36 +846,36 @@ export default function DigitalPrintingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  Order Summary
+                  {t("services.digitalPrintingPage.orderSummaryTitle")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="font-medium">{selectedProduct.name}</span>
+                          <span className="font-medium">{t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}</span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
-                      <span>Size:</span>
+                      <span>{t("common.labels.size")}</span>
                       <span>
                         {selectedSize.width}" × {selectedSize.height}"
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Print:</span>
-                      <span className="capitalize">{printSides}-sided</span>
+                      <span>{t("common.labels.print")}</span>
+                          <span className="capitalize">{printSides === "double" ? t("services.digitalPrintingPage.doubleSided") : t("services.digitalPrintingPage.singleSided")}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Quantity:</span>
+                      <span>{t("common.labels.quantity")}</span>
                       <span>{quantity}</span>
                     </div>
                     {(aiDesign || customDesign) && (
                   <div className="flex justify-between">
-                    <span>Design:</span>
+                    <span>{t("common.labels.design")}</span>
                     <span className="text-purple-600 flex items-center gap-1">
-                      {aiDesign ? "AI Generated" : "Custom"}
+                      {aiDesign ? t("services.digitalPrintingPage.aiGenerated") : t("services.digitalPrintingPage.customDesignLabel")}
                       <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                        ✓ Ready
+                        ✓ {t("common.ready")}
                       </Badge>
                     </span>
                   </div>
@@ -874,7 +887,7 @@ export default function DigitalPrintingPage() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Unit Price:</span>
+                    <span>{t("common.labels.unitPrice")}</span>
                     <span>
                         $
                         {printSides === "double" && 'price_double' in selectedSize
@@ -883,7 +896,7 @@ export default function DigitalPrintingPage() {
                       </span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
+                    <span>{t("common.labels.total")}</span>
                     <span className="text-red-600">${calculatePrice().toFixed(2)}</span>
                   </div>
                 </div>
@@ -891,7 +904,7 @@ export default function DigitalPrintingPage() {
                 <div className="space-y-3 pb-4">
                   <Button onClick={handleAddToCart} className="w-full bg-red-600 hover:bg-red-700" size="lg">
                     <ShoppingCart className="mr-2 h-5 w-5" />
-                    Add to Cart
+                    {t("common.addToCart")}
                   </Button>
 
                   <div className="text-center">
@@ -900,7 +913,7 @@ export default function DigitalPrintingPage() {
                       variant="outline"
                       className="w-full border-red-600 text-red-600 hover:bg-red-50"
                     >
-                      Request Custom Quote
+                      {t("services.digitalPrintingPage.requestCustomQuote")}
                     </Button>
                   </div>
                 </div>
@@ -940,7 +953,7 @@ export default function DigitalPrintingPage() {
               setShowDesignEditor(false)
             }}
             productImage={selectedProduct.image || ''}
-            productName={selectedProduct.name}
+            productName={t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}
             product={selectedProduct}
             variants={selectedProduct.sizes || []}
             selectedVariant={selectedProduct.sizes?.findIndex(size => 
@@ -963,7 +976,7 @@ export default function DigitalPrintingPage() {
         <QuoteRequestModal
           isOpen={showQuoteModal}
           onClose={() => setShowQuoteModal(false)}
-          serviceType="Digital Printing"
+          serviceType={t("services.digitalPrintingPage.headerTitle")}
           prefilledData={{
             product: selectedProduct,
             size: selectedSize,

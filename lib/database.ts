@@ -12,6 +12,7 @@ export type Product = {
   is_featured: boolean
   created_at: string
   updated_at: string | null
+  tenant_id: string | null
 }
 
 export type ProductImage = {
@@ -179,9 +180,14 @@ export async function getProducts(
     offset?: number
     sortBy?: string
     sortOrder?: "asc" | "desc"
+    tenantId?: string
   } = {},
 ) {
   let query = supabase.from("products").select("*").eq("is_active", true)
+
+  if (options.tenantId) {
+    query = query.eq("tenant_id", options.tenantId)
+  }
 
   if (options.category) {
     query = query.eq("category", options.category)
@@ -551,4 +557,28 @@ export async function createOrderItem(orderItem: Omit<OrderItem, "id" | "created
   }
 
   return data as OrderItem
+}
+
+// Multi-tenancy: Tenant type and helper
+export type Tenant = {
+  id: string
+  slug: string
+  name: string
+  logo_url: string | null
+  brand_bg_color: string | null
+  brand_ui_color: string | null
+  email_from: string | null
+  created_at: string
+  updated_at: string | null
+}
+
+export async function getTenantBySlug(slug: string) {
+  const { data, error } = await supabase.from("tenants").select("*").eq("slug", slug).single()
+
+  if (error) {
+    console.error("Error fetching tenant by slug:", error)
+    return null
+  }
+
+  return data as Tenant
 }

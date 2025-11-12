@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import type { User } from "@supabase/supabase-js"
 import {
   LayoutDashboard,
   Package,
@@ -31,6 +32,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Loader2 } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
+import { LanguageSwitcher } from "@/components/language-switcher"
+
+// Local profile type to ensure correct state typing
+type Profile = {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  role: "admin" | "operator" | "customer" | string
+  status: "active" | "inactive" | string
+}
 
 const adminNavItems = [
   {
@@ -82,6 +95,12 @@ const adminNavItems = [
     description: "Customer support tickets",
   },
   {
+    href: "/admin/translations",
+    icon: MessageSquare,
+    title: "Translations",
+    description: "Review and manage UI translations",
+  },
+  {
     href: "/admin/settings",
     icon: Settings,
     title: "Settings",
@@ -97,11 +116,12 @@ const adminNavItems = [
 
 // Create a client component for admin content
 function AdminContent({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
+  const { t } = useLanguage()
 
   useEffect(() => {
     // Simple auth check without useAuth hook
@@ -127,7 +147,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             id: session.user.id,
             first_name: "Admin",
             last_name: "User",
-            email: session.user.email,
+            email: session.user.email ?? "",
             role: "admin",
             status: "active",
           })
@@ -137,7 +157,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             id: session.user.id,
             first_name: "User",
             last_name: "",
-            email: session.user.email,
+            email: session.user.email ?? "",
             role: "customer",
             status: "active",
           })
@@ -176,10 +196,10 @@ function AdminContent({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
+            <h1 className="text-2xl font-bold mb-4">{t("admin.layout.accessDeniedTitle")}</h1>
+            <p className="text-gray-600 mb-6">{t("admin.layout.accessDeniedDesc")}</p>
             <Button asChild className="bg-[#8B0000] hover:bg-[#6B0000]">
-              <Link href="/dashboard">Go to Dashboard</Link>
+              <Link href="/dashboard">{t("admin.layout.goToDashboard")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -204,7 +224,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b flex-shrink-0">
           <Link href="/admin" className="text-xl font-bold text-[#8B0000]">
-            Admin Panel
+            {t("admin.layout.panelTitle")}
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-6 w-6" />
@@ -230,7 +250,19 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="space-y-1">
-              {adminNavItems.map((item) => (
+              {[
+                { href: "/admin", icon: LayoutDashboard, title: t("admin.nav.dashboard"), description: t("admin.navDescriptions.dashboard") },
+                { href: "/admin/products", icon: Package, title: t("admin.nav.products"), description: t("admin.navDescriptions.products") },
+                { href: "/admin/orders", icon: ShoppingCart, title: t("admin.nav.orders"), description: t("admin.navDescriptions.orders") },
+                { href: "/admin/payments", icon: CreditCard, title: t("admin.nav.payments"), description: t("admin.navDescriptions.payments") },
+                { href: "/admin/transactions", icon: CreditCard, title: t("admin.nav.transactions"), description: t("admin.navDescriptions.transactions") },
+                { href: "/admin/users", icon: Users, title: t("admin.nav.users"), description: t("admin.navDescriptions.users") },
+                { href: "/admin/quotes", icon: FileText, title: t("admin.nav.quotes"), description: t("admin.navDescriptions.quotes") },
+                { href: "/admin/messages", icon: MessageSquare, title: t("admin.nav.messages"), description: t("admin.navDescriptions.messages") },
+                { href: "/admin/translations", icon: MessageSquare, title: t("admin.nav.translations"), description: t("admin.navDescriptions.translations") },
+                { href: "/admin/settings", icon: Settings, title: t("admin.nav.settings"), description: t("admin.navDescriptions.settings") },
+                { href: "/admin/email-settings", icon: Mail, title: t("admin.nav.emailSettings"), description: t("admin.navDescriptions.emailSettings") },
+              ].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -251,23 +283,23 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between">
-                  <span>Account</span>
+                  <span>{t("admin.layout.account")}</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("admin.layout.myAccount")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard">User Dashboard</Link>
+                  <Link href="/dashboard">{t("navigation.dashboard")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/settings">Settings</Link>
+                  <Link href="/settings">{t("navigation.settings")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-red-600">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  {t("admin.layout.signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -283,13 +315,14 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
               <Menu className="h-6 w-6" />
             </Button>
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
-                ← Back to Site
-              </Link>
-            </div>
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
+              ← {t("admin.layout.backToSite")}
+            </Link>
+            <LanguageSwitcher />
           </div>
         </div>
+      </div>
 
         {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">{children}</main>

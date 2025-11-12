@@ -199,7 +199,8 @@ export class ResendEmailManager {
       }
 
       // Create confirmation URL
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+      const baseUrl = rawSiteUrl.startsWith('http') ? rawSiteUrl : `https://${rawSiteUrl}`
       const confirmationUrl = `${baseUrl}/api/auth/confirm-email?token=${token}&email=${encodeURIComponent(email)}`
 
       // Send confirmation email
@@ -376,11 +377,13 @@ export class ResendEmailManager {
       return { success: true, userId: tokenData.user_id }
       
       // After successful confirmation, create a session
+      const rawSiteUrl2 = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+      const baseUrl2 = rawSiteUrl2.startsWith('http') ? rawSiteUrl2 : `https://${rawSiteUrl2}`
       const { data: signInData, error: signInError } = await this.supabaseAdmin.auth.admin.generateLink({
         type: 'magiclink',
         email: decodedEmail,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`
+          redirectTo: `${baseUrl2}/dashboard`
         }
       })
       
@@ -406,13 +409,15 @@ export class ResendEmailManager {
    * Send test email
    */
   async sendTestEmail(to: string): Promise<{ success: boolean; error?: string }> {
+    const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    const baseUrl = rawSiteUrl.startsWith('http') ? rawSiteUrl : `https://${rawSiteUrl}`
     const result = await this.sendTemplatedEmail(
       'test_email',
       to,
       {
         test_message: 'This is a test email from your Resend integration',
         timestamp: new Date().toISOString(),
-        admin_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin`,
+        admin_url: `${baseUrl}/admin`,
       }
     )
 

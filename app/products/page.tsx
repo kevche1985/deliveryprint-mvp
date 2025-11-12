@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { getProducts, getCategories, type Product, type Category } from "@/lib/database"
+import { useLanguage } from "@/lib/language-context"
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -17,6 +18,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useLanguage()
 
   useEffect(() => {
     async function loadCategories() {
@@ -68,8 +70,8 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Catalog</h1>
-          <p className="text-gray-600">Browse our collection of customizable products</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("products.catalogTitle")}</h1>
+          <p className="text-gray-600">{t("products.catalogDescription")}</p>
         </div>
 
         <div className="mb-8 space-y-4">
@@ -79,7 +81,7 @@ export default function ProductsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder={t("products.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -88,10 +90,10 @@ export default function ProductsPage() {
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t("products.allCategories")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("products.allCategories")}</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.name}>
                     {category.name}
@@ -101,13 +103,13 @@ export default function ProductsPage() {
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t("products.sortBy")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="name">{t("products.sortName")}</SelectItem>
+                <SelectItem value="price-asc">{t("products.sortPriceAsc")}</SelectItem>
+                <SelectItem value="price-desc">{t("products.sortPriceDesc")}</SelectItem>
+                <SelectItem value="newest">{t("products.sortNewest")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -119,38 +121,38 @@ export default function ProductsPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
               {products.map((product, index) => (
-                <div key={product.id}>
-                  <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader className="p-0">
-                      <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                        <img
-                          src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
-                          alt={product.name}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                        <Badge className="absolute top-2 right-2 bg-[#8B0000]">Customizable</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
-                      <p className="text-2xl font-bold text-[#8B0000]">${product.price.toFixed(2)}</p>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      <Link href={`/products/${product.id}`} className="w-full">
-                        <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">Customize</Button>
-                      </Link>
-                    </CardFooter>
-                  </Card>
-                </div>
+                <div key={product.id} className="h-full">
+                  <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
+                     <CardHeader className="p-0">
+                       <div className="aspect-square relative overflow-hidden rounded-t-lg">
+                         <img
+                           src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
+                           alt={product.name}
+                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                         />
+                         <Badge className="absolute top-2 right-2 bg-[#8B0000]">{t("products.badgeCustomizable")}</Badge>
+                       </div>
+                     </CardHeader>
+                    <CardContent className="p-4 flex-1">
+                      <h3 className="font-semibold text-lg mb-1 line-clamp-1">{product.name}</h3>
+                       <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
+                       <p className="text-2xl font-bold text-[#8B0000]">${product.price.toFixed(2)}</p>
+                     </CardContent>
+                    <CardFooter className="p-4 pt-0 mt-auto">
+                       <Link href={`/products/${product.id}`} className="w-full">
+                         <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">{t("products.buttonCustomize")}</Button>
+                       </Link>
+                     </CardFooter>
+                   </Card>
+                 </div>
               ))}
             </div>
 
             {products.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500">No products found matching your criteria</p>
+                <p className="text-gray-500">{t("products.noProductsFound")}</p>
               </div>
             )}
           </>

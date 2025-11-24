@@ -16,6 +16,8 @@ import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import { getProductById, getProductImages, getProductVariants } from "@/lib/database"
 import { useLanguage } from "@/lib/language-context"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { QuoteRequestModal } from "@/components/quote-request-modal"
 import type { Product, ProductImage, ProductVariant } from "@/lib/database"
 import { useCart } from "@/lib/cart-context"
 import { toast } from "@/hooks/use-toast"
@@ -54,6 +56,10 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState("details")
   const [editorError, setEditorError] = useState(false)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  // Bulk order quotation prompt state
+  const [showBulkQuotePrompt, setShowBulkQuotePrompt] = useState(false)
+  const [showQuoteModal, setShowQuoteModal] = useState(false)
+  const [quoteServiceType, setQuoteServiceType] = useState("Bulk Order")
 
   // Heuristic: treat apparel/wearables as products that should show standard size options
   const isWearable = React.useMemo(() => {
@@ -80,7 +86,7 @@ export default function ProductDetailPage() {
     return m
   }, [variants])
   const { addItem } = useCart()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { user } = useAuth()
 
   useEffect(() => {
@@ -135,13 +141,9 @@ export default function ProductDetailPage() {
     }
   }
 
-  const handleAddToCart = () => {
+  const proceedAddToCart = () => {
     if (!product) return
-
-    // Find the selected variant
     const variant = variants.find((v) => v.id === selectedVariant)
-
-    // Add to cart
     addItem({
       productId: product.id,
       variantId: selectedVariant || undefined,
@@ -153,8 +155,26 @@ export default function ProductDetailPage() {
     })
   }
 
+  const handleAddToCart = () => {
+    if (!product) return
+    if (quantity > 49) {
+      setQuoteServiceType(product?.name || "Bulk Order")
+      setShowBulkQuotePrompt(true)
+      return
+    }
+    proceedAddToCart()
+  }
+
   const handleSaveDesign = (designData: any) => {
     if (!product) return
+    if (!product.is_customizable) {
+      toast({
+        title: t("productDetail.notCustomizable") || "Not customizable",
+        description: t("productDetail.notCustomizableDesc") || "This product cannot be customized.",
+        variant: "destructive",
+      })
+      return
+    }
 
     // Find the selected variant
     const variant = variants.find((v) => v.id === selectedVariant)
@@ -461,9 +481,11 @@ export default function ProductDetailPage() {
 
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${product?.is_customizable ? "grid-cols-2" : "grid-cols-1"}`}>
               <TabsTrigger value="details">{t("productDetail.tabDetails")}</TabsTrigger>
-              <TabsTrigger value="customize">{t("productDetail.tabCustomize")}</TabsTrigger>
+              {product?.is_customizable && (
+                <TabsTrigger value="customize">{t("productDetail.tabCustomize")}</TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="details">
               <CardContent className="p-6">
@@ -502,36 +524,77 @@ export default function ProductDetailPage() {
                 </div>
               </CardContent>
             </TabsContent>
-            <TabsContent value="customize">
-              <CardContent className="p-6">
-                <div className="min-h-[400px]">
-                  <ErrorBoundary onError={() => setEditorError(true)}>
-                    <React.Suspense
-                      fallback={
-                        <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg">
-                          <div className="text-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-[#8B0000] mx-auto mb-2" />
-                            <p className="text-sm text-gray-600">Loading Design Editor...</p>
+            {product?.is_customizable ? (
+              <TabsContent value="customize">
+                <CardContent className="p-6">
+                  <div className="min-h-[400px]">
+                    <ErrorBoundary onError={() => setEditorError(true)}>
+                      <React.Suspense
+                        fallback={
+                          <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg">
+                            <div className="text-center">
+                              <Loader2 className="h-8 w-8 animate-spin text-[#8B0000] mx-auto mb-2" />
+                              <p className="text-sm text-gray-600">Loading Design Editor...</p>
+                            </div>
                           </div>
-                        </div>
-                      }
-                    >
-                      <DesignEditor
-                        productImage={selectedImage || product.image || "/placeholder.svg?height=600&width=600"}
-                        printArea={{ x: 150, y: 150, width: 300, height: 300 }}
-                        onSave={handleSaveDesign}
-                        productName={product.name}
-                        product={product}
-                        variants={variants}
-                        selectedVariant={selectedVariant || undefined}
-                      />
-                    </React.Suspense>
-                  </ErrorBoundary>
-                </div>
-              </CardContent>
-            </TabsContent>
+                        }
+                      >
+                        <DesignEditor
+                          productImage={selectedImage || product.image || "/placeholder.svg?height=600&width=600"}
+                          printArea={{ x: 150, y: 150, width: 300, height: 300 }}
+                          onSave={handleSaveDesign}
+                          productName={product.name}
+                          product={product}
+                          variants={variants}
+                          selectedVariant={selectedVariant || undefined}
+                        />
+                      </React.Suspense>
+                    </ErrorBoundary>
+                  </div>
+                </CardContent>
+              </TabsContent>
+            ) : (
+              <TabsContent value="customize">
+                <CardContent className="p-6">
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+                    {t("productDetail.notCustomizable") || "This product cannot be customized."}
+                  </div>
+                </CardContent>
+              </TabsContent>
+            )}
           </Tabs>
         </Card>
+      {/* Bulk order quotation prompt */}
+      <Dialog open={showBulkQuotePrompt} onOpenChange={setShowBulkQuotePrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{language === "es" ? "¿Quieres una cotización?" : "Would you like a quotation?"}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            {language === "es"
+              ? "Has seleccionado 50 o más unidades. Podemos ofrecer mejores precios con una cotización."
+              : "You've selected 50+ units. We can offer better pricing with a quotation."}
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => { setShowBulkQuotePrompt(false); proceedAddToCart() }}>
+              {language === "es" ? "Continuar sin cotización" : "Continue without quote"}
+            </Button>
+            <Button className="bg-[#8B0000] hover:bg-[#6B0000]" onClick={() => { setShowBulkQuotePrompt(false); setShowQuoteModal(true) }}>
+              {language === "es" ? "Solicitar cotización" : "Request a quote"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quote Request Modal */}
+      {showQuoteModal && (
+        <QuoteRequestModal
+          isOpen={showQuoteModal}
+          onClose={() => setShowQuoteModal(false)}
+          serviceType={quoteServiceType}
+          prefilledData={{ productId: product?.id, productName: product?.name, quantity, variant: selectedVariant, size: selectedSize }}
+        />
+      )}
       </div>
     </div>
   )

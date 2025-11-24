@@ -10,6 +10,8 @@ export type Product = {
   image: string | null // Base product image
   is_active: boolean
   is_featured: boolean
+  // New: controls whether product supports customization flows
+  is_customizable: boolean
   created_at: string
   updated_at: string | null
   tenant_id: string | null
@@ -222,7 +224,11 @@ export async function getProducts(
     throw error
   }
 
-  return data as Product[]
+  // Default legacy/null values to customizable=true for backward compatibility
+  return (data ?? []).map((p: any) => ({
+    ...p,
+    is_customizable: p?.is_customizable ?? true,
+  })) as Product[]
 }
 
 export async function getProductById(id: string) {
@@ -234,8 +240,10 @@ export async function getProductById(id: string) {
     return null
   }
 
-  return data as Product
+  if (!data) return null
+  return { ...data, is_customizable: (data as any).is_customizable ?? true } as Product
 }
+
 
 export async function getProductBySlug(slug: string) {
   const { data, error } = await supabase.from("products").select("*").eq("name", slug.replace(/-/g, " ")).single()
@@ -245,7 +253,8 @@ export async function getProductBySlug(slug: string) {
     return null
   }
 
-  return data as Product
+  if (!data) return null
+  return { ...data, is_customizable: (data as any).is_customizable ?? true } as Product
 }
 
 export async function getProductImages(productId: string) {

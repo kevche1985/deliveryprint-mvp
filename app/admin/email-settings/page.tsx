@@ -761,7 +761,7 @@ export default function EmailSettingsPage() {
                 placeholder="e.g., customer_name, order_number, total_amount"
                 />
                 <p className="text-sm text-gray-500">
-                Use {'{{'}}variable_name{'}}'}  in your templates to insert dynamic content.
+                  Use <code>&#123;&#123;variable_name&#125;&#125;</code> in your templates to insert dynamic content.
                 </p>
                 </div>
                 

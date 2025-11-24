@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileImage, Ruler, Building2, Lightbulb, ArrowRight, CheckCircle, Clock, Shield } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
+import { useState } from "react"
+import { QuoteRequestModal } from "@/components/quote-request-modal"
 
 const services = [
   {
@@ -74,6 +76,8 @@ const benefits = [
 
 export default function ServicesPage() {
   const { t } = useLanguage()
+  const [isQuoteOpen, setIsQuoteOpen] = useState(false)
+  const [quoteServiceType, setQuoteServiceType] = useState("Services")
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -83,7 +87,7 @@ export default function ServicesPage() {
           <p className="text-xl mb-8 max-w-3xl mx-auto">{t("services.page.heroSubtitle")}</p>
           <div className="flex gap-4 justify-center">
             <Button size="lg" className="bg-white text-red-900 hover:bg-gray-100">{t("services.page.ctaGetStarted")}</Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-900">
+            <Button size="lg" variant="outline" className="border-white text-red-900 hover:bg-white hover:text-red-900" onClick={() => { setQuoteServiceType("Services"); setIsQuoteOpen(true) }}>
               {t("services.page.ctaRequestQuote")}
             </Button>
           </div>
@@ -220,13 +224,17 @@ export default function ServicesPage() {
               </Button>
             </Link>
             <Link href="/quote">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-900">
+              <Button size="lg" variant="outline" className="border-white text-red-900 hover:bg-white hover:text-red-900" onClick={() => { setQuoteServiceType("Custom Quote"); setIsQuoteOpen(true) }}>
                 {t("services.page.ctaRequestCustomQuote")}
               </Button>
             </Link>
           </div>
         </div>
       </section>
+      {/* Quote Request Modal */}
+      {isQuoteOpen && (
+        <QuoteRequestModal isOpen={isQuoteOpen} onClose={() => setIsQuoteOpen(false)} serviceType={quoteServiceType} />
+      )}
     </div>
   )
 }

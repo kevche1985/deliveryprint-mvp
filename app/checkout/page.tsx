@@ -433,10 +433,24 @@ export default function CheckoutPage() {
           transactionId,
           paymentMethod: "paypal",
           paymentStatus: "completed",
-          cartItems: items.map((item) => ({
-            ...item,
-            productImage: (item as any).productImage || null, // Add base product image
-          })),
+          cartItems: items.map((item) => {
+            const customizedProductImage = (item as any).customizations?.customDesign?.customizedProductImage || (item as any).customizations?.customizedProductImage || null
+            const aiPreview = (item as any).customizations?.aiDesign?.previewUrl || null
+            const previewUrl = (item as any).customizations?.preview_url || aiPreview || customizedProductImage || item.image || null
+            const downloadUrl = (item as any).customizations?.download_url || (item as any).customizations?.storage_url || customizedProductImage || aiPreview || item.image || null
+            const designId = (item as any).designId || (item as any).customizations?.design_id || undefined
+            return {
+              ...item,
+              designId,
+              productImage: item.image || null,
+              customizedProductImage,
+              design_image_url: previewUrl,
+              design_file_url: downloadUrl,
+              storageUrl: (item as any).customizations?.storage_url || null,
+              preview_url: previewUrl,
+              download_url: downloadUrl,
+            }
+          }),
           digitalCartItems: digitalItems.map((item) => ({
             ...item,
             productImage: null, // Digital items don't have base product images
@@ -531,10 +545,24 @@ export default function CheckoutPage() {
           transactionId,
           paymentMethod: "wompi",
           paymentStatus: "completed",
-          cartItems: items.map((item) => ({
-            ...item,
-            productImage: (item as any).productImage || null, // Add base product image
-          })),
+          cartItems: items.map((item) => {
+            const customizedProductImage = (item as any).customizations?.customDesign?.customizedProductImage || (item as any).customizations?.customizedProductImage || null
+            const aiPreview = (item as any).customizations?.aiDesign?.previewUrl || null
+            const previewUrl = (item as any).customizations?.preview_url || aiPreview || customizedProductImage || item.image || null
+            const downloadUrl = (item as any).customizations?.download_url || (item as any).customizations?.storage_url || customizedProductImage || aiPreview || item.image || null
+            const designId = (item as any).designId || (item as any).customizations?.design_id || undefined
+            return {
+              ...item,
+              designId,
+              productImage: item.image || null,
+              customizedProductImage,
+              design_image_url: previewUrl,
+              design_file_url: downloadUrl,
+              storageUrl: (item as any).customizations?.storage_url || null,
+              preview_url: previewUrl,
+              download_url: downloadUrl,
+            }
+          }),
           digitalCartItems: digitalItems.map((item) => ({
             ...item,
             productImage: null, // Digital items don't have base product images

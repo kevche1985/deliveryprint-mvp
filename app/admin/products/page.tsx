@@ -37,6 +37,7 @@ type Product = {
   image: string | null
   is_active: boolean
   is_featured: boolean
+  is_customizable: boolean
   created_at: string
 }
 
@@ -58,6 +59,7 @@ export default function ProductManagement() {
     image: "",
     is_active: true,
     is_featured: false,
+    is_customizable: true,
   })
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
   const importFileRef = useRef<HTMLInputElement>(null)
@@ -167,6 +169,7 @@ export default function ProductManagement() {
         image: imageUrlToSave || null, // Use the uploaded URL or existing one
         is_active: formData.is_active,
         is_featured: formData.is_featured,
+        is_customizable: formData.is_customizable,
       }
 
       if (editingProduct) {
@@ -201,6 +204,7 @@ export default function ProductManagement() {
       image: product.image || "",
       is_active: product.is_active,
       is_featured: product.is_featured,
+      is_customizable: (product as any).is_customizable ?? true,
     })
     setSelectedImageFile(null) // Clear any previously selected file
     setImagePreviewUrl(product.image || null) // Set preview if product has an image
@@ -218,6 +222,7 @@ export default function ProductManagement() {
       image: "",
       is_active: true,
       is_featured: false,
+      is_customizable: true,
     })
     setSelectedImageFile(null)
     setImagePreviewUrl(null)
@@ -446,7 +451,16 @@ export default function ProductManagement() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              if (open) {
+                setIsDialogOpen(true)
+              } else {
+                handleDialogClose()
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button className="bg-[#8B0000] hover:bg-[#6B0000]">
                 <Plus className="mr-2 h-4 w-4" />
@@ -593,6 +607,15 @@ export default function ProductManagement() {
                         disabled={isImageUploading} // Disable while uploading
                       />
                       <Label htmlFor="is_featured">{t("admin.products.form.featuredLabel")}</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is_customizable"
+                        checked={formData.is_customizable}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_customizable: checked })}
+                        disabled={isImageUploading} // Disable while uploading
+                      />
+                      <Label htmlFor="is_customizable">Customizable</Label>
                     </div>
                   </div>
                 </div>

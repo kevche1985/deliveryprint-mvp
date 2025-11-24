@@ -18,7 +18,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   useEffect(() => {
     async function loadCategories() {
@@ -132,7 +132,9 @@ export default function ProductsPage() {
                            alt={product.name}
                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                          />
-                         <Badge className="absolute top-2 right-2 bg-[#8B0000]">{t("products.badgeCustomizable")}</Badge>
+                         {product.is_customizable && (
+                           <Badge className="absolute top-2 right-2 bg-[#8B0000]">{t("products.badgeCustomizable")}</Badge>
+                         )}
                        </div>
                      </CardHeader>
                     <CardContent className="p-4 flex-1">
@@ -142,7 +144,7 @@ export default function ProductsPage() {
                      </CardContent>
                     <CardFooter className="p-4 pt-0 mt-auto">
                        <Link href={`/products/${product.id}`} className="w-full">
-                         <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">{t("products.buttonCustomize")}</Button>
+                         <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">{product.is_customizable ? t("products.buttonCustomize") : language === "es" ? "Ver" : "View"}</Button>
                        </Link>
                      </CardFooter>
                    </Card>

@@ -143,16 +143,22 @@ export default function Navigation() {
                     <Link href="/admin/products">{t("products.title")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/admin/services">Services</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/admin/users">{t("users.title")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/admin/quotes">{t("quotes.title")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/transactions">{t("admin.paymentTransactions")}</Link>
+                    <Link href="/admin/transactions">{t("admin.nav.transactions")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/email-settings">{t("admin.emailSettings")}</Link>
+                    <Link href="/admin/disputes">{t("admin.nav.disputes")}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/email-settings">{t("admin.nav.emailSettings")}</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

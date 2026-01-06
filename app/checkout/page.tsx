@@ -22,6 +22,7 @@ import WompiPaymentModal from "@/components/wompi-payment-modal"
 import PayPalButton from "@/components/paypal-button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLanguage } from "@/lib/language-context"
+import { track } from "@/lib/analytics"
 
 const shippingMethods = [
   { id: "standard", name: "Regular Shipping", price: 3, description: "5-7 business days", value: "standard" },
@@ -143,6 +144,10 @@ export default function CheckoutPage() {
       router.push("/auth/login?redirect=checkout")
     }
   }, [loading, user, router])
+
+  useEffect(() => {
+    track("checkout_start", { items: items.length + digitalItems.length, subtotal: subtotal + digitalSubtotal })
+  }, [])
 
   // Check if this is a digital-only order
   useEffect(() => {
@@ -385,7 +390,72 @@ export default function CheckoutPage() {
       }
 
       const order = await createOrder(orderData)
+      track("order_created", { orderId: order.id, total: combinedTotal, method: paymentMethod })
       setCurrentOrder(order)
+
+      // Create order items immediately (idempotent with payment confirm)
+      try {
+        const physicalOrderItems = items.map((item) => {
+          const customizedProductImage = (item as any).customizations?.customDesign?.customizedProductImage || (item as any).customizations?.customizedProductImage || null
+          const aiPreview = (item as any).customizations?.aiDesign?.previewUrl || null
+          const previewUrl = (item as any).customizations?.preview_url || aiPreview || customizedProductImage || item.image || null
+          const downloadUrl = (item as any).customizations?.download_url || (item as any).customizations?.storage_url || customizedProductImage || aiPreview || item.image || null
+          const designId = (item as any).designId || (item as any).customizations?.design_id || undefined
+          return {
+            order_id: order.id,
+            product_id: item.productId,
+            variant_id: item.variantId || null,
+            design_id: designId || null,
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            name: item.name,
+            product_image_url: item.image || null,
+            design_image_url: previewUrl || null,
+            design_file_url: downloadUrl || null,
+            customized_image_url: customizedProductImage || null,
+            print_ready_file_url: downloadUrl || null,
+            digital_product_id: null,
+            customizations: (item as any).customizations || null,
+          }
+        })
+        for (const oi of physicalOrderItems) {
+          await fetch(`/api/orders/${order.id}/items`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oi)
+          })
+        }
+
+        const digitalOrderItems = digitalItems.map((d) => ({
+          order_id: order.id,
+          product_id: 'digital-product',
+          digital_product_id: d.productId || d.designId,
+          variant_id: null,
+          design_id: null,
+          name: d.name,
+          quantity: 1,
+          price: d.finalPrice || d.basePrice || 0,
+          customizations: d.generationInputs || null,
+          product_image_url: null,
+          design_image_url: d.previewUrl || null,
+          design_file_url: null,
+          customized_image_url: d.previewUrl || null,
+          print_ready_file_url: null,
+        }))
+        for (const oi of digitalOrderItems) {
+          await fetch(`/api/orders/${order.id}/items`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oi)
+          })
+        }
+      } catch (e) {
+        console.warn('Order items creation failed or partially succeeded:', e)
+      }
+
+      try {
+        await fetch("/api/email/admin/new-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order }),
+        })
+      } catch (_) {}
 
       if (paymentMethod === "wompi") {
         setShowWompiModal(true)

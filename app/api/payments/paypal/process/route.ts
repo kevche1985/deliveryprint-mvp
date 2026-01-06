@@ -31,14 +31,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Missing data in webhook event" }, { status: 400 })
       }
 
-      const { data, error } = await supabaseServer
-        .from("orders")
-        .update({
-          payment_status: "paid",
-          paypal_capture_id: captureId,
-          gross_amount: Number.parseFloat(grossAmount),
-        })
-        .eq("id", orderId)
+      const { data: existing } = await supabaseServer.from("orders").select("status,payment_status").eq("id", orderId).single()
+      const prevStatus = existing?.status || "pending"
+      const prevPay = existing?.payment_status || "unpaid"
+      const canAdvance = ["pending", "created", "processing"].includes(prevStatus)
+      const newFields: any = {
+        paypal_capture_id: captureId,
+        gross_amount: Number.parseFloat(grossAmount),
+      }
+      if (canAdvance) newFields.status = "confirmed"
+      if (prevPay !== "paid") newFields.payment_status = "paid"
+      const { data, error } = await supabaseServer.from("orders").update(newFields).eq("id", orderId)
 
       if (error) {
         console.error("Error updating order in database:", error)

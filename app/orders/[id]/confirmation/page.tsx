@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, CheckCircle, AlertCircle, Printer, FileText, ArrowRight } from "lucide-react"
+import { Loader2, CheckCircle, AlertCircle, Printer, FileText, ArrowRight, Eye } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
@@ -14,6 +15,9 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import { getOrderById, getOrderItems } from "@/lib/database"
 import type { Order, OrderItem } from "@/lib/database"
+import { track } from "@/lib/analytics"
+import DisputeModal from "@/components/dispute-modal"
+import { useLanguage } from "@/lib/language-context"
 
 export default function OrderConfirmationPage() {
   const { id } = useParams()
@@ -26,6 +30,16 @@ export default function OrderConfirmationPage() {
   const [loading, setLoading] = useState(true)
   const [generatingInvoice, setGeneratingInvoice] = useState(false)
   const [printingReceipt, setPrintingReceipt] = useState(false)
+  const [refunding, setRefunding] = useState(false)
+  const [showDispute, setShowDispute] = useState(false)
+  const [disputes, setDisputes] = useState<any[]>([])
+  const [showDisputeDetail, setShowDisputeDetail] = useState(false)
+  const [selectedDispute, setSelectedDispute] = useState<any | null>(null)
+  const [disputeComments, setDisputeComments] = useState<any[]>([])
+  const [newMessage, setNewMessage] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedFileName, setSelectedFileName] = useState<string>("")
 
   useEffect(() => {
     async function loadOrderData() {
@@ -49,6 +63,46 @@ export default function OrderConfirmationPage() {
       loadOrderData()
     }
   }, [id, user])
+
+  useEffect(() => {
+    const loadDisputes = async () => {
+      if (!user || !id) return
+      const { data } = await supabase.from("disputes").select("*").eq("order_id", id as string).eq("user_id", user.id).order("created_at", { ascending: false })
+      setDisputes(data || [])
+    }
+    loadDisputes()
+  }, [id, user])
+
+  const openDisputeDetail = async (d: any) => {
+    setSelectedDispute(d)
+    const { data } = await supabase.from("dispute_comments").select("*").eq("dispute_id", d.id).order("created_at", { ascending: true })
+    setDisputeComments(data || [])
+    setShowDisputeDetail(true)
+  }
+
+  const sendMessage = async () => {
+    if (!selectedDispute || !newMessage.trim()) return
+    const { data: session } = await supabase.auth.getSession()
+    const token = session.session?.access_token
+    const resp = await fetch(`/api/disputes/${selectedDispute.id}/message`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: newMessage }) })
+    const payload = await resp.json()
+    if (resp.ok) {
+      setDisputeComments([...disputeComments, payload.comment])
+      setNewMessage("")
+    }
+  }
+
+  const uploadFile = async (file: File) => {
+    if (!selectedDispute || !file) return
+    setUploading(true)
+    const { data: session } = await supabase.auth.getSession()
+    const token = session.session?.access_token
+    const form = new FormData()
+    form.append('file', file)
+    const resp = await fetch(`/api/disputes/${selectedDispute.id}/files/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+    setUploading(false)
+    if (resp.ok) setSelectedFileName("")
+  }
 
   const handlePrintReceipt = () => {
     if (!order) return
@@ -310,6 +364,9 @@ export default function OrderConfirmationPage() {
                     <p className="text-gray-600">
                       <span className="font-medium">Status:</span> {paymentStatus === "success" ? "Paid" : "Pending"}
                     </p>
+                    {((order as any).shipping_method || 'standard') === 'download' && (
+                      <p className="text-green-700 text-sm">Your digital downloads are ready after payment.</p>
+                    )}
                     <p className="text-gray-600">
                       <span className="font-medium">Shipping:</span>{" "}
                       {((order as any).shipping_method || 'standard').charAt(0).toUpperCase() + ((order as any).shipping_method || 'standard').slice(1)} Shipping
@@ -327,9 +384,13 @@ export default function OrderConfirmationPage() {
                         <div key={item.id} className="flex items-center justify-between border-b pb-4">
                           <div className="flex items-center">
                             <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden mr-4 flex-shrink-0">
-                              {/* Use a placeholder for now */}
                               <img
-                                src="/placeholder.svg?height=64&width=64&query=product"
+                                src={
+                                  (item as any).product_image_url ||
+                                  (item as any).design_image_url ||
+                                  (item as any).customized_image_url ||
+                                  "/placeholder.svg?height=64&width=64&query=product"
+                                }
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />
@@ -347,6 +408,27 @@ export default function OrderConfirmationPage() {
                     )}
                   </div>
                 </div>
+
+                {disputes.length > 0 && (
+                  <div>
+                    <Separator />
+                    <h3 className="font-semibold mb-4">{t("disputes.title")}</h3>
+                    <div className="space-y-3">
+                      {disputes.map((d) => (
+                        <div key={d.id} className="flex items-center justify-between border rounded p-3">
+                          <div>
+                            <p className="font-medium">{d.reason}</p>
+                            <p className="text-sm text-gray-600">Status: {d.status}</p>
+                            {d.resolution && <p className="text-sm text-gray-600">Resolution: {d.resolution}</p>}
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => openDisputeDetail(d)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <Separator />
 
@@ -401,9 +483,58 @@ export default function OrderConfirmationPage() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+            {(paymentStatus === "success" || (order?.payment_status === "paid") || (order?.status === "confirmed") || (order?.status === "completed")) && (
+              <Button className="flex-1" variant="outline" onClick={() => setShowDispute(true)}>
+                Request Refund
+              </Button>
+            )}
           </div>
+          <DisputeModal open={showDispute} onOpenChange={setShowDispute} orderId={order?.id || String(id)} paymentProvider={order?.payment_method} captureId={(order as any)?.paypal_capture_id} onCreated={() => toast({ title: t("success"), description: t("disputes.detailsTitle") })} />
+          <Dialog open={showDisputeDetail} onOpenChange={setShowDisputeDetail}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{t("disputes.detailsTitle")}</DialogTitle>
+              </DialogHeader>
+              {selectedDispute && (
+                <div className="space-y-3">
+                  <p className="text-sm"><span className="font-medium">{t("disputes.reason")}</span> {selectedDispute.reason}</p>
+                  <p className="text-sm"><span className="font-medium">{t("disputes.status")}</span> {selectedDispute.status}</p>
+                  {selectedDispute.description && <p className="text-sm"><span className="font-medium">{t("disputes.description")}</span> {selectedDispute.description}</p>}
+                  {selectedDispute.resolution && <p className="text-sm"><span className="font-medium">{t("disputes.resolution")}</span> {selectedDispute.resolution}</p>}
+                  <div>
+                    <p className="font-semibold mb-2">{t("disputes.messages")}</p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {disputeComments.length === 0 ? (
+                        <p className="text-sm text-gray-500">{t("disputes.noMessages")}</p>
+                      ) : (
+                        disputeComments.map((c) => (
+                          <div key={c.id} className="border rounded p-2 text-sm">
+                            <p>{c.comment}</p>
+                            <p className="text-xs text-gray-500">{new Date(c.created_at).toLocaleString()}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <textarea className="w-full border rounded p-2 text-sm" placeholder={t("disputes.writeMessage")} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
+                      <div className="flex gap-2 justify-center items-center">
+                        <Button variant="outline" onClick={sendMessage}>{t("disputes.send")}</Button>
+                        <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => { if (e.target.files && e.target.files[0]) { setSelectedFileName(e.target.files[0].name); uploadFile(e.target.files[0]) } }} />
+                        <Button className="bg-[#8B0000] hover:bg-[#6B0000]" onClick={() => fileInputRef.current?.click()}>
+                          {t("disputes.chooseFile")}
+                        </Button>
+                        {selectedFileName && <span className="text-xs">{selectedFileName}</span>}
+                        {uploading && <span className="text-xs text-gray-500">{t("disputes.uploading")}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
   )
 }
+  const { t } = useLanguage()

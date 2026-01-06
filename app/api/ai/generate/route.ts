@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
 // Explicitly set this as a server-side only route
 export const runtime = "nodejs"
@@ -9,18 +10,23 @@ export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body = await request.json()
-    const { prompt, type, userId } = body
+    const Schema = z
+      .object({
+        prompt: z.string().min(3),
+        type: z.enum(["logo", "image", "font"]),
+        userId: z.string().min(1),
+      })
+      .strict()
+    const parsed = Schema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 })
+    }
+    const { prompt, type, userId } = parsed.data
 
     console.log("Request body:", { type, userId, promptLength: prompt?.length })
 
     // Validate required fields
-    if (!prompt || !type || !userId) {
-      console.error("Missing required fields:", { prompt: !!prompt, type: !!type, userId: !!userId })
-      return NextResponse.json(
-        { error: "Missing required fields: prompt, type, and userId are required" },
-        { status: 400 },
-      )
-    }
+    // Fields validated by schema above
 
     console.log("Processing AI generation:", { type, userId, promptLength: prompt.length })
 

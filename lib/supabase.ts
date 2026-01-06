@@ -13,9 +13,6 @@ if (!supabaseAnonKey) {
   throw new Error("Missing Supabase anon key")
 }
 
-console.log("Connecting to Supabase:", supabaseUrl)
-console.log("Using anon key:", supabaseAnonKey.substring(0, 20) + "...")
-
 // Client-side Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {

@@ -9,7 +9,6 @@ import { Toaster } from "@/components/ui/toaster"
 import Navigation from "@/components/navigation"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { LanguageProvider } from "@/lib/language-context"
-import PerformanceMonitor from "@/components/performance-monitor"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -35,7 +34,6 @@ export default function RootLayout({
                   <Navigation />
                   <main className="min-h-screen">{children}</main>
                   <Toaster />
-                  <PerformanceMonitor />
                 </DigitalCartProvider>
               </CartProvider>
             </AuthWrapper>

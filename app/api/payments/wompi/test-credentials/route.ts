@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    console.log("🧪 Testing Wompi credentials...")
+    // Credential test
 
     const WOMPI_CLIENT_ID = process.env.WOMPI_CLIENT_ID
     const WOMPI_CLIENT_SECRET = process.env.WOMPI_CLIENT_SECRET
@@ -18,7 +18,7 @@ export async function GET() {
       })
     }
 
-    console.log("🔐 Testing OAuth token request...")
+    // OAuth token request
 
     const tokenResponse = await fetch("https://id.wompi.sv/connect/token", {
       method: "POST",
@@ -36,15 +36,13 @@ export async function GET() {
     })
 
     const responseText = await tokenResponse.text()
-    console.log("📡 Token response status:", tokenResponse.status)
-    console.log("📄 Token response:", responseText.substring(0, 200))
 
     if (!tokenResponse.ok) {
       return NextResponse.json({
         success: false,
         error: "OAuth authentication failed",
         status: tokenResponse.status,
-        response: responseText,
+        // response omitted
         details: {
           endpoint: "https://id.wompi.sv/connect/token",
           clientId: WOMPI_CLIENT_ID?.substring(0, 8) + "...",

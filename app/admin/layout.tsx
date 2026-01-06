@@ -22,6 +22,7 @@ import {
   LogOut,
   ChevronDown,
   Mail,
+  Printer,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -253,6 +254,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
               {[
                 { href: "/admin", icon: LayoutDashboard, title: t("admin.nav.dashboard"), description: t("admin.navDescriptions.dashboard") },
                 { href: "/admin/products", icon: Package, title: t("admin.nav.products"), description: t("admin.navDescriptions.products") },
+                { href: "/admin/services", icon: Printer, title: "Services", description: "Manage your services" },
                 { href: "/admin/orders", icon: ShoppingCart, title: t("admin.nav.orders"), description: t("admin.navDescriptions.orders") },
                 { href: "/admin/payments", icon: CreditCard, title: t("admin.nav.payments"), description: t("admin.navDescriptions.payments") },
                 { href: "/admin/transactions", icon: CreditCard, title: t("admin.nav.transactions"), description: t("admin.navDescriptions.transactions") },

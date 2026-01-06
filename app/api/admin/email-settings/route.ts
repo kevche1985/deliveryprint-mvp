@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { emailService } from "@/lib/email-service"
+import { requireRole } from "@/lib/rbac"
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireRole(request, ["admin", "operator"])
+    if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status })
     console.log("GET /api/admin/email-settings - Fetching email settings...")
 
     const settings = await emailService.getSettings()
@@ -27,6 +30,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireRole(request, ["admin", "operator"])
+    if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status })
     console.log("POST /api/admin/email-settings - Updating email settings...")
 
     const body = await request.json()

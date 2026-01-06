@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { getProducts, getCategories, type Product, type Category } from "@/lib/database"
+import Image from "next/image"
 import { useLanguage } from "@/lib/language-context"
 
 export default function ProductsPage() {
@@ -127,10 +128,12 @@ export default function ProductsPage() {
                   <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
                      <CardHeader className="p-0">
                        <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                         <img
+                         <Image
                            src={product.image || "/placeholder.svg?height=300&width=300&query=product"}
                            alt={product.name}
-                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                           fill
+                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                           className="object-cover hover:scale-105 transition-transform duration-300"
                          />
                          {product.is_customizable && (
                            <Badge className="absolute top-2 right-2 bg-[#8B0000]">{t("products.badgeCustomizable")}</Badge>

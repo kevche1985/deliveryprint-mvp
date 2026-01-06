@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileImage, Ruler, Building2, Lightbulb, ArrowRight, CheckCircle, Clock, Shield } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { QuoteRequestModal } from "@/components/quote-request-modal"
+import { supabase } from "@/lib/supabase"
 
-const services = [
+const staticServices = [
   {
     id: "digital-printing",
     title: "Digital Printing Services",
@@ -78,6 +79,37 @@ export default function ServicesPage() {
   const { t } = useLanguage()
   const [isQuoteOpen, setIsQuoteOpen] = useState(false)
   const [quoteServiceType, setQuoteServiceType] = useState("Services")
+  const [services, setServices] = useState<any[]>(staticServices)
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("services")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+        if (error) throw error
+        if (data && data.length > 0) {
+          const mapped = data.map((s) => ({
+            id: s.slug || s.id,
+            title: s.name,
+            description: s.description || "",
+            icon: FileImage,
+            href: s.slug ? `/services/${s.slug}` : "/services",
+            features: [],
+            priceRange: s.price ? `$${Number(s.price).toFixed(2)}+` : t("services.page.startingFrom"),
+            turnaround: t("services.page.turnaroundDefault"),
+            image: s.image || "/placeholder.svg?height=200&width=300",
+          }))
+          setServices(mapped)
+        }
+      } catch (e) {
+        console.error("Failed to load services", e)
+      }
+    }
+    loadServices()
+  }, [t])
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}

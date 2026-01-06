@@ -7,7 +7,7 @@ const WOMPI_CLIENT_SECRET = process.env.WOMPI_CLIENT_SECRET
 
 export async function GET() {
   try {
-    console.log("Testing Wompi connection...")
+    // Connection test
 
     // Check if credentials are configured
     if (!WOMPI_CLIENT_ID || !WOMPI_CLIENT_SECRET) {
@@ -24,7 +24,7 @@ export async function GET() {
     }
 
     // Test getting access token
-    console.log("Testing Wompi token endpoint...")
+    // Token endpoint test
     const tokenResponse = await fetch(`${WOMPI_BASE_ACCESS_URL}`, {
       method: "POST",
       headers: {
@@ -39,8 +39,6 @@ export async function GET() {
     })
 
     const tokenResponseText = await tokenResponse.text()
-    console.log("Token response status:", tokenResponse.status)
-    console.log("Token response:", tokenResponseText)
 
     if (!tokenResponse.ok) {
       return NextResponse.json({
@@ -48,7 +46,7 @@ export async function GET() {
         error: "Failed to authenticate with Wompi",
         details: {
           status: tokenResponse.status,
-          response: tokenResponseText,
+          // response body omitted
           endpoint: `${WOMPI_BASE_ACCESS_URL}`,
         },
       })

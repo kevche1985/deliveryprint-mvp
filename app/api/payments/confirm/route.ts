@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseServer } from "@/lib/supabase-server"
 import { createOrderItem, updateOrderPaymentStatus } from "@/lib/database" // Assuming these are server-side functions
 import { sendOrderConfirmationEmail } from "@/lib/email-service" // Assuming this exists
 import { markDigitalProductAsPurchased } from "@/lib/digital-product-service"
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     
     // Optional: Verify the order exists and belongs to the provided userId if available
     if (userId) {
-      const { data: existingOrder, error: orderError } = await supabase
+      const { data: existingOrder, error: orderError } = await supabaseServer
         .from('orders')
         .select('id, user_id')
         .eq('id', orderId)
@@ -73,6 +73,8 @@ export async function POST(req: NextRequest) {
     // For a robust server action, you'd fetch cart items from the DB directly.
 
     // Example of processing cart items and creating order items
+    const { data: existingItems } = await supabaseServer.from('order_items').select('id').eq('order_id', orderId)
+    if (!existingItems || existingItems.length === 0) {
     for (const item of cartItems) {
       // Ensure customizations are stored as JSONB
       const lightweightCustomizations = item.customizations ? JSON.parse(JSON.stringify(item.customizations)) : null
@@ -117,9 +119,10 @@ export async function POST(req: NextRequest) {
         // Decide if you want to roll back or continue. For now, log and continue.
       }
     }
+    }
 
     // 3. Process digital products if present
-    if (digitalCartItems && digitalCartItems.length > 0) {
+    if (digitalCartItems && digitalCartItems.length > 0 && (!existingItems || existingItems.length === 0)) {
       console.log(`Processing ${digitalCartItems.length} digital products for order ${orderId}`)
       
       for (const digitalItem of digitalCartItems) {
@@ -172,8 +175,26 @@ export async function POST(req: NextRequest) {
     // 4. Clear the user's cart (assuming a server-side cart clearing mechanism)
     // await clearCart(user.id); // This would depend on your cart implementation
 
-    // 5. Send confirmation email
-    await sendOrderConfirmationEmail(customerEmail, orderId)
+    // 5. Send confirmation email to customer with order details
+    try {
+      const { data: emailItems } = await supabaseServer
+        .from('order_items')
+        .select('name, quantity, price')
+        .eq('order_id', orderId)
+
+      const payload = {
+        customerEmail,
+        customerName: `${shippingAddress?.firstName || ''} ${shippingAddress?.lastName || ''}`.trim() || customerEmail,
+        orderNumber: updatedOrder.order_number,
+        orderTotal: Number(updatedOrder.total || total).toFixed(2),
+        orderItems: (emailItems || []).map((i: any) => ({
+          name: i.name,
+          quantity: i.quantity || 1,
+          price: Number(i.price || 0).toFixed(2),
+        })),
+      }
+      await sendOrderConfirmationEmail(payload)
+    } catch (_) {}
 
     return NextResponse.json({ success: true, order: updatedOrder }, { status: 200 })
   } catch (error: any) {

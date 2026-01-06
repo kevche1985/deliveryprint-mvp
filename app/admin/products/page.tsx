@@ -41,6 +41,17 @@ type Product = {
   created_at: string
 }
 
+type Category = {
+  id: string
+  name: string
+  description: string | null
+  slug: string | null
+  image_url: string | null
+  is_active: boolean
+  parent_id: string | null
+  created_at?: string
+}
+
 export default function ProductManagement() {
   const { t } = useLanguage()
   const { toast } = useToast()
@@ -50,6 +61,7 @@ export default function ProductManagement() {
   const [filterCategory, setFilterCategory] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [formData, setFormData] = useState({
     name: "",
@@ -66,9 +78,15 @@ export default function ProductManagement() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isImageUploading, setIsImageUploading] = useState(false)
+  const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"]
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+  const [categories, setCategories] = useState<Category[]>([])
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [categoryForm, setCategoryForm] = useState({ name: "", description: "", is_active: true })
 
   useEffect(() => {
     loadProducts()
+    loadCategories()
   }, [])
 
   const loadProducts = async () => {
@@ -89,11 +107,33 @@ export default function ProductManagement() {
     }
   }
 
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase.from("categories").select("*").order("name", { ascending: true })
+      if (error) throw error
+      setCategories(data || [])
+    } catch (error) {
+      console.error("Error loading categories:", error)
+      toast({ title: t("common.error"), description: t("admin.products.toasts.errorLoadingCategories"), variant: "destructive" })
+    }
+  }
+
   const handleImageSelect = (file: File | null) => {
-    setSelectedImageFile(file)
     if (file) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_SIZE) {
+        toast({
+          title: t("common.error"),
+          description: `${t("admin.products.imageUpload.supportedFormats")} Max 5MB.`,
+          variant: "destructive",
+        })
+        setSelectedImageFile(null)
+        setImagePreviewUrl(null)
+        return
+      }
+      setSelectedImageFile(file)
       setImagePreviewUrl(URL.createObjectURL(file))
     } else {
+      setSelectedImageFile(null)
       setImagePreviewUrl(null)
     }
   }
@@ -101,6 +141,9 @@ export default function ProductManagement() {
   const uploadImageToSupabase = async (file: File): Promise<string | null> => {
     setIsImageUploading(true)
     try {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_SIZE) {
+        throw new Error(`${t("admin.products.imageUpload.supportedFormats")} Max 5MB.`)
+      }
       const fileExtension = file.name.split(".").pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`
       const filePath = `product_images/${fileName}` // Folder inside the bucket
@@ -108,6 +151,7 @@ export default function ProductManagement() {
       const { data, error } = await supabase.storage.from("product-images").upload(filePath, file, {
         cacheControl: "3600",
         upsert: false,
+        contentType: file.type,
       })
 
       if (error) {
@@ -392,7 +436,6 @@ export default function ProductManagement() {
     return matchesSearch && matchesCategory
   })
 
-  const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
 
   const isAllSelected = filteredProducts.length > 0 && selectedProductIds.size === filteredProducts.length
   const isSomeSelected = selectedProductIds.size > 0 && selectedProductIds.size < filteredProducts.length
@@ -467,7 +510,7 @@ export default function ProductManagement() {
                 {t("admin.products.addButtonLabel")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-xl">
               <DialogHeader>
                 <DialogTitle>{editingProduct ? t("admin.products.editDialog.titleEdit") : t("admin.products.editDialog.titleAddNew")}</DialogTitle>
                 <DialogDescription>
@@ -577,15 +620,21 @@ export default function ProductManagement() {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="space-y-2">
                       <Label htmlFor="category">{t("admin.products.form.categoryLabel")}</Label>
-                      <Input
-                        id="category"
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      placeholder={t("admin.products.form.categoryPlaceholder")}
-                        disabled={isImageUploading} // Disable while uploading
-                      />
+                      <Select
+                        value={formData.category || ""}
+                        onValueChange={(val) => setFormData({ ...formData, category: val })}
+                      >
+                        <SelectTrigger id="category">
+                          <SelectValue placeholder={t("admin.products.form.categoryPlaceholder")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     {/* The image URL input is moved up */}
                   </div>
@@ -634,6 +683,10 @@ export default function ProductManagement() {
               </form>
             </DialogContent>
           </Dialog>
+          <Button variant="outline" onClick={() => setIsCategoryDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("admin.products.manageCategories")}
+          </Button>
         </div>
       </div>
 
@@ -658,10 +711,8 @@ export default function ProductManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("admin.products.allCategories")}</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category!}>
-                    {category}
-                  </SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -764,6 +815,147 @@ export default function ProductManagement() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={isCategoryDialogOpen}
+        onOpenChange={(open) => {
+          setIsCategoryDialogOpen(open)
+          if (open) {
+            setEditingCategory(null)
+            setCategoryForm({ name: "", description: "", is_active: true })
+            loadCategories()
+          }
+        }}
+      >
+        <DialogTrigger asChild>
+          <Button variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            {t("admin.products.manageCategories")}
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t("admin.products.categories.title")}</DialogTitle>
+            <DialogDescription>{t("admin.products.categories.description")}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto">
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cat-name">{t("admin.products.categories.name")}</Label>
+                  <Input id="cat-name" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cat-active">{t("admin.products.categories.active")}</Label>
+                  <Switch id="cat-active" checked={categoryForm.is_active} onCheckedChange={(checked) => setCategoryForm({ ...categoryForm, is_active: checked })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cat-desc">{t("admin.products.categories.descriptionLabel")}</Label>
+                <Textarea id="cat-desc" value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} rows={3} />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingCategory(null)
+                    setCategoryForm({ name: "", description: "", is_active: true })
+                  }}
+                >
+                  {t("common.clear")}
+                </Button>
+                <Button
+                  className="bg-[#8B0000] hover:bg-[#6B0000]"
+                  onClick={async () => {
+                    try {
+                      if (!categoryForm.name.trim()) {
+                        toast({ title: t("common.error"), description: t("admin.products.categories.nameRequired"), variant: "destructive" })
+                        return
+                      }
+                      if (editingCategory) {
+                        const { error } = await supabase
+                          .from("categories")
+                          .update({ name: categoryForm.name, description: categoryForm.description || null, is_active: categoryForm.is_active })
+                          .eq("id", editingCategory.id)
+                        if (error) throw error
+                        toast({ title: t("common.success"), description: t("admin.products.categories.updated") })
+                      } else {
+                        const { error } = await supabase
+                          .from("categories")
+                          .insert([{ name: categoryForm.name, description: categoryForm.description || null, is_active: categoryForm.is_active }])
+                        if (error) throw error
+                        toast({ title: t("common.success"), description: t("admin.products.categories.created") })
+                      }
+                      setEditingCategory(null)
+                      setCategoryForm({ name: "", description: "", is_active: true })
+                      loadCategories()
+                    } catch (error) {
+                      console.error("Error saving category:", error)
+                      toast({ title: t("common.error"), description: t("admin.products.categories.saveFailed"), variant: "destructive" })
+                    }
+                  }}
+                >
+                  {editingCategory ? t("admin.products.categories.update") : t("admin.products.categories.create")}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("admin.products.categories.table.name")}</TableHead>
+                    <TableHead>{t("admin.products.categories.table.active")}</TableHead>
+                    <TableHead className="text-right">{t("admin.products.table.actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>{c.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={c.is_active ? "default" : "secondary"}>{c.is_active ? t("common.active") : t("common.inactive")}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingCategory(c)
+                              setCategoryForm({ name: c.name || "", description: c.description || "", is_active: !!c.is_active })
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              if (!confirm(t("admin.products.categories.deleteConfirm"))) return
+                              try {
+                                const { error } = await supabase.from("categories").delete().eq("id", c.id)
+                                if (error) throw error
+                                toast({ title: t("common.success"), description: t("admin.products.categories.deleted") })
+                                loadCategories()
+                              } catch (error) {
+                                console.error("Error deleting category:", error)
+                                toast({ title: t("common.error"), description: t("admin.products.categories.deleteFailed"), variant: "destructive" })
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

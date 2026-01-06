@@ -603,7 +603,7 @@ export default function OrderManagement() {
                                   {/* Order Items */}
                                   <div>
                                     <h4 className="font-semibold mb-3">{t("admin.orders.orderItems")} ({selectedOrder.order_items?.length || 0})</h4>
-                                    <div className="space-y-3">
+                                  <div className="space-y-3">
                                       {selectedOrder.order_items?.map((item) => (
                                         <div key={item.id} className="border rounded-lg p-4">
                                           <div className="flex justify-between items-start">
@@ -744,6 +744,24 @@ export default function OrderManagement() {
                                           <p className="text-sm bg-yellow-50 p-2 rounded">{selectedOrder.notes}</p>
                                         </div>
                                       )}
+                                      <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => window.location.href = '/admin/disputes'}>
+                                          Disputes
+                                        </Button>
+                                        {selectedOrder.payment_method === 'paypal' && (
+                                          <Button variant="outline" size="sm" onClick={async () => {
+                                            const { data: session } = await supabase.auth.getSession()
+                                            const token = session.session?.access_token
+                                            const resp = await fetch(`/api/payments/paypal/refund`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: selectedOrder.id }) })
+                                            const data = await resp.json()
+                                            if (!resp.ok || !data.success) {
+                                              console.error('Refund failed', data)
+                                            }
+                                          }}>
+                                            Refund Payment
+                                          </Button>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>

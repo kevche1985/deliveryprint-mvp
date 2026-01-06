@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { Loader2, Eye, EyeOff } from "lucide-react"
+import { testConnection } from "@/lib/supabase"
 
 // Add this import
 import { useLanguage } from "@/lib/language-context"
@@ -23,6 +24,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [authReady, setAuthReady] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const check = async () => {
+      const ok = await testConnection()
+      setAuthReady(ok)
+    }
+    check()
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -56,6 +66,9 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">{t("auth.welcomeBack")}</CardTitle>
           <CardDescription className="text-center">{t("auth.enterCredentials")}</CardDescription>
+          {authReady === false && (
+            <div className="text-center text-red-600 text-sm">Auth service not reachable. Check environment keys.</div>
+          )}
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">

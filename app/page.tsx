@@ -11,6 +11,9 @@ import { useCart } from "@/lib/cart-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
+import UserRoadmap from "@/components/user-roadmap"
+import { getTheme } from "@/lib/theme"
+import { track } from "@/lib/analytics"
 
 // Minimal product shape used for fallback/sample items alongside DB Products
 type MinimalProduct = {
@@ -29,6 +32,7 @@ export default function HomePage() {
   const router = useRouter()
   const { toast } = useToast()
   const { t } = useLanguage()
+  const theme = getTheme()
 
   useEffect(() => {
     async function fetchFeaturedProducts() {
@@ -46,6 +50,7 @@ export default function HomePage() {
   }, [])
 
   const handleAddToCartAndCheckout = (product: Product | MinimalProduct) => {
+    track("add_to_cart", { productId: product.id, price: product.price })
     addItem({
       productId: product.id,
       name: product.name,
@@ -97,12 +102,12 @@ export default function HomePage() {
   return (
     <main className="flex-1">
       {/* Hero Section */}
-      <section className="relative h-[500px] bg-gradient-to-r from-red-700 to-red-900 flex items-center justify-center text-white overflow-hidden">
+      <section className="relative h-[500px] flex items-center justify-center text-white overflow-hidden" style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColor}, ${theme.accentColor})` }}>
         <div className="absolute inset-0 z-0">
           <img
-            src="/placeholder.svg?height=500&width=1200"
-            alt="Background pattern"
-            className="w-full h-full object-cover opacity-20"
+            src={theme.bannerImageUrl}
+            alt="Hero banner"
+            className="w-full h-full object-cover opacity-30"
           />
         </div>
         <div className="relative z-10 text-center px-4">
@@ -113,10 +118,18 @@ export default function HomePage() {
             {t("home.heroSubtitle")}
           </p>
           <Link href="/products" passHref>
-            <Button size="lg" className="bg-white text-red-800 hover:bg-gray-100 hover:text-red-900 shadow-lg">
+            <Button size="lg" className="bg-white shadow-lg" style={{ color: theme.primaryColor }}>
               {t("home.exploreProducts")}
             </Button>
           </Link>
+        </div>
+      </section>
+
+      {/* Interactive Roadmap */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {/* Placed directly below the hero banner */}
+          <UserRoadmap />
         </div>
       </section>
 
@@ -262,7 +275,7 @@ export default function HomePage() {
       </section>
 
       {/* Call to Action */}
-      <section className="bg-red-800 text-white py-16 text-center">
+      <section className="text-white py-16 text-center" style={{ backgroundColor: theme.primaryColor }}>
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold mb-4">{t("home.ctaTitle")}</h2>
           <p className="text-xl mb-8">
@@ -270,16 +283,12 @@ export default function HomePage() {
           </p>
           <div className="flex justify-center space-x-4">
             <Link href="/ai-studio" passHref>
-              <Button size="lg" className="bg-white text-red-800 hover:bg-gray-100 hover:text-red-900 shadow-lg">
-                {t("common.startDesigning")}
-              </Button>
-            </Link>
+            <Button size="lg" className="bg-white shadow-lg" style={{ color: theme.primaryColor }}>
+              {t("common.startDesigning")}
+            </Button>
+          </Link>
             <Link href="/quote" passHref>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-red-800 shadow-lg bg-transparent"
-              >
+              <Button size="lg" variant="outline" className="border-white text-white shadow-lg bg-transparent" style={{}}>
                 {t("home.ctaGetQuote")}
               </Button>
             </Link>

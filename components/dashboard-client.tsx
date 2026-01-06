@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, PlusCircle, Download, Edit, Trash2, ShoppingCart, Heart, AlertCircle, Save } from "lucide-react"
+import { Loader2, PlusCircle, Download, Edit, Trash2, ShoppingCart, Heart, AlertCircle, Save, Eye } from "lucide-react"
+import DisputeModal from "@/components/dispute-modal"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -29,6 +30,9 @@ export default function DashboardClient() {
   const [showUnpurchased, setShowUnpurchased] = useState(false)
   const [downloadingDesigns, setDownloadingDesigns] = useState<Record<string, boolean>>({})
   const [selectedFormats, setSelectedFormats] = useState<Record<string, string>>({})
+  const [showDispute, setShowDispute] = useState(false)
+  const [disputeOrderId, setDisputeOrderId] = useState<string | null>(null)
+  const [disputeProvider, setDisputeProvider] = useState<string | undefined>(undefined)
   const { addItem } = useDigitalCart()
   
   // Redirect if not authenticated
@@ -47,18 +51,21 @@ export default function DashboardClient() {
   
   const loadUserData = async () => {
     if (!user?.id) return
-    
     try {
       setLoading(true)
-      
-      // Load orders and digital products in parallel
-      const [userOrders, purchased, unpurchased] = await Promise.all([
-        getUserOrders(user.id),
+      const { data: session } = await supabase.auth.getSession()
+      const token = session.session?.access_token
+      const resp = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } })
+      let serverOrders: Order[] = []
+      if (resp.ok) {
+        const payload = await resp.json()
+        serverOrders = payload.orders || []
+      }
+      const [purchased, unpurchased] = await Promise.all([
         getUserPurchasedDigitalProducts(user.id),
         getUserUnpurchasedDigitalProducts(user.id)
       ])
-      
-      setOrders(userOrders)
+      setOrders(serverOrders)
       setPurchasedDesigns(purchased)
       setUnpurchasedDesigns(unpurchased)
     } catch (err: any) {
@@ -313,6 +320,16 @@ export default function DashboardClient() {
                           </Badge>
                           <p className="text-sm font-semibold mt-1">${order.total.toFixed(2)}</p>
                         </div>
+                      </div>
+                      <div className="mt-3 flex justify-end gap-2">
+                        <Button asChild variant="outline" className="h-8 w-8 p-0">
+                          <Link href={`/orders/${order.id}/confirmation`} aria-label="View Details">
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="h-8" onClick={() => { setDisputeOrderId(order.id); setDisputeProvider(order as any)?.payment_method; setShowDispute(true) }}>
+                          Request Refund
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -575,6 +592,7 @@ export default function DashboardClient() {
           </Card>
         </TabsContent>
       </Tabs>
+      <DisputeModal open={showDispute} onOpenChange={setShowDispute} orderId={disputeOrderId || ''} paymentProvider={disputeProvider} onCreated={() => setShowDispute(false)} />
     </div>
   )
 }

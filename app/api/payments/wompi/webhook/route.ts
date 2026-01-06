@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
     }
 
-    console.log("Received Wompi webhook:", webhookData)
+    // Received webhook
 
     // Extract transaction information from webhook
     const {
@@ -120,23 +120,27 @@ export async function POST(request: NextRequest) {
       // Continue even if this fails, as we already updated the wompi_transactions table
     }
 
-    // Update the related order if payment was successful
+    // Update the related order if payment was successful (forward-only)
     if (updateData.status === "completed") {
       const orderId = transaction.external_id || transaction.id_externo
 
       if (orderId) {
-        await supabase
-          .from("orders")
-          .update({
-            status: "confirmed",
-            payment_method: "wompi",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", orderId)
+        const { data: order } = await supabase.from("orders").select("status").eq("id", orderId).single()
+        const prev = order?.status || "pending"
+        if (["pending", "created", "processing"].includes(prev)) {
+          await supabase
+            .from("orders")
+            .update({
+              status: "confirmed",
+              payment_method: "wompi",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", orderId)
+        }
       }
     }
 
-    console.log("Webhook processed successfully for transaction:", transaction.id)
+    // Webhook processed
 
     return NextResponse.json({ success: true, message: "Webhook processed" })
   } catch (error) {

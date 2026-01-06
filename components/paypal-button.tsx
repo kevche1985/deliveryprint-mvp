@@ -43,6 +43,7 @@ export default function PayPalButton({
   const [loaded, setLoaded] = useState(false)
   const [processing, setProcessing] = useState(false)
   const paypalRef = useRef(null)
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
 
   // Calculate item total (sum of all items without shipping)
   const calculateItemTotal = () => {
@@ -126,9 +127,16 @@ export default function PayPalButton({
         </div>
       )}
 
+      {!clientId && (
+        <div className="text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+          PayPal is not configured. Set NEXT_PUBLIC_PAYPAL_CLIENT_ID in your environment.
+        </div>
+      )}
+
+      {clientId && (
       <PayPalScriptProvider
         options={{
-          "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+          "client-id": clientId,
           currency,
           intent: "capture",
         }}
@@ -251,6 +259,7 @@ export default function PayPalButton({
           />
         </div>
       </PayPalScriptProvider>
+      )}
     </div>
   )
 }

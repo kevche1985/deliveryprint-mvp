@@ -134,6 +134,28 @@ export async function capturePayPalOrder(accessToken: string, orderId: string) {
   }
 }
 
+export async function refundPayPalCapture(accessToken: string, captureId: string, amount?: { value: string; currency_code: string }) {
+  const PAYPAL_BASE_URL = process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
+  const body = amount ? { amount } : {}
+  const response = await fetch(`${PAYPAL_BASE_URL}/v2/payments/captures/${captureId}/refund`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  })
+  const text = await response.text()
+  if (!response.ok) {
+    throw new Error(`PayPal refund error: ${response.status} - ${text}`)
+  }
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { raw: text }
+  }
+}
+
 export async function getPayPalOrder(accessToken: string, orderId: string) {
   const PAYPAL_BASE_URL =
     process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
@@ -165,4 +187,51 @@ export const paypal = {
   createOrder: createPayPalOrder,
   captureOrder: capturePayPalOrder,
   getOrder: getPayPalOrder,
+  refundCapture: refundPayPalCapture,
+  async verifyWebhookEvent(body: string, headers: Headers) {
+    const PAYPAL_BASE_URL = process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID
+    if (!webhookId) {
+      console.error("Missing PAYPAL_WEBHOOK_ID")
+      return false
+    }
+    const authAlgo = headers.get("paypal-auth-algo") || headers.get("PayPal-Auth-Algo") || ""
+    const certUrl = headers.get("paypal-cert-url") || headers.get("PayPal-Cert-Url") || ""
+    const transmissionId = headers.get("paypal-transmission-id") || headers.get("PayPal-Transmission-Id") || ""
+    const transmissionSig = headers.get("paypal-transmission-sig") || headers.get("PayPal-Transmission-Sig") || ""
+    const transmissionTime = headers.get("paypal-transmission-time") || headers.get("PayPal-Transmission-Time") || ""
+    if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
+      console.error("Missing PayPal webhook headers")
+      return false
+    }
+    try {
+      const accessToken = await getPayPalAccessToken()
+      const resp = await fetch(`${PAYPAL_BASE_URL}/v1/notifications/verify-webhook-signature`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          auth_algo: authAlgo,
+          cert_url: certUrl,
+          transmission_id: transmissionId,
+          transmission_sig: transmissionSig,
+          transmission_time: transmissionTime,
+          webhook_id: webhookId,
+          webhook_event: JSON.parse(body),
+        }),
+      })
+      if (!resp.ok) {
+        const text = await resp.text()
+        console.error("PayPal verify webhook failed:", resp.status, text)
+        return false
+      }
+      const data = await resp.json()
+      return data.verification_status === "SUCCESS"
+    } catch (e) {
+      console.error("Error verifying PayPal webhook:", e)
+      return false
+    }
+  },
 }

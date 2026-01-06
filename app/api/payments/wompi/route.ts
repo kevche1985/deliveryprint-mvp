@@ -34,9 +34,7 @@ function getTestModeInfo(paymentData: WompiPaymentRequest) {
   const cvv = paymentData.tarjetaCreditoDebido.cvv
   const cardNumber = paymentData.tarjetaCreditoDebido.numeroTarjeta
   
-  console.log("🧪 Wompi Test Mode Analysis:")
-  console.log(`💳 Card ending in: ${cardNumber.slice(-4)}`)
-  console.log(`🔒 CVV: ${cvv}`)
+  // Avoid logging card details or CVV
   
   // According to Wompi docs: CVV "111" simulates rejected payment
   if (cvv === "111") {
@@ -123,10 +121,7 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
     throw new Error("Wompi credentials not configured")
   }
 
-  console.log("🔐 === STEP 1: OAUTH TOKEN REQUEST ===")
-  console.log("🔗 OAuth URL: https://id.wompi.sv/connect/token")
-  console.log("🆔 Client ID:", WOMPI_CLIENT_ID?.substring(0, 8) + "...")
-  console.log("🔑 Client Secret:", WOMPI_CLIENT_SECRET ? "SET" : "NOT SET")
+  // OAuth token request
 
   // Step 1: Get OAuth token with enhanced logging
   const tokenRequestBody = new URLSearchParams({
@@ -136,7 +131,7 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
     client_secret: WOMPI_CLIENT_SECRET,
   }).toString()
 
-  console.log("📤 Token request body:", tokenRequestBody.replace(WOMPI_CLIENT_SECRET, "***SECRET***"))
+  // Do not log token request body
 
   const tokenResponse = await fetch("https://id.wompi.sv/connect/token", {
     method: "POST",
@@ -148,11 +143,10 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
     body: tokenRequestBody,
   })
 
+  // Log status only
   console.log("📡 OAuth response status:", tokenResponse.status)
-  console.log("📡 OAuth response headers:", Object.fromEntries(tokenResponse.headers.entries()))
 
   const tokenResponseText = await tokenResponse.text()
-  console.log("📄 OAuth response body:", tokenResponseText)
 
   if (!tokenResponse.ok) {
     console.error("❌ OAuth failed with status:", tokenResponse.status)
@@ -162,10 +156,7 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
   let tokenData
   try {
     tokenData = JSON.parse(tokenResponseText)
-    console.log("✅ OAuth token parsed successfully")
-    console.log("🎫 Token type:", tokenData.token_type)
-    console.log("⏰ Expires in:", tokenData.expires_in)
-    console.log("🔑 Access token (first 20 chars):", tokenData.access_token?.substring(0, 20) + "...")
+    // Do not log token contents
   } catch (parseError) {
     console.error("❌ Failed to parse OAuth response:", parseError)
     throw new Error("Invalid OAuth response format")
@@ -276,10 +267,8 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
         }
         
         console.log("📡 Payment response status:", paymentResponse.status)
-        console.log("📡 Payment response headers:", Object.fromEntries(paymentResponse.headers.entries()))
 
         const responseText = await paymentResponse.text()
-        console.log("📄 Payment response body:", responseText)
 
         if (paymentResponse.ok) {
           console.log("✅ Payment API call succeeded!")
@@ -326,7 +315,7 @@ async function attemptRealWompiPayment(paymentData: WompiPaymentRequest) {
           let wompiError
           try {
             wompiError = JSON.parse(responseText)
-            console.log("📋 Wompi error details:", wompiError)
+            // Do not log full error details from provider
           } catch (parseError) {
             console.log("⚠️ Could not parse error response as JSON")
             wompiError = { mensajes: [responseText] }

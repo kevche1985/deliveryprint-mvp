@@ -49,20 +49,25 @@ export async function POST(request: Request) {
       console.error("Error recording PayPal transaction:", transactionError)
     }
 
-    // Update the order status in the database
+    // Update the order status in the database (forward-only)
     if (dbOrderId) {
-      const { error: orderError } = await supabase
-        .from("orders")
-        .update({
-          status: "confirmed",
-          payment_method: "paypal",
-          payment_id: orderID,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", dbOrderId)
+      const { data: currentOrder } = await supabase.from("orders").select("status").eq("id", dbOrderId).single()
+      const prev = currentOrder?.status || "pending"
+      const allowedPrev = ["pending", "created", "processing"]
+      if (allowedPrev.includes(prev)) {
+        const { error: orderError } = await supabase
+          .from("orders")
+          .update({
+            status: "confirmed",
+            payment_method: "paypal",
+            payment_id: orderID,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", dbOrderId)
 
-      if (orderError) {
-        console.error("Error updating order status:", orderError)
+        if (orderError) {
+          console.error("Error updating order status:", orderError)
+        }
       }
 
       // IMPORTANT: Update digital products status

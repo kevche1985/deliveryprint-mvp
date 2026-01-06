@@ -139,6 +139,21 @@ export type Supplier = {
   updated_at: string | null
 }
 
+// Service Types
+export type Service = {
+  id: string
+  name: string
+  description: string | null
+  category: string | null
+  image: string | null
+  price: number
+  is_active: boolean
+  is_featured: boolean
+  slug: string | null
+  created_at: string
+  updated_at?: string | null
+}
+
 // Quote Types
 export type Quote = {
   id: string
@@ -308,6 +323,42 @@ export async function createDesign(design: Omit<Design, "id" | "created_at" | "u
   }
 
   return data as Design
+}
+
+// Services CRUD
+export async function getServices(): Promise<Service[]> {
+  const { data, error } = await supabase.from("services").select("*").order("created_at", { ascending: false })
+  if (error) {
+    console.error("Error fetching services:", error)
+    throw error
+  }
+  return (data || []) as Service[]
+}
+
+export async function createService(service: Omit<Service, "id" | "created_at" | "updated_at">): Promise<Service> {
+  const { data, error } = await supabase.from("services").insert([service]).select().single()
+  if (error) {
+    console.error("Error creating service:", error)
+    throw error
+  }
+  return data as Service
+}
+
+export async function updateService(id: string, service: Partial<Omit<Service, "id" | "created_at" | "updated_at">>): Promise<Service> {
+  const { data, error } = await supabase.from("services").update(service).eq("id", id).select().single()
+  if (error) {
+    console.error("Error updating service:", error)
+    throw error
+  }
+  return data as Service
+}
+
+export async function deleteService(id: string): Promise<void> {
+  const { error } = await supabase.from("services").delete().eq("id", id)
+  if (error) {
+    console.error("Error deleting service:", error)
+    throw error
+  }
 }
 
 export async function getUserDesigns(userId: string) {

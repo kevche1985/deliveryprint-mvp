@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/lib/language-context"
+import { track } from "@/lib/analytics"
 
 export default function PaymentCompletePage() {
   const router = useRouter()
@@ -64,6 +65,7 @@ export default function PaymentCompletePage() {
           if (data.success) {
             setProcessingDetails(t("payment.3ds.processing.title"))
             setSuccess(true)
+            track("payment_success", { orderId, provider: "paypal", captureId: data.captureId })
             toast({
               title: t("payment.success.title"),
               description: t("payment.3ds.success.message"),
@@ -74,6 +76,7 @@ export default function PaymentCompletePage() {
         } catch (err: any) {
           console.error("Payment capture error:", err)
           setError(err.message || t("payment.error.processingFailed"))
+          track("payment_failure", { orderId, provider: "paypal", error: err?.message })
           toast({
             title: t("payment.error.title"),
             description: err.message || t("payment.error.processingFailed"),
@@ -83,10 +86,13 @@ export default function PaymentCompletePage() {
       } else if (status === "success") {
         // For other payment types that are already processed
         setSuccess(true)
+        track("payment_success", { orderId, provider: type || "unknown" })
       } else if (status === "cancel" && type === "paypal") {
         setError(t("common.error"))
+        track("payment_cancel", { orderId, provider: "paypal" })
       } else {
         setError(t("payment.3ds.failed.message"))
+        track("payment_failure", { orderId, provider: type || "unknown" })
       }
 
       setLoading(false)

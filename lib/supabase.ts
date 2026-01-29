@@ -1,9 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Use environment variables instead of hardcoded values
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dzlqddocovzijnfwygap.supabase.co"
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bHFkZG9jb3Z6aWpuZnd5Z2FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxMTI4MzMsImV4cCI6MjA2MzY4ODgzM30.HNBdMHhTwTiZbRWpJpLQuNMaUN1LrHe6AOBKC4ghaSk"
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bHFkZG9jb3Z6aWpuZnd5Z2FwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODExMjgzMywiZXhwIjoyMDYzNjg4ODMzfQ.PP02QkSVAZe4DfE1UnwMJ-XGPf4r1uQCMTzhH_j4tGA"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl) {
   throw new Error("Missing Supabase URL")
@@ -32,8 +31,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Server-side client with service role key for admin operations
 export const supabaseAdmin =
-  typeof window === "undefined" && supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey, {
+  typeof window === "undefined" && !!supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey!, {
         db: {
           schema: "public",
         },

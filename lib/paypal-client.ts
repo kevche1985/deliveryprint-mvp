@@ -8,7 +8,7 @@ export async function getPayPalAccessToken() {
   console.log("PayPal Environment:", process.env.NODE_ENV)
   console.log("PayPal Base URL:", PAYPAL_BASE_URL)
   console.log("PayPal Client ID:", PAYPAL_CLIENT_ID ? `${PAYPAL_CLIENT_ID.substring(0, 10)}...` : "NOT SET")
-  console.log("PayPal Client Secret:", PAYPAL_CLIENT_SECRET ? `${PAYPAL_CLIENT_SECRET.substring(0, 10)}...` : "NOT SET")
+  console.log("PayPal Client Secret:", PAYPAL_CLIENT_SECRET ? "SET" : "NOT SET")
 
   if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
     throw new Error(

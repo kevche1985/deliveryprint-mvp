@@ -14,6 +14,6 @@ export function getTheme(): ThemeConfig {
     primaryColor: process.env.NEXT_PUBLIC_BRAND_PRIMARY_COLOR || "#8B0000",
     accentColor: process.env.NEXT_PUBLIC_BRAND_ACCENT_COLOR || "#6B0000",
     logoUrl: process.env.NEXT_PUBLIC_BRAND_LOGO_URL || "/logo-print.png",
-    bannerImageUrl: process.env.NEXT_PUBLIC_BANNER_IMAGE_URL || "/placeholder.svg?height=500&width=1200",
+    bannerImageUrl: process.env.NEXT_PUBLIC_BANNER_IMAGE_URL || "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images/banner_main.png",
   }
 }

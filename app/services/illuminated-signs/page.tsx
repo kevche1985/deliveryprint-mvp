@@ -133,6 +133,26 @@ export default function IlluminatedSignsPage() {
   const { addItem } = useCart()
   const { toast } = useToast()
   const { t } = useLanguage()
+  const localizeText = (text: string) => {
+    const map: Record<string, string> = {
+      Height: "Altura",
+      "Linear Foot": "Pie lineal",
+      Feet: "Pies",
+      Display: "Pantalla",
+      Diagonal: "Diagonal",
+      "Custom Size": "Tamaño personalizado",
+      "Custom Length": "Longitud personalizada",
+      "Contact for quote": "Contactar para cotización",
+      "Variable W": "Ancho variable",
+    }
+    let out = text
+    Object.entries(map).forEach(([k, v]) => {
+      out = out.replaceAll(k, v)
+    })
+    // Replace dimension markers
+    out = out.replaceAll(' W x ', ' A x ').replaceAll(' H', ' A').replaceAll(' D', ' P')
+    return out
+  }
 
   const handleProductChange = (productId: string) => {
     const product = illuminatedSignProducts.find((p) => p.id === productId)
@@ -273,7 +293,7 @@ export default function IlluminatedSignsPage() {
                     {selectedProduct.sizes.map((size, index) => (
                       <SelectItem key={index} value={index.toString()}>
                         <div className="flex justify-between items-center w-full">
-                          <span>{size.name}</span>
+                          <span>{localizeText(size.name)}</span>
                           <span className="ml-4 font-semibold">
                             {size.price > 0 ? `$${size.price}` : t("common.quote")}
                           </span>
@@ -282,7 +302,7 @@ export default function IlluminatedSignsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-gray-600">{t("services.illuminatedSignsPage.dimensions")} {selectedSize.dimensions}</p>
+                <p className="text-sm text-gray-600">{t("services.illuminatedSignsPage.dimensions")} {localizeText(selectedSize.dimensions)}</p>
               </div>
 
               {/* Quantity */}

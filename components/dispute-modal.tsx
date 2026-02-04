@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 
 export default function DisputeModal({ open, onOpenChange, orderId, paymentProvider, captureId, onCreated }: { open: boolean; onOpenChange: (v: boolean) => void; orderId: string; paymentProvider?: string; captureId?: string; onCreated?: (d: any) => void }) {
+  const { t } = useLanguage()
   const [reason, setReason] = useState("not_received")
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
@@ -36,26 +38,26 @@ export default function DisputeModal({ open, onOpenChange, orderId, paymentProvi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Request Refund / Create Dispute</DialogTitle>
+          <DialogTitle>{t("disputes.modalTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <Label>Reason</Label>
+          <Label>{t("disputes.reason")}</Label>
           <Select value={reason} onValueChange={setReason}>
-            <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t("disputes.selectReason")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="not_received">Product not received</SelectItem>
-              <SelectItem value="defective">Defective or damaged</SelectItem>
-              <SelectItem value="not_as_described">Not as described</SelectItem>
-              <SelectItem value="duplicate_charge">Duplicate charge</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="not_received">{t("disputes.reasons.not_received")}</SelectItem>
+              <SelectItem value="defective">{t("disputes.reasons.defective")}</SelectItem>
+              <SelectItem value="not_as_described">{t("disputes.reasons.not_as_described")}</SelectItem>
+              <SelectItem value="duplicate_charge">{t("disputes.reasons.duplicate_charge")}</SelectItem>
+              <SelectItem value="other">{t("disputes.reasons.other")}</SelectItem>
             </SelectContent>
           </Select>
-          <Label>Requested Amount (USD)</Label>
+          <Label>{t("disputes.requestedAmount")}</Label>
           <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-          <Label>Details</Label>
+          <Label>{t("disputes.detailsLabel")}</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
           <div className="flex justify-end">
-            <Button onClick={submit} disabled={loading} className="bg-[#8B0000] hover:bg-[#6B0000]">{loading ? "Submitting..." : "Submit Dispute"}</Button>
+            <Button onClick={submit} disabled={loading} className="bg-[#8B0000] hover:bg-[#6B0000]">{loading ? t("disputes.submitting") : t("disputes.submitDispute")}</Button>
           </div>
         </div>
       </DialogContent>

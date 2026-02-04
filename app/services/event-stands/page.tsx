@@ -413,23 +413,23 @@ export default function EventStandsPage() {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  Professional-grade materials and construction
+                  {t("services.eventStandsPage.whyChooseList.item1")}
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  Easy setup with no tools required
+                  {t("services.eventStandsPage.whyChooseList.item2")}
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  Custom graphics and branding options
+                  {t("services.eventStandsPage.whyChooseList.item3")}
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  Portable carrying cases included
+                  {t("services.eventStandsPage.whyChooseList.item4")}
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
-                  Fast turnaround and nationwide shipping
+                  {t("services.eventStandsPage.whyChooseList.item5")}
                 </li>
               </ul>
             </CardContent>

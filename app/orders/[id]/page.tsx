@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Package, Truck, CheckCircle, Clock, CreditCard, Printer, ArrowLeft, Edit } from "lucide-react"
 import OrderItemsList from "@/components/order-items-list"
@@ -48,6 +49,7 @@ export default function OrderDetailsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user, profile } = useAuth()
+  const { t } = useLanguage()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [downloadingAll, setDownloadingAll] = useState(false)
@@ -113,8 +115,8 @@ export default function OrderDetailsPage() {
       if (error) {
         console.error("Error fetching order:", error)
         toast({
-          title: "Error",
-          description: "Failed to load order details",
+          title: t("common.error"),
+          description: t("orders.errors.loadFailed"),
           variant: "destructive",
         })
         return
@@ -123,8 +125,8 @@ export default function OrderDetailsPage() {
       if (!orders || orders.length === 0) {
         console.error("Order not found or access denied")
         toast({
-          title: "Error",
-          description: "Order not found or you don't have permission to view it",
+          title: t("common.error"),
+          description: t("orders.errors.notFoundOrAccess"),
           variant: "destructive",
         })
         return
@@ -153,8 +155,8 @@ export default function OrderDetailsPage() {
     } catch (error) {
       console.error("Error:", error)
       toast({
-        title: "Error",
-        description: "Failed to load order details",
+        title: t("common.error"),
+        description: t("orders.errors.loadFailed"),
         variant: "destructive",
       })
     } finally {
@@ -174,8 +176,8 @@ export default function OrderDetailsPage() {
 
       if (!session?.access_token) {
         toast({
-          title: "Authentication Error",
-          description: "Please log in again to download files.",
+          title: t("orders.errors.authError"),
+          description: t("orders.errors.loginToDownload"),
           variant: "destructive",
         })
         return
@@ -191,7 +193,7 @@ export default function OrderDetailsPage() {
       })
 
       if (!response.ok) {
-        let errorMessage = "Failed to download designs"
+        let errorMessage = t("orders.errors.downloadFailed")
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorMessage
@@ -214,14 +216,14 @@ export default function OrderDetailsPage() {
       document.body.removeChild(a)
 
       toast({
-        title: "Success",
-        description: "All designs downloaded successfully",
+        title: t("common.success"),
+        description: t("orders.success.download"),
       })
     } catch (error) {
       console.error("Download error:", error)
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to download designs",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("orders.errors.downloadFailed"),
         variant: "destructive",
       })
     } finally {
@@ -241,8 +243,8 @@ export default function OrderDetailsPage() {
 
       if (!session?.access_token) {
         toast({
-          title: "Authentication Error",
-          description: "Please log in again to generate invoice.",
+          title: t("orders.errors.authError"),
+          description: t("orders.errors.loginToDownload"),
           variant: "destructive",
         })
         return
@@ -257,7 +259,7 @@ export default function OrderDetailsPage() {
       })
 
       if (!response.ok) {
-        let errorMessage = "Failed to generate invoice"
+        let errorMessage = t("orders.errors.invoiceGen")
         try {
           const errorData = await response.json()
           errorMessage = errorData.error || errorMessage
@@ -283,8 +285,8 @@ export default function OrderDetailsPage() {
       document.body.removeChild(a)
 
       toast({
-        title: "Success",
-        description: "Invoice generated and downloaded successfully",
+        title: t("common.success"),
+        description: t("orders.success.invoice"),
       })
 
       // Refresh order to get updated invoice number
@@ -292,8 +294,8 @@ export default function OrderDetailsPage() {
     } catch (error) {
       console.error("Invoice generation error:", error)
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate invoice",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("orders.errors.invoiceGen"),
         variant: "destructive",
       })
     } finally {
@@ -320,13 +322,13 @@ export default function OrderDetailsPage() {
       setOrder({ ...order, status: newStatus })
 
       toast({
-        title: "Success",
-        description: `Order status updated to ${newStatus}`,
+        title: t("common.success"),
+        description: `${t("orders.success.statusUpdate")} ${t("orders.statuses." + newStatus)}`,
       })
     } catch (error) {
       console.error("Error updating order status:", error)
       toast({
-        title: "Error",
+        title: t("common.error"),
         description: "Failed to update order status",
         variant: "destructive",
       })
@@ -387,12 +389,12 @@ export default function OrderDetailsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("orders.authRequiredTitle")}</h1>
           <p className="text-gray-600 mb-4">
-            Please log in to view order details.
+            {t("orders.authRequiredDesc")}
           </p>
           <Button onClick={() => router.push("/auth/login")}>
-            Log In
+            {t("orders.login")}
           </Button>
         </div>
       </div>
@@ -403,13 +405,13 @@ export default function OrderDetailsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("orders.notFoundTitle")}</h1>
           <p className="text-gray-600 mb-4">
-            The order you're looking for doesn't exist or you don't have permission to view it.
+            {t("orders.notFoundDesc")}
           </p>
           <Button onClick={() => router.push("/orders")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Orders
+            {t("orders.backToOrders")}
           </Button>
         </div>
       </div>
@@ -423,22 +425,22 @@ export default function OrderDetailsPage() {
         <div className="flex items-center space-x-4">
           <Button variant="ghost" onClick={() => router.push("/orders")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Orders
+            {t("orders.backToOrders")}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Order #{order.order_number || orderId.slice(0, 8).toUpperCase()}</h1>
-            <p className="text-gray-600">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+            <h1 className="text-2xl font-bold">{t("orders.orderNumber")} {order.order_number || orderId.slice(0, 8).toUpperCase()}</h1>
+            <p className="text-gray-600">{t("orders.placedOn")} {new Date(order.created_at).toLocaleDateString()}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Badge className={`${getStatusColor(order.status)} flex items-center space-x-1`}>
             {getStatusIcon(order.status)}
-            <span className="capitalize">{order.status}</span>
+            <span className="capitalize">{t(`orders.statuses.${order.status}`)}</span>
           </Badge>
           {order.payment_status && (
             <Badge variant={order.payment_status === "paid" ? "default" : "secondary"}>
               <CreditCard className="h-3 w-3 mr-1" />
-              {order.payment_status === "paid" ? "Paid" : "Pending"}
+              {t(`orders.paymentStatuses.${order.payment_status}`)}
             </Badge>
           )}
         </div>
@@ -449,17 +451,17 @@ export default function OrderDetailsPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Order Items</CardTitle>
+              <CardTitle>{t("orders.items")}</CardTitle>
               <div className="flex space-x-2">
                 {order.order_items?.some((item) => item.design_file_url || item.customized_image_url) && (
                   <Button variant="outline" size="sm" onClick={handleDownloadAllDesigns} disabled={downloadingAll}>
                     <Download className="h-4 w-4 mr-2" />
-                    {downloadingAll ? "Downloading..." : "Download All"}
+                    {downloadingAll ? t("orders.downloading") : t("orders.downloadAll")}
                   </Button>
                 )}
                 <Button variant="outline" size="sm" onClick={handlePrintInvoice} disabled={generatingInvoice}>
                   <Printer className="h-4 w-4 mr-2" />
-                  {generatingInvoice ? "Generating..." : "Print Invoice"}
+                  {generatingInvoice ? t("orders.generating") : t("orders.printInvoice")}
                 </Button>
               </div>
             </CardHeader>
@@ -480,12 +482,12 @@ export default function OrderDetailsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Edit className="h-5 w-5" />
-                  Order Management
+                  {t("orders.admin.orderManagement")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Update Order Status:</label>
+                  <label className="text-sm font-medium mb-2 block">{t("orders.admin.updateStatus")}:</label>
                   <Select
                     value={order.status}
                     onValueChange={updateOrderStatus}
@@ -495,25 +497,25 @@ export default function OrderDetailsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
-                      <SelectItem value="printing">Printing</SelectItem>
-                      <SelectItem value="shipped">Shipped</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="pending">{t("orders.statuses.pending")}</SelectItem>
+                      <SelectItem value="confirmed">{t("orders.statuses.confirmed")}</SelectItem>
+                      <SelectItem value="processing">{t("orders.statuses.processing")}</SelectItem>
+                      <SelectItem value="printing">{t("orders.statuses.printing")}</SelectItem>
+                      <SelectItem value="shipped">{t("orders.statuses.shipped")}</SelectItem>
+                      <SelectItem value="delivered">{t("orders.statuses.delivered")}</SelectItem>
+                      <SelectItem value="completed">{t("orders.statuses.completed")}</SelectItem>
+                      <SelectItem value="cancelled">{t("orders.statuses.cancelled")}</SelectItem>
                     </SelectContent>
                   </Select>
                   {updatingStatus && (
-                    <p className="text-sm text-gray-500 mt-1">Updating status...</p>
+                    <p className="text-sm text-gray-500 mt-1">{t("orders.admin.updating")}</p>
                   )}
                 </div>
                 
                 <div className="text-sm text-gray-600">
-                  <p><strong>Last Updated:</strong> {new Date(order.updated_at).toLocaleString()}</p>
+                  <p><strong>{t("orders.admin.lastUpdated")}:</strong> {new Date(order.updated_at).toLocaleString()}</p>
                   {order.payment_transaction_id && (
-                    <p><strong>Transaction ID:</strong> {order.payment_transaction_id}</p>
+                    <p><strong>{t("orders.transactionId")}:</strong> {order.payment_transaction_id}</p>
                   )}
                 </div>
               </CardContent>
@@ -522,34 +524,34 @@ export default function OrderDetailsPage() {
           {/* Order Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>{t("orders.summary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>{t("orders.subtotal")}</span>
                 <span>${order.subtotal?.toFixed(2) || "0.00"}</span>
               </div>
               {order.tax > 0 && (
                 <div className="flex justify-between">
-                  <span>Tax</span>
+                  <span>{t("orders.tax")}</span>
                   <span>${order.tax.toFixed(2)}</span>
                 </div>
               )}
               {order.shipping > 0 && (
                 <div className="flex justify-between">
-                  <span>Shipping</span>
+                  <span>{t("orders.shipping")}</span>
                   <span>${order.shipping.toFixed(2)}</span>
                 </div>
               )}
               {order.discount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
+                  <span>{t("orders.discount")}</span>
                   <span>-${order.discount.toFixed(2)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
+                <span>{t("orders.total")}</span>
                 <span>${order.total.toFixed(2)}</span>
               </div>
             </CardContent>
@@ -558,11 +560,11 @@ export default function OrderDetailsPage() {
           {/* Customer Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle>{t("orders.customerInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium">Contact</h4>
+                <h4 className="font-medium">{t("orders.contact")}</h4>
                 {profile?.first_name && profile?.last_name && (
                   <p className="text-sm text-gray-600">{`${profile.first_name} ${profile.last_name}`}</p>
                 )}
@@ -572,7 +574,7 @@ export default function OrderDetailsPage() {
 
               {order.shipping_address && (
                 <div>
-                  <h4 className="font-medium">Shipping Address</h4>
+                  <h4 className="font-medium">{t("orders.shippingAddress")}</h4>
                   <div className="text-sm text-gray-600">
                     {order.shipping_address.street && <p>{order.shipping_address.street}</p>}
                     {(order.shipping_address.city ||
@@ -594,30 +596,30 @@ export default function OrderDetailsPage() {
           {/* Payment Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment Information</CardTitle>
+              <CardTitle>{t("orders.paymentInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
-                <span>Method</span>
+                <span>{t("orders.method")}</span>
                 <span className="capitalize">{order.payment_method || "N/A"}</span>
               </div>
               {order.payment_status && (
                 <div className="flex justify-between">
-                  <span>Status</span>
+                  <span>{t("orders.statusLabel")}</span>
                   <Badge variant={order.payment_status === "paid" ? "default" : "secondary"}>
-                    {order.payment_status === "paid" ? "Paid" : "Pending"}
+                    {t(`orders.paymentStatuses.${order.payment_status}`)}
                   </Badge>
                 </div>
               )}
               {order.payment_transaction_id && (
                 <div className="flex justify-between">
-                  <span>Transaction ID</span>
+                  <span>{t("orders.transactionId")}</span>
                   <span className="text-sm font-mono">{order.payment_transaction_id.slice(0, 12)}...</span>
                 </div>
               )}
               {order.invoice_number && (
                 <div className="flex justify-between">
-                  <span>Invoice Number</span>
+                  <span>{t("orders.invoiceNumber")}</span>
                   <span className="text-sm font-mono">{order.invoice_number}</span>
                 </div>
               )}

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useLanguage } from "@/lib/language-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +17,7 @@ import { Loader2, Check, X } from "lucide-react"
 
 export default function RegisterPage() {
   const { signUp } = useAuth()
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,11 +30,11 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
 
   const passwordRequirements = [
-    { regex: /.{8,}/, text: "At least 8 characters" },
-    { regex: /[A-Z]/, text: "One uppercase letter" },
-    { regex: /[a-z]/, text: "One lowercase letter" },
-    { regex: /\d/, text: "One number" },
-    { regex: /[@$!%*?&]/, text: "One special character" },
+    { regex: /.{8,}/, text: t("authRegisterPage.password.atLeast8") },
+    { regex: /[A-Z]/, text: t("authRegisterPage.password.uppercase") },
+    { regex: /[a-z]/, text: t("authRegisterPage.password.lowercase") },
+    { regex: /\d/, text: t("authRegisterPage.password.number") },
+    { regex: /[@$!%*?&]/, text: t("authRegisterPage.password.special") },
   ]
 
   function checkPasswordStrength(password: string) {
@@ -78,8 +80,8 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-          <CardDescription className="text-center">Join our print on demand platform</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">{t("authRegisterPage.title")}</CardTitle>
+          <CardDescription className="text-center">{t("authRegisterPage.subtitle")}</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -91,7 +93,7 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t("authRegisterPage.firstName")}</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
@@ -101,7 +103,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t("authRegisterPage.lastName")}</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
@@ -113,11 +115,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("authRegisterPage.email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder={t("authRegisterPage.emailPlaceholder")}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
@@ -126,7 +128,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("authRegisterPage.passwordLabel")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -152,7 +154,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Account Type</Label>
+              <Label>{t("authRegisterPage.accountType")}</Label>
               <RadioGroup
                 value={formData.role}
                 onValueChange={(value) => setFormData({ ...formData, role: value as "customer" | "supplier" })}
@@ -161,13 +163,13 @@ export default function RegisterPage() {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="customer" id="customer" />
                   <Label htmlFor="customer" className="font-normal cursor-pointer">
-                    Customer - Order custom printed products
+                    {t("authRegisterPage.customerLabel")}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="supplier" id="supplier" />
                   <Label htmlFor="supplier" className="font-normal cursor-pointer">
-                    Supplier - Sell products on our platform
+                    {t("authRegisterPage.supplierLabel")}
                   </Label>
                 </div>
               </RadioGroup>
@@ -181,9 +183,9 @@ export default function RegisterPage() {
                 disabled={loading}
               />
               <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
-                I accept the{" "}
+                {t("authRegisterPage.acceptTermsPrefix")}{" "}
                 <Link href="/terms" className="text-[#8B0000] hover:underline">
-                  terms and conditions
+                  {t("authRegisterPage.termsAndConditions")}
                 </Link>
               </Label>
             </div>
@@ -193,16 +195,16 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  {t("authRegisterPage.creatingAccount")}
                 </>
               ) : (
-                "Create Account"
+                t("authRegisterPage.createAccount")
               )}
             </Button>
             <p className="text-sm text-center text-gray-600">
-              Already have an account?{" "}
+              {t("authRegisterPage.alreadyHaveAccount")}{" "}
               <Link href="/auth/login" className="text-[#8B0000] hover:underline">
-                Sign in
+                {t("authRegisterPage.signIn")}
               </Link>
             </p>
           </CardFooter>

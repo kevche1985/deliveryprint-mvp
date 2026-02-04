@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
+import { useLanguage } from "@/lib/language-context"
 import { Plus, Trash2, FileText, Send } from "lucide-react"
 
 type QuoteItem = {
@@ -34,6 +35,7 @@ export default function QuotePage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user } = useAuth()
+  const { t } = useLanguage()
 
   const [formData, setFormData] = useState<QuoteFormData>({
     customerName: "",
@@ -81,8 +83,8 @@ export default function QuotePage() {
 
     if (!formData.customerName || !formData.customerEmail || !formData.serviceType) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: t("quoteRequest.toasts.missingInfo.title"),
+        description: t("quoteRequest.toasts.missingInfo.description"),
         variant: "destructive",
       })
       return
@@ -90,8 +92,8 @@ export default function QuotePage() {
 
     if (formData.items.some((item) => !item.description.trim())) {
       toast({
-        title: "Incomplete Items",
-        description: "Please provide descriptions for all items.",
+        title: t("quoteRequest.toasts.incompleteItems.title"),
+        description: t("quoteRequest.toasts.incompleteItems.description"),
         variant: "destructive",
       })
       return
@@ -159,8 +161,8 @@ export default function QuotePage() {
         console.error("Quote items creation error:", errorData.error)
         // Don't fail the entire quote if items creation fails
         toast({
-          title: "Quote Created",
-          description: "Quote was created but some items may not have been saved properly.",
+          title: t("quoteRequest.toasts.partialSuccess.title"),
+          description: t("quoteRequest.toasts.partialSuccess.description"),
           variant: "default",
         })
       } else {
@@ -168,8 +170,8 @@ export default function QuotePage() {
       }
 
       toast({
-        title: "Quote Submitted Successfully",
-        description: `Your quote request #${quote.quote_number} has been submitted. We'll get back to you soon!`,
+        title: t("quoteRequest.toasts.success.title"),
+        description: t("quoteRequest.toasts.success.description").replace("#{number}", quote.quote_number),
       })
 
       // Reset form
@@ -190,8 +192,8 @@ export default function QuotePage() {
     } catch (error) {
       console.error("Quote creation error:", error)
       toast({
-        title: "Submission Failed",
-        description: error instanceof Error ? error.message : "Failed to submit quote. Please try again.",
+        title: t("quoteRequest.toasts.failed.title"),
+        description: error instanceof Error ? error.message : t("quoteRequest.toasts.failed.description"),
         variant: "destructive",
       })
     } finally {
@@ -203,10 +205,9 @@ export default function QuotePage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Request a Quote</h1>
+          <h1 className="text-4xl font-bold mb-4">{t("quoteRequest.title")}</h1>
           <p className="text-gray-600">
-            Get a custom quote for your printing needs. Fill out the form below and we'll get back to you within 24
-            hours.
+            {t("quoteRequest.subtitle")}
           </p>
         </div>
 
@@ -216,41 +217,41 @@ export default function QuotePage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FileText className="h-5 w-5 mr-2" />
-                Customer Information
+                {t("orders.customerInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="customerName">Full Name *</Label>
+                  <Label htmlFor="customerName">{t("quoteRequest.fullName")} *</Label>
                   <Input
                     id="customerName"
                     value={formData.customerName}
                     onChange={(e) => handleInputChange("customerName", e.target.value)}
-                    placeholder="Enter your full name"
+                    placeholder={t("quoteRequest.placeholders.fullName")}
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="customerEmail">Email Address *</Label>
+                  <Label htmlFor="customerEmail">{t("quoteRequest.emailAddress")} *</Label>
                   <Input
                     id="customerEmail"
                     type="email"
                     value={formData.customerEmail}
                     onChange={(e) => handleInputChange("customerEmail", e.target.value)}
-                    placeholder="Enter your email address"
+                    placeholder={t("quoteRequest.placeholders.email")}
                     required
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="customerPhone">Phone Number</Label>
+                <Label htmlFor="customerPhone">{t("quoteRequest.phoneNumber")}</Label>
                 <Input
                   id="customerPhone"
                   type="tel"
                   value={formData.customerPhone}
                   onChange={(e) => handleInputChange("customerPhone", e.target.value)}
-                  placeholder="Enter your phone number"
+                  placeholder={t("quoteRequest.placeholders.phone")}
                 />
               </div>
             </CardContent>
@@ -259,40 +260,40 @@ export default function QuotePage() {
           {/* Service Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Service Details</CardTitle>
+              <CardTitle>{t("quoteRequest.labels.serviceDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="serviceType">Service Type *</Label>
+                  <Label htmlFor="serviceType">{t("quoteRequest.labels.serviceType")} *</Label>
                   <Select
                     value={formData.serviceType}
                     onValueChange={(value) => handleInputChange("serviceType", value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a service" />
+                      <SelectValue placeholder={t("quoteRequest.placeholders.serviceType")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="digital-printing">Digital Printing</SelectItem>
-                      <SelectItem value="large-format">Large Format Printing</SelectItem>
-                      <SelectItem value="event-stands">Event Stands</SelectItem>
-                      <SelectItem value="illuminated-signs">Illuminated Signs</SelectItem>
-                      <SelectItem value="custom-design">Custom Design Service</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="digital-printing">{t("services.digitalPrinting")}</SelectItem>
+                      <SelectItem value="large-format">{t("services.largeFormat")}</SelectItem>
+                      <SelectItem value="event-stands">{t("services.eventStands")}</SelectItem>
+                      <SelectItem value="illuminated-signs">{t("services.illuminatedSigns")}</SelectItem>
+                      <SelectItem value="custom-design">{t("services.designServices")}</SelectItem>
+                      <SelectItem value="other">{t("services.other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="priority">Priority Level</Label>
+                  <Label htmlFor="priority">{t("quoteRequest.labels.priority")}</Label>
                   <Select value={formData.priority} onValueChange={(value) => handleInputChange("priority", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
+                      <SelectValue placeholder={t("quoteRequest.placeholders.priority")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low - Standard delivery</SelectItem>
-                      <SelectItem value="normal">Normal - Within 5-7 days</SelectItem>
-                      <SelectItem value="high">High - Within 2-3 days</SelectItem>
-                      <SelectItem value="urgent">Urgent - Within 24 hours</SelectItem>
+                      <SelectItem value="low">{t("quoteRequest.priorities.low")}</SelectItem>
+                      <SelectItem value="normal">{t("quoteRequest.priorities.normal")}</SelectItem>
+                      <SelectItem value="high">{t("quoteRequest.priorities.high")}</SelectItem>
+                      <SelectItem value="urgent">{t("quoteRequest.priorities.urgent")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -304,10 +305,10 @@ export default function QuotePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Quote Items
+                {t("quoteRequest.labels.quoteItems")}
                 <Button type="button" onClick={addItem} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Item
+                  {t("quoteRequest.labels.addItem")}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -315,18 +316,18 @@ export default function QuotePage() {
               {formData.items.map((item, index) => (
                 <div key={item.id} className="flex gap-4 items-end">
                   <div className="flex-1">
-                    <Label htmlFor={`item-description-${item.id}`}>Item Description {index + 1} *</Label>
+                    <Label htmlFor={`item-description-${item.id}`}>{t("quoteRequest.labels.description")} {index + 1} *</Label>
                     <Textarea
                       id={`item-description-${item.id}`}
                       value={item.description}
                       onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
-                      placeholder="Describe the item you need printed (size, material, quantity, etc.)"
+                      placeholder={t("quoteRequest.placeholders.itemDescription")}
                       rows={2}
                       required
                     />
                   </div>
                   <div className="w-24">
-                    <Label htmlFor={`item-quantity-${item.id}`}>Quantity</Label>
+                    <Label htmlFor={`item-quantity-${item.id}`}>{t("quoteRequest.labels.quantity")}</Label>
                     <Input
                       id={`item-quantity-${item.id}`}
                       type="number"
@@ -354,15 +355,15 @@ export default function QuotePage() {
           {/* Additional Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Additional Details</CardTitle>
+              <CardTitle>{t("quoteRequest.labels.additionalDetails")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Label htmlFor="additionalDetails">Additional Information</Label>
+              <Label htmlFor="additionalDetails">{t("quoteRequest.labels.additionalDetails")}</Label>
               <Textarea
                 id="additionalDetails"
                 value={formData.additionalDetails}
                 onChange={(e) => handleInputChange("additionalDetails", e.target.value)}
-                placeholder="Any additional details, special requirements, or questions you have..."
+                placeholder={t("quoteRequest.placeholders.additionalDetails")}
                 rows={4}
               />
             </CardContent>
@@ -372,11 +373,11 @@ export default function QuotePage() {
           <div className="flex justify-center">
             <Button type="submit" disabled={isSubmitting} className="px-8 py-3 text-lg">
               {isSubmitting ? (
-                "Submitting..."
+                t("quoteRequest.submitting")
               ) : (
                 <>
                   <Send className="h-5 w-5 mr-2" />
-                  Submit Quote Request
+                  {t("quoteRequest.submit")}
                 </>
               )}
             </Button>

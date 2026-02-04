@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import DesignEditor from "./design-editor"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
 // Use any types to avoid conflicts with design-editor internal types
 interface DesignServiceEditorProps {
@@ -34,6 +35,7 @@ export default function DesignServiceEditor({
   selectedVariant,
 }: DesignServiceEditorProps) {
   const [designData, setDesignData] = useState<any>(null)
+  const { t } = useLanguage()
 
   const handleSave = (output: any) => {
     setDesignData(output)
@@ -50,7 +52,7 @@ export default function DesignServiceEditor({
         <div className="absolute top-2 right-2 z-50">
           <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-red-500">
             <X className="h-6 w-6" />
-            <span className="sr-only">Close editor</span>
+            <span className="sr-only">{t("designEditor.closeEditorSr")}</span>
           </Button>
         </div>
         <div className="flex-1 overflow-hidden">
@@ -68,13 +70,9 @@ export default function DesignServiceEditor({
         
         {/* Design Confirmation Footer */}
          <div className="border-t bg-gray-50 px-4 py-2 flex justify-between items-center shrink-0">
-           <div className="text-xs text-gray-600">
-             Complete before confirming
-           </div>
+           <div className="text-xs text-gray-600">{t("designEditor.footer.completeBefore")}</div>
            <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={onClose}>
-               Cancel
-             </Button>
+             <Button variant="outline" size="sm" onClick={onClose}>{t("common.cancel")}</Button>
              <Button 
                size="sm"
                onClick={() => {
@@ -88,7 +86,7 @@ export default function DesignServiceEditor({
                }}
                className="bg-red-600 hover:bg-red-700 text-white"
              >
-               Confirm Design
+               {t("designEditor.footer.confirmDesign")}
              </Button>
            </div>
          </div>

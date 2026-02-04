@@ -5,12 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Sparkles, ImageIcon, Type } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/lib/language-context"
 
 const services = [
   {
     id: "logo",
-    title: "AI Logo Generator",
-    description: "Create unique, professional logos for your brand",
     price: 25,
     icon: Sparkles,
     href: "/ai-studio/logo",
@@ -18,8 +17,6 @@ const services = [
   },
   {
     id: "image",
-    title: "AI Image Generator",
-    description: "Generate custom images for your designs",
     price: 5,
     icon: ImageIcon,
     href: "/ai-studio/image",
@@ -27,8 +24,6 @@ const services = [
   },
   {
     id: "font",
-    title: "AI Font Generator",
-    description: "Design unique typography for your brand",
     price: 5,
     icon: Type,
     href: "/ai-studio/font",
@@ -38,15 +33,14 @@ const services = [
 
 export default function AIStudioPage() {
   const [selectedService, setSelectedService] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">AI Design Studio</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Harness the power of AI to create stunning designs for your print-on-demand products
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t("aiStudioPage.headerTitle")}</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t("aiStudioPage.headerSubtitle")}</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -65,8 +59,16 @@ export default function AIStudioPage() {
                     <service.icon className="h-12 w-12 text-[#8B0000]" />
                     <span className="text-2xl font-bold text-[#8B0000]">${service.price}</span>
                   </div>
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
-                  <CardDescription>{service.description}</CardDescription>
+                  <CardTitle className="text-xl">
+                    {service.id === "logo" && t("aiStudioPage.services.logo.title")}
+                    {service.id === "image" && t("aiStudioPage.services.image.title")}
+                    {service.id === "font" && t("aiStudioPage.services.font.title")}
+                  </CardTitle>
+                  <CardDescription>
+                    {service.id === "logo" && t("aiStudioPage.services.logo.description")}
+                    {service.id === "image" && t("aiStudioPage.services.image.description")}
+                    {service.id === "font" && t("aiStudioPage.services.font.description")}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex space-x-2 mb-6">
@@ -80,7 +82,7 @@ export default function AIStudioPage() {
                     ))}
                   </div>
                   <Link href={service.href}>
-                    <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">Get Started</Button>
+                    <Button className="w-full bg-[#8B0000] hover:bg-[#6B0000]">{t("aiStudioPage.getStarted")}</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -89,28 +91,28 @@ export default function AIStudioPage() {
         </div>
 
         <div className="mt-16 bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto animate-fade-in-late">
-          <h2 className="text-2xl font-bold mb-4">How It Works</h2>
+          <h2 className="text-2xl font-bold mb-4">{t("aiStudioPage.howItWorksTitle")}</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-[#8B0000] text-white rounded-full flex items-center justify-center mx-auto mb-3">
                 1
               </div>
-              <h3 className="font-semibold mb-2">Choose Your Service</h3>
-              <p className="text-gray-600 text-sm">Select from logo, image, or font generation</p>
+              <h3 className="font-semibold mb-2">{t("aiStudioPage.steps.chooseService.title")}</h3>
+              <p className="text-gray-600 text-sm">{t("aiStudioPage.steps.chooseService.desc")}</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-[#8B0000] text-white rounded-full flex items-center justify-center mx-auto mb-3">
                 2
               </div>
-              <h3 className="font-semibold mb-2">Describe Your Vision</h3>
-              <p className="text-gray-600 text-sm">Enter a detailed prompt for AI generation</p>
+              <h3 className="font-semibold mb-2">{t("aiStudioPage.steps.describeVision.title")}</h3>
+              <p className="text-gray-600 text-sm">{t("aiStudioPage.steps.describeVision.desc")}</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-[#8B0000] text-white rounded-full flex items-center justify-center mx-auto mb-3">
                 3
               </div>
-              <h3 className="font-semibold mb-2">Download & Use</h3>
-              <p className="text-gray-600 text-sm">Purchase and download in multiple formats</p>
+              <h3 className="font-semibold mb-2">{t("aiStudioPage.steps.downloadUse.title")}</h3>
+              <p className="text-gray-600 text-sm">{t("aiStudioPage.steps.downloadUse.desc")}</p>
             </div>
           </div>
         </div>

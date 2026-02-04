@@ -78,6 +78,7 @@ export type Order = {
   shipping_address: any
   billing_address: any
   payment_method: string
+  payment_status?: string
   shipping_method?: string
   notes?: string
   currency?: string

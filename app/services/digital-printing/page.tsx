@@ -923,20 +923,20 @@ export default function DigitalPrintingPage() {
             {/* Quick Info */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Production Info</CardTitle>
+                <CardTitle className="text-lg">{t("services.digitalPrintingPage.productionInfo.title")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Turnaround:</span>
-                  <span className="font-medium">1-2 business days</span>
+                  <span className="text-gray-600">{t("services.digitalPrintingPage.productionInfo.turnaroundLabel")}</span>
+                  <span className="font-medium">{t("services.digitalPrintingPage.productionInfo.turnaroundValue")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping:</span>
-                  <span className="font-medium">Available</span>
+                  <span className="text-gray-600">{t("services.digitalPrintingPage.productionInfo.shippingLabel")}</span>
+                  <span className="font-medium">{t("services.digitalPrintingPage.productionInfo.shippingValue")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Pickup:</span>
-                  <span className="font-medium">Same day</span>
+                  <span className="text-gray-600">{t("services.digitalPrintingPage.productionInfo.pickupLabel")}</span>
+                  <span className="font-medium">{t("services.digitalPrintingPage.productionInfo.pickupValue")}</span>
                 </div>
               </CardContent>
             </Card>

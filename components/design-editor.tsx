@@ -34,6 +34,7 @@ import { toast } from "@/components/ui/use-toast"
 import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/lib/auth-context"
 import { createClient } from "@supabase/supabase-js"
+import { useLanguage } from "@/lib/language-context"
 
 // Add this after the other hooks
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
@@ -163,6 +164,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
   const { addItem } = useCart()
   const { user } = useAuth()
+  const { t } = useLanguage()
 
   // Add to history for undo/redo
   const addToHistory = useCallback(
@@ -447,11 +449,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
     try {
       if (!designViewportRef.current) {
         console.error("Design viewport ref not found for capturing.")
-        toast({
-          title: "Error",
-          description: "Could not capture design. Please try again.",
-          variant: "destructive",
-        })
+        toast({ title: t("designEditor.errorTitle"), description: t("designEditor.captureError"), variant: "destructive" })
         return
       }
 
@@ -490,11 +488,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
       console.log("✅ User authenticated:", user.email)
 
       // Show initial loading toast
-      const loadingToast = toast({
-        title: "Saving Design...",
-        description: "Processing your design...",
-        duration: 0, // Keep open
-      })
+      const loadingToast = toast({ title: t("designEditor.savingTitle"), description: t("designEditor.savingDesc"), duration: 0 })
 
       // Temporarily set transform-origin to top left for html2canvas
       const originalTransformOrigin = designViewportRef.current.style.transformOrigin
@@ -849,12 +843,14 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-xl border border-gray-200">
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-700">Design Editor {productName && `for ${productName}`}</h2>
+        <h2 className="text-lg font-semibold text-gray-700">
+          {t("designEditor.title")} {productName ? `${t("designEditor.forProduct")} ${productName}` : ""}
+        </h2>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0} title="Undo">
+          <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0} title={t("designEditor.undo")}>
             <Undo className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo">
+          <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1} title={t("designEditor.redo")}>
             <Redo className="w-4 h-4" />
           </Button>
           <Button 
@@ -864,7 +860,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
             disabled={isSaving}
             data-save-design
           >
-            {isSaving ? "Saving..." : "Save Design"}
+            {isSaving ? t("designEditor.savingShort") : t("designEditor.saveDesign")}
           </Button>
         </div>
       </div>
@@ -926,8 +922,8 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-xs text-gray-600 mb-1">Drag & drop or click to browse</p>
-                  <p className="text-xs text-gray-500">Max 10MB (Full Quality)</p>
+                  <p className="text-xs text-gray-600 mb-1">{t("designEditor.upload.dragDrop")}</p>
+                  <p className="text-xs text-gray-500">{t("designEditor.upload.maxSize")}</p>
                 </div>
                 <input
                   ref={fileInputRef}
@@ -940,22 +936,20 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
               <TabsContent value="text" className="space-y-3">
                 <div>
-                  <Label htmlFor="text-input" className="text-xs">
-                    Text Content
-                  </Label>
+                  <Label htmlFor="text-input" className="text-xs">{t("designEditor.text.contentLabel")}</Label>
                   <Input
                     id="text-input"
                     type="text"
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    placeholder="Enter text"
+                    placeholder={t("designEditor.text.placeholder")}
                     className="mt-1"
                     onKeyPress={(e) => e.key === "Enter" && addText()}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">Color</Label>
+                    <Label className="text-xs">{t("designEditor.text.color")}</Label>
                     <Input
                       type="color"
                       value={textColor}
@@ -964,7 +958,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Size ({textSize}px)</Label>
+                    <Label className="text-xs">{`${t("designEditor.text.size")} (${textSize}px)`}</Label>
                     <Slider
                       value={[textSize]}
                       onValueChange={(val) => setTextSize(val[0])}
@@ -1000,7 +994,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       className="flex flex-col items-center h-auto py-2"
                     >
                       <Icon className="w-5 h-5 mb-1" />
-                      <span className="text-xs capitalize">{shape}</span>
+                  <span className="text-xs capitalize">{t(`designEditor.shapes.${shape}`)}</span>
                     </Button>
                   ))}
                 </div>
@@ -1015,17 +1009,17 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
               style={{ minHeight: "300px", maxHeight: "50%" }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-700">Element Properties</h3>
+                <h3 className="text-sm font-semibold text-gray-700">{t("designEditor.elementProps.title")}</h3>
                 <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {selected.type.charAt(0).toUpperCase() + selected.type.slice(1)}
+                  {t(`designEditor.elementProps.type.${selected.type}`)}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-medium text-gray-700">Position & Size</Label>
+                <Label className="text-xs font-medium text-gray-700">{t("designEditor.elementProps.positionSize")}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs">X Position</Label>
+                    <Label className="text-xs">{t("designEditor.elementProps.xPos")}</Label>
                     <Input
                       type="number"
                       value={Math.round(selected.x)}
@@ -1035,7 +1029,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Y Position</Label>
+                    <Label className="text-xs">{t("designEditor.elementProps.yPos")}</Label>
                     <Input
                       type="number"
                       value={Math.round(selected.y)}
@@ -1050,7 +1044,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
               {(selected.type === "image" || selected.type === "shape") && (
                 <>
                   <div>
-                    <Label className="text-xs font-medium">Element Size ({Math.round(((selected.width || 0) / 100) * 100)}%)</Label>
+                    <Label className="text-xs font-medium">{`${t("designEditor.elementProps.elementSize")} (${Math.round(((selected.width || 0) / 100) * 100)}%)`}</Label>
                     <div className="mt-2">
                       <Slider
                         value={[selected.width || 100]}
@@ -1077,15 +1071,15 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       />
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Small</span>
-                      <span>Medium</span>
-                      <span>Large</span>
+                      <span>{t("designEditor.sizeScale.small")}</span>
+                      <span>{t("designEditor.sizeScale.medium")}</span>
+                      <span>{t("designEditor.sizeScale.large")}</span>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-xs">Width</Label>
+                      <Label className="text-xs">{t("designEditor.elementProps.width")}</Label>
                       <Input
                         type="number"
                         value={Math.round(selected.width || 0)}
@@ -1101,7 +1095,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs">Height</Label>
+                      <Label className="text-xs">{t("designEditor.elementProps.height")}</Label>
                       <Input
                         type="number"
                         value={Math.round(selected.height || 0)}
@@ -1134,7 +1128,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       className="flex flex-col items-center gap-1 h-auto py-2"
                     >
                       <ZoomOut className="w-4 h-4" />
-                      <span className="text-xs">Zoom Out</span>
+                      <span className="text-xs">{t("designEditor.actions.zoomOut")}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -1150,7 +1144,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       className="flex flex-col items-center gap-1 h-auto py-2"
                     >
                       <RotateCcw className="w-4 h-4" />
-                      <span className="text-xs">Reset</span>
+                      <span className="text-xs">{t("designEditor.actions.reset")}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -1167,7 +1161,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                       className="flex flex-col items-center gap-1 h-auto py-2"
                     >
                       <ZoomIn className="w-4 h-4" />
-                      <span className="text-xs">Zoom In</span>
+                      <span className="text-xs">{t("designEditor.actions.zoomIn")}</span>
                     </Button>
                   </div>
                 </>
@@ -1176,7 +1170,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
               {selected.type === "text" && (
                 <>
                   <div>
-                    <Label className="text-xs">Font Size ({selected.fontSize}px)</Label>
+                    <Label className="text-xs">{`${t("designEditor.text.fontSize")} (${selected.fontSize}px)`}</Label>
                     <Slider
                       value={[selected.fontSize || 24]}
                       onValueChange={(v) => updateSelectedElement({ fontSize: v[0] })}
@@ -1187,7 +1181,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Color</Label>
+                    <Label className="text-xs">{t("designEditor.text.color")}</Label>
                     <Input
                       type="color"
                       value={selected.color}
@@ -1211,7 +1205,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Stroke</Label>
+                    <Label className="text-xs">{t("designEditor.shape.stroke")}</Label>
                     <Input
                       type="color"
                       value={selected.stroke}
@@ -1225,7 +1219,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs font-medium">Rotation ({selected.rotation}°)</Label>
+                  <Label className="text-xs font-medium">{`${t("designEditor.elementProps.rotation")} (${selected.rotation}°)`}</Label>
                   <div className="mt-2">
                     <Slider
                       value={[selected.rotation]}
@@ -1245,7 +1239,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                 </div>
                 
                 <div>
-                  <Label className="text-xs font-medium">Opacity ({Math.round((selected.opacity || 1) * 100)}%)</Label>
+                  <Label className="text-xs font-medium">{`${t("designEditor.elementProps.opacity")} (${Math.round((selected.opacity || 1) * 100)}%)`}</Label>
                   <div className="mt-2">
                     <Slider
                       value={[selected.opacity || 1]}
@@ -1266,37 +1260,37 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
               </div>
 
               <div className="space-y-3 pt-2 border-t border-gray-100">
-                <Label className="text-xs font-medium text-gray-700">Transform Actions</Label>
+                <Label className="text-xs font-medium text-gray-700">{t("designEditor.actions.title")}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => commitSelectedElementUpdate({ flipX: !selected.flipX })}
-                    title="Flip Horizontal"
+                    title={t("designEditor.actions.flipH")}
                     className={`flex flex-col items-center gap-1 h-auto py-2 ${selected.flipX ? 'bg-blue-50 border-blue-200' : ''}`}
                   >
                     <FlipHorizontal className="w-4 h-4" />
-                    <span className="text-xs">Flip H</span>
+                    <span className="text-xs">{t("designEditor.actions.flipHShort")}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => commitSelectedElementUpdate({ flipY: !selected.flipY })}
-                    title="Flip Vertical"
+                    title={t("designEditor.actions.flipV")}
                     className={`flex flex-col items-center gap-1 h-auto py-2 ${selected.flipY ? 'bg-blue-50 border-blue-200' : ''}`}
                   >
                     <FlipVertical className="w-4 h-4" />
-                    <span className="text-xs">Flip V</span>
+                    <span className="text-xs">{t("designEditor.actions.flipVShort")}</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={duplicateSelected} 
-                    title="Duplicate" 
+                    title={t("designEditor.actions.duplicate")} 
                     className="flex flex-col items-center gap-1 h-auto py-2"
                   >
                     <Copy className="w-4 h-4" />
-                    <span className="text-xs">Copy</span>
+                    <span className="text-xs">{t("designEditor.actions.copy")}</span>
                   </Button>
                 </div>
                 
@@ -1308,7 +1302,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                     className="w-full flex items-center justify-center gap-2 py-2"
                   >
                     <Crop className="w-4 h-4" /> 
-                    <span>Crop Image</span>
+                    <span>{t("designEditor.actions.cropImage")}</span>
                   </Button>
                 )}
                 
@@ -1316,11 +1310,11 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                   variant="destructive" 
                   size="sm" 
                   onClick={deleteSelected} 
-                  title="Delete" 
+                  title={t("designEditor.actions.delete")} 
                   className="w-full flex items-center justify-center gap-2 py-2 mt-3"
                 >
                   <Trash2 className="w-4 h-4" /> 
-                  <span>Delete Element</span>
+                  <span>{t("designEditor.actions.deleteElement")}</span>
                 </Button>
               </div>
             </div>
@@ -1468,14 +1462,12 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
               </ReactCrop>
             </div>
             <canvas ref={cropPreviewCanvasRef} style={{ display: "none" }} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCropModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={applyCrop} className="bg-red-700 hover:bg-red-800 text-white">
-                Apply Crop
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCropModalOpen(false)}>{t("common.cancel")}</Button>
+                <Button onClick={applyCrop} className="bg-red-700 hover:bg-red-800 text-white">
+                  {t("designEditor.crop.apply")}
+                </Button>
+              </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

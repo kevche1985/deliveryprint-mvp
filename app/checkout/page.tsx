@@ -279,8 +279,8 @@ export default function CheckoutPage() {
   const validateForm = () => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to complete your order",
+        title: t("checkout.toast.authRequiredTitle"),
+        description: t("checkout.toast.authRequiredDesc"),
         variant: "destructive",
       })
       router.push("/auth/login?redirect=checkout")
@@ -301,8 +301,8 @@ export default function CheckoutPage() {
     // Then use this in the condition
     if (!hasItems) {
       toast({
-        title: "Empty cart",
-        description: "Your cart is empty. Please add products to your cart before checking out.",
+        title: t("checkout.toast.emptyCartTitle"),
+        description: t("checkout.toast.emptyCartDesc"),
         variant: "destructive",
       })
       router.push("/products")
@@ -311,8 +311,8 @@ export default function CheckoutPage() {
 
     if (!agreeToTerms) {
       toast({
-        title: "Terms & Conditions",
-        description: "Please agree to the terms and conditions to complete your order.",
+        title: t("checkout.toast.termsTitle"),
+        description: t("checkout.toast.termsDesc"),
         variant: "destructive",
       })
       return false
@@ -329,8 +329,8 @@ export default function CheckoutPage() {
       !billingInfo.zipCode
     ) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required billing information fields.",
+        title: t("checkout.toast.missingInfoTitle"),
+        description: t("checkout.toast.missingInfoDesc"),
         variant: "destructive",
       })
       return false
@@ -348,8 +348,8 @@ export default function CheckoutPage() {
         !shippingInfo.zipCode)
     ) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required shipping information fields.",
+        title: t("checkout.toast.missingInfoTitle"),
+        description: t("checkout.toast.missingInfoDesc"),
         variant: "destructive",
       })
       return false
@@ -1072,15 +1072,14 @@ export default function CheckoutPage() {
                         <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">FREE</span>
                       </h3>
                       <p className="text-sm text-gray-600">
-                        After your payment is processed, you'll be able to download your digital products from your
-                        order confirmation page and account dashboard.
+                        {t("checkout.digitalDeliveryInfo")}
                       </p>
                       <div className="mt-4 text-sm">
-                        <p className="font-medium">Available formats:</p>
+                        <p className="font-medium">{t("checkout.availableFormats")}</p>
                         <ul className="list-disc pl-5 mt-1 space-y-1">
-                          <li>High-resolution JPG/PNG images</li>
-                          <li>Vector files (SVG, AI) for logos</li>
-                          <li>Font files (OTF, TTF, WOFF) for custom fonts</li>
+                          <li>{t("checkout.formats.highRes")}</li>
+                          <li>{t("checkout.formats.vector")}</li>
+                          <li>{t("checkout.formats.fonts")}</li>
                         </ul>
                       </div>
                     </div>
@@ -1134,13 +1133,13 @@ export default function CheckoutPage() {
                             {method.id === "wompi" && (
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Secure</span>
-                                <span className="text-xs text-gray-500">Powered by Wompi</span>
+                                <span className="text-xs text-gray-500">{t("checkout.poweredByWompi")}</span>
                               </div>
                             )}
                             {method.id === "paypal" && (
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Secure</span>
-                                <span className="text-xs text-gray-500">PayPal Express Checkout</span>
+                                <span className="text-xs text-gray-500">{t("checkout.paypalExpress")}</span>
                               </div>
                             )}
                           </div>

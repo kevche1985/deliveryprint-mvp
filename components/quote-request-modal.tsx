@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Upload, X, Phone, Mail, CheckCircle, Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { useLanguage } from "@/lib/language-context"
 
 interface QuoteRequestModalProps {
   isOpen: boolean
@@ -31,6 +32,7 @@ interface UploadedFile {
 
 export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefilledData }: QuoteRequestModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
 
   // Form state
   const [formData, setFormData] = useState({
@@ -89,7 +91,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
   const handleFiles = (files: File[]) => {
     // Check file limits
     if (uploadedFiles.length + files.length > 10) {
-      alert("Maximum 10 files allowed per quote request")
+      alert(t("quoteRequest.maxFiles"))
       return
     }
 
@@ -109,7 +111,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
       else if (file.type.startsWith("application/")) maxSize = maxSizes.application
 
       if (file.size > maxSize) {
-        alert(`${file.name} exceeds the maximum size limit`)
+        alert(`${t("quoteRequest.fileTooLarge")} ${file.name}`)
         return false
       }
 
@@ -133,22 +135,22 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
   const validateForm = () => {
     const errors: string[] = []
 
-    if (!formData.customerName.trim()) errors.push("Name is required")
-    if (!formData.customerEmail.trim()) errors.push("Email is required")
-    if (!formData.customerPhone.trim()) errors.push("Phone number is required")
-    if (!formData.requestDescription.trim()) errors.push("Request description is required")
+    if (!formData.customerName.trim()) errors.push(t("quoteRequest.errors.nameRequired"))
+    if (!formData.customerEmail.trim()) errors.push(t("quoteRequest.errors.emailRequired"))
+    if (!formData.customerPhone.trim()) errors.push(t("quoteRequest.errors.phoneRequired"))
+    if (!formData.requestDescription.trim()) errors.push(t("quoteRequest.errors.descriptionRequired"))
     if (formData.requestDescription.length < minDescriptionLength) {
-      errors.push(`Description must be at least ${minDescriptionLength} characters`)
+      errors.push(`${t("quoteRequest.errors.descriptionMin")} ${minDescriptionLength}`)
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.customerEmail)) {
-      errors.push("Please enter a valid email address")
+      errors.push(t("quoteRequest.errors.emailInvalid"))
     }
 
     if (errors.length > 0) {
-      alert("Please fix the following errors: " + errors.join(", "))
+      alert(t("quoteRequest.errors.fixErrors") + " " + errors.join(", "))
       return false
     }
 
@@ -290,7 +292,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
-              Quote Request Submitted
+              {t("quoteRequest.submitted.title")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -298,22 +300,20 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
               <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Request Submitted Successfully!</h3>
-              <p className="text-gray-600 mb-4">Your quote request has been received and assigned reference number:</p>
+              <h3 className="text-lg font-semibold mb-2">{t("quoteRequest.submitted.success")}</h3>
+              <p className="text-gray-600 mb-4">{t("quoteRequest.submitted.refAssigned")}</p>
               <Badge variant="outline" className="text-lg px-4 py-2 font-mono">
                 {quoteReference}
               </Badge>
-              <p className="text-sm text-gray-500 mt-4">
-                We'll review your request and contact you within 24 hours using your preferred contact method.
-              </p>
+              <p className="text-sm text-gray-500 mt-4">{t("quoteRequest.submitted.followUp")}</p>
             </div>
           </div>
           <div className="flex gap-2">
             <Button onClick={resetForm} variant="outline" className="flex-1">
-              Submit Another Request
+              {t("quoteRequest.submitted.submitAnother")}
             </Button>
             <Button onClick={onClose} className="flex-1 bg-red-600 hover:bg-red-700">
-              Close
+              {t("quoteRequest.submitted.close")}
             </Button>
           </div>
         </DialogContent>
@@ -327,20 +327,20 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Request Quote - {serviceType}
+            {t("quoteRequest.title")} - {serviceType}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Service Information */}
           <div className="bg-red-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Service Selected</h3>
+            <h3 className="font-semibold mb-2">{t("quoteRequest.serviceSelected")}</h3>
             <Badge variant="secondary" className="bg-red-100 text-red-800">
               {serviceType}
             </Badge>
             {prefilledData && (
               <p className="text-sm text-gray-600 mt-2">
-                Your current configuration will be included with this quote request.
+                {t("quoteRequest.currentConfigIncluded")}
               </p>
             )}
           </div>
@@ -348,7 +348,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
           {/* Customer Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="customerName">Full Name *</Label>
+              <Label htmlFor="customerName">{t("quoteRequest.fullName")} *</Label>
               <Input
                 id="customerName"
                 value={formData.customerName}
@@ -357,7 +357,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
               />
             </div>
             <div>
-              <Label htmlFor="customerEmail">Email Address *</Label>
+              <Label htmlFor="customerEmail">{t("quoteRequest.emailAddress")} *</Label>
               <Input
                 id="customerEmail"
                 type="email"
@@ -367,7 +367,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
               />
             </div>
             <div>
-              <Label htmlFor="customerPhone">Phone Number *</Label>
+              <Label htmlFor="customerPhone">{t("quoteRequest.phoneNumber")} *</Label>
               <Input
                 id="customerPhone"
                 type="tel"
@@ -377,7 +377,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
               />
             </div>
             <div>
-              <Label htmlFor="customerCompany">Company (Optional)</Label>
+              <Label htmlFor="customerCompany">{t("quoteRequest.companyOptional")}</Label>
               <Input
                 id="customerCompany"
                 value={formData.customerCompany}
@@ -388,18 +388,18 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
 
           {/* Request Description */}
           <div>
-            <Label htmlFor="requestDescription">Project Description *</Label>
+            <Label htmlFor="requestDescription">{t("quoteRequest.projectDescription")} *</Label>
             <Textarea
               id="requestDescription"
               value={formData.requestDescription}
               onChange={(e) => handleInputChange("requestDescription", e.target.value)}
-              placeholder="Please describe your project requirements, specifications, quantity, timeline, and any special instructions..."
+              placeholder={t("quoteRequest.projectDescriptionPlaceholder")}
               rows={6}
               maxLength={maxDescriptionLength}
               required
             />
             <div className="flex justify-between text-sm text-gray-500 mt-1">
-              <span>Minimum {minDescriptionLength} characters</span>
+              <span>{`${t("quoteRequest.minimumChars")} ${minDescriptionLength}`}</span>
               <span>
                 {formData.requestDescription.length}/{maxDescriptionLength}
               </span>
@@ -408,7 +408,7 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
 
           {/* File Upload */}
           <div>
-            <Label>Attach Files (Optional)</Label>
+            <Label>{t("quoteRequest.attachFilesOptional")}</Label>
             <input
               ref={fileInputRef}
               type="file"
@@ -427,18 +427,18 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
               onDrop={handleDrop}
             >
               <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 mb-2">Drop files here or click to browse</p>
+              <p className="text-gray-600 mb-2">{t("quoteRequest.dropFilesHere")}</p>
               <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                Choose Files
+                {t("quoteRequest.chooseFiles")}
               </Button>
               <p className="text-xs text-gray-500 mt-2">
-                Max 10 files. Images (10MB), PDFs (25MB), Design files (50MB), Archives (100MB)
+                {t("quoteRequest.filesLimits")}
               </p>
             </div>
 
             {uploadedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
-                <h4 className="font-medium">Uploaded Files ({uploadedFiles.length}/10)</h4>
+                <h4 className="font-medium">{`${t("quoteRequest.uploadedFilesCount")} (${uploadedFiles.length}/10)`}</h4>
                 {uploadedFiles.map((file) => (
                   <div key={file.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <div className="flex items-center gap-2">
@@ -464,21 +464,21 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
           {/* Additional Options */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Urgency Level</Label>
+              <Label>{t("quoteRequest.urgencyLevel")}</Label>
               <Select value={formData.urgencyLevel} onValueChange={(value) => handleInputChange("urgencyLevel", value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard (3-5 days)</SelectItem>
-                  <SelectItem value="urgent">Urgent (1-2 days)</SelectItem>
-                  <SelectItem value="rush">Rush (Same day)</SelectItem>
+                  <SelectItem value="standard">{t("quoteRequest.urgency.standard")}</SelectItem>
+                  <SelectItem value="urgent">{t("quoteRequest.urgency.urgent")}</SelectItem>
+                  <SelectItem value="rush">{t("quoteRequest.urgency.rush")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label>Preferred Contact Method</Label>
+              <Label>{t("quoteRequest.preferredContactMethod")}</Label>
               <RadioGroup
                 value={formData.preferredContactMethod}
                 onValueChange={(value) => handleInputChange("preferredContactMethod", value)}
@@ -488,25 +488,25 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
                   <RadioGroupItem value="email" id="email" />
                   <Label htmlFor="email" className="flex items-center gap-1">
                     <Mail className="h-4 w-4" />
-                    Email
+                    {t("quoteRequest.contact.email")}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="phone" id="phone" />
                   <Label htmlFor="phone" className="flex items-center gap-1">
                     <Phone className="h-4 w-4" />
-                    Phone
+                    {t("quoteRequest.contact.phone")}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="both" id="both" />
-                  <Label htmlFor="both">Both</Label>
+                  <Label htmlFor="both">{t("quoteRequest.contact.both")}</Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div>
-              <Label>Best Time to Contact</Label>
+              <Label>{t("quoteRequest.bestTimeToContact")}</Label>
               <Select
                 value={formData.bestContactTime}
                 onValueChange={(value) => handleInputChange("bestContactTime", value)}
@@ -515,10 +515,10 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="morning">Morning (9AM - 12PM)</SelectItem>
-                  <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
-                  <SelectItem value="evening">Evening (5PM - 8PM)</SelectItem>
-                  <SelectItem value="anytime">Anytime</SelectItem>
+                  <SelectItem value="morning">{t("quoteRequest.bestTime.morning")}</SelectItem>
+                  <SelectItem value="afternoon">{t("quoteRequest.bestTime.afternoon")}</SelectItem>
+                  <SelectItem value="evening">{t("quoteRequest.bestTime.evening")}</SelectItem>
+                  <SelectItem value="anytime">{t("quoteRequest.bestTime.anytime")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -527,16 +527,16 @@ export default function QuoteRequestModal({ isOpen, onClose, serviceType, prefil
           {/* Submit Button */}
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
+              {t("quoteRequest.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting} className="flex-1 bg-red-600 hover:bg-red-700">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t("quoteRequest.submitting")}
                 </>
               ) : (
-                "Submit Quote Request"
+                t("quoteRequest.submit")
               )}
             </Button>
           </div>

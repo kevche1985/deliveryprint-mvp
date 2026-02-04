@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, ArrowLeft, Mail } from 'lucide-react'
+import { useLanguage } from '@/lib/language-context'
 
 export default function ForgotPasswordPage() {
+  const { t } = useLanguage()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -37,11 +39,11 @@ export default function ForgotPasswordPage() {
         setMessage(data.message)
         setEmailSent(true)
       } else {
-        setError(data.error || 'An error occurred. Please try again.')
+        setError(data.error || t('authForgotPasswordPage.errorGeneric'))
       }
     } catch (error) {
       console.error('Forgot password error:', error)
-      setError('An error occurred. Please try again.')
+      setError(t('authForgotPasswordPage.errorGeneric'))
     } finally {
       setLoading(false)
     }
@@ -55,9 +57,9 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Check Your Email</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">{t('authForgotPasswordPage.checkEmailTitle')}</CardTitle>
             <CardDescription>
-              We've sent password reset instructions to your email address.
+              {t('authForgotPasswordPage.checkEmailDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -67,9 +69,9 @@ export default function ForgotPasswordPage() {
               </Alert>
             )}
             <div className="text-sm text-gray-600 space-y-2">
-              <p>• Check your spam folder if you don't see the email</p>
-              <p>• The reset link will expire in 1 hour</p>
-              <p>• The link can only be used once</p>
+              <p>• {t('authForgotPasswordPage.spamFolder')}</p>
+              <p>• {t('authForgotPasswordPage.expireTime')}</p>
+              <p>• {t('authForgotPasswordPage.oneTimeUse')}</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
@@ -82,12 +84,12 @@ export default function ForgotPasswordPage() {
               variant="outline" 
               className="w-full"
             >
-              Send Another Email
+              {t('authForgotPasswordPage.sendAnother')}
             </Button>
             <Link href="/auth/login" className="w-full">
               <Button variant="ghost" className="w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Login
+                {t('authForgotPasswordPage.backToLogin')}
               </Button>
             </Link>
           </CardFooter>
@@ -101,10 +103,10 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center text-gray-900">
-            Forgot Password
+            {t('authForgotPasswordPage.title')}
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your email address and we'll send you a link to reset your password.
+            {t('authForgotPasswordPage.description')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -116,12 +118,12 @@ export default function ForgotPasswordPage() {
             )}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email Address
+                {t('authForgotPasswordPage.emailLabel')}
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email address"
+                placeholder={t('authForgotPasswordPage.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -139,16 +141,16 @@ export default function ForgotPasswordPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Reset Link...
+                  {t('authForgotPasswordPage.submittingButton')}
                 </>
               ) : (
-                "Send Reset Link"
+                t('authForgotPasswordPage.submitButton')
               )}
             </Button>
             <Link href="/auth/login" className="w-full">
               <Button variant="ghost" className="w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Login
+                {t('authForgotPasswordPage.backToLogin')}
               </Button>
             </Link>
           </CardFooter>

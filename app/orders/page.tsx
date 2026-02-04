@@ -12,11 +12,13 @@ import { Loader2, Search, FileText, Eye } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
+import { useLanguage } from "@/lib/language-context"
 import { getUserOrders } from "@/lib/database"
 import type { Order } from "@/lib/database"
 
 export default function OrdersPage() {
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,10 +115,10 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
-          <p className="mb-6">Please sign in to view your orders.</p>
+          <h1 className="text-2xl font-bold mb-4">{t("orders.authRequiredTitle")}</h1>
+          <p className="mb-6">{t("orders.authRequiredDesc")}</p>
           <Button asChild className="bg-[#8B0000] hover:bg-[#6B0000]">
-            <Link href="/auth/login">Sign In</Link>
+            <Link href="/auth/login">{t("orders.login")}</Link>
           </Button>
         </div>
       </div>
@@ -136,13 +138,13 @@ export default function OrdersPage() {
       return (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <FileText className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No Orders Found</h2>
+          <h2 className="text-xl font-semibold mb-2">{t("orders.noOrdersTitle")}</h2>
           <p className="text-gray-500 mb-6">
-            {orders.length === 0 ? "You haven't placed any orders yet." : "No orders match your current filters."}
+            {orders.length === 0 ? t("orders.noOrdersDesc") : t("orders.noOrdersFilterDesc")}
           </p>
           {orders.length === 0 ? (
             <Button asChild className="bg-[#8B0000] hover:bg-[#6B0000]">
-              <Link href="/products">Browse Products</Link>
+              <Link href="/products">{t("orders.browseProducts")}</Link>
             </Button>
           ) : (
             <Button
@@ -154,7 +156,7 @@ export default function OrdersPage() {
                 setActiveTab("all")
               }}
             >
-              Clear Filters
+              {t("orders.clearFilters")}
             </Button>
           )}
         </div>
@@ -175,17 +177,17 @@ export default function OrdersPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between">
                   <div className="mb-4 md:mb-0">
                     <p className="font-medium text-lg">{order.order_number}</p>
-                    <p className="text-sm text-gray-500">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">{t("orders.placedOn")} {new Date(order.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <Badge className={getStatusColor(order.status)}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {t(`orders.statuses.${order.status}`) || order.status}
                     </Badge>
                     <p className="font-semibold">${order.total.toFixed(2)}</p>
                     <Button asChild size="sm">
                       <Link href={`/orders/${order.id}`}>
                         <Eye className="mr-2 h-4 w-4" />
-                        View Details
+                        {t("orders.viewDetails")}
                       </Link>
                     </Button>
                   </div>
@@ -202,26 +204,26 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-          <p className="text-gray-600">View and track all your orders in one place</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("orders.myOrders")}</h1>
+          <p className="text-gray-600">{t("orders.subtitle")}</p>
         </motion.div>
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Filter Orders</CardTitle>
-            <CardDescription>Find specific orders by searching or applying filters</CardDescription>
+            <CardTitle>{t("orders.filterTitle")}</CardTitle>
+            <CardDescription>{t("orders.filterDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="search" className="mb-2 block">
-                  Search
+                  {t("orders.searchLabel")}
                 </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     id="search"
-                    placeholder="Search by order number or email"
+                    placeholder={t("orders.searchPlaceholder")}
                     className="pl-9"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -230,35 +232,35 @@ export default function OrdersPage() {
               </div>
               <div>
                 <Label htmlFor="status" className="mb-2 block">
-                  Status
+                  {t("orders.statusLabel")}
                 </Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger id="status">
-                    <SelectValue placeholder="All Statuses" />
+                    <SelectValue placeholder={t("orders.allStatuses")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="all">{t("orders.allStatuses")}</SelectItem>
+                    <SelectItem value="pending">{t("orders.statuses.pending")}</SelectItem>
+                    <SelectItem value="processing">{t("orders.statuses.processing")}</SelectItem>
+                    <SelectItem value="completed">{t("orders.statuses.completed")}</SelectItem>
+                    <SelectItem value="cancelled">{t("orders.statuses.cancelled")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label htmlFor="date" className="mb-2 block">
-                  Date Range
+                  {t("orders.dateRangeLabel")}
                 </Label>
                 <Select value={dateFilter} onValueChange={setDateFilter}>
                   <SelectTrigger id="date">
-                    <SelectValue placeholder="All Time" />
+                    <SelectValue placeholder={t("orders.allTime")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="last7days">Last 7 Days</SelectItem>
-                    <SelectItem value="last30days">Last 30 Days</SelectItem>
-                    <SelectItem value="last3months">Last 3 Months</SelectItem>
-                    <SelectItem value="last6months">Last 6 Months</SelectItem>
+                    <SelectItem value="all">{t("orders.allTime")}</SelectItem>
+                    <SelectItem value="last7days">{t("orders.last7Days")}</SelectItem>
+                    <SelectItem value="last30days">{t("orders.last30Days")}</SelectItem>
+                    <SelectItem value="last3months">{t("orders.last3Months")}</SelectItem>
+                    <SelectItem value="last6months">{t("orders.last6Months")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -268,11 +270,11 @@ export default function OrdersPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-5 mb-8">
-            <TabsTrigger value="all">All ({orders.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({getOrdersByStatus("pending").length})</TabsTrigger>
-            <TabsTrigger value="processing">Processing ({getOrdersByStatus("processing").length})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({getOrdersByStatus("completed").length})</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled ({getOrdersByStatus("cancelled").length})</TabsTrigger>
+            <TabsTrigger value="all">{t("orders.all")} ({orders.length})</TabsTrigger>
+            <TabsTrigger value="pending">{t("orders.statuses.pending")} ({getOrdersByStatus("pending").length})</TabsTrigger>
+            <TabsTrigger value="processing">{t("orders.statuses.processing")} ({getOrdersByStatus("processing").length})</TabsTrigger>
+            <TabsTrigger value="completed">{t("orders.statuses.completed")} ({getOrdersByStatus("completed").length})</TabsTrigger>
+            <TabsTrigger value="cancelled">{t("orders.statuses.cancelled")} ({getOrdersByStatus("cancelled").length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">{renderOrdersList(filteredOrders)}</TabsContent>

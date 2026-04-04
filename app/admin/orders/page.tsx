@@ -43,6 +43,17 @@ type OrderItem = {
   }
 }
 
+type OrderDigitalProduct = {
+  id: string
+  name: string
+  type: string
+  status: string
+  download_url?: string
+  preview_url?: string
+  created_at: string
+  updated_at: string
+}
+
 type Order = {
   id: string
   order_number: string
@@ -81,44 +92,81 @@ export default function OrderManagement() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [downloadingDesign, setDownloadingDesign] = useState<string | null>(null)
   const [generatingInvoice, setGeneratingInvoice] = useState(false)
+  const [selectedOrderDigitalProducts, setSelectedOrderDigitalProducts] = useState<OrderDigitalProduct[]>([])
+  const [loadingSelectedOrderDigitalProducts, setLoadingSelectedOrderDigitalProducts] = useState(false)
 
   useEffect(() => {
     loadOrders()
   }, [])
 
+  useEffect(() => {
+    const loadOrderDigitalProducts = async () => {
+      if (!selectedOrder?.id) {
+        setSelectedOrderDigitalProducts([])
+        return
+      }
+      setLoadingSelectedOrderDigitalProducts(true)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const token = session?.access_token
+
+        const resp = await fetch(`/api/admin/orders/${selectedOrder.id}/digital-products`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+        const text = await resp.text()
+        let json: any = {}
+        try {
+          json = text ? JSON.parse(text) : {}
+        } catch {}
+        if (!resp.ok) throw new Error(json?.error || text || "Failed to load digital products")
+
+        setSelectedOrderDigitalProducts(Array.isArray(json?.products) ? json.products : [])
+      } catch (error) {
+        console.error("Error loading order digital products:", error)
+        setSelectedOrderDigitalProducts([])
+      } finally {
+        setLoadingSelectedOrderDigitalProducts(false)
+      }
+    }
+
+    loadOrderDigitalProducts()
+  }, [selectedOrder?.id])
+
   const loadOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          order_items (
-            id,
-            name,
-            quantity,
-            price,
-            customizations,
-            design_file_url,
-            product_image_url,
-            design_image_url,
-            customized_image_url,
-            print_ready_file_url,
-            product_id,
-            digital_product_id,
-            digital_product:digital_products (
-              id,
-              download_url,
-              preview_url,
-              type
-            )
-          )
-        `)
-        .order("created_at", { ascending: false })
-  
-      if (error) throw error
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const resp = await fetch("/api/admin/orders", {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+
+      const text = await resp.text()
+      let json: any = {}
+      try {
+        json = text ? JSON.parse(text) : {}
+      } catch {}
+      if (!resp.ok) throw new Error(json?.error || text || "Failed to load orders")
+
+      const { orders } = json
+
+      const safeJson = (value: unknown) => {
+        if (typeof value !== "string") return value
+        try {
+          return JSON.parse(value)
+        } catch {
+          return value
+        }
+      }
       
       // Parse JSON fields and convert string numbers to actual numbers
-      const processedOrders = (data || []).map(order => ({
+      const processedOrders = (orders || []).map((order: any) => ({
         ...order,
         // Convert string numbers to actual numbers
         subtotal: parseFloat(order.subtotal) || 0,
@@ -127,12 +175,8 @@ export default function OrderManagement() {
         discount: parseFloat(order.discount) || 0,
         total: parseFloat(order.total) || 0,
         // Parse JSON address fields
-        shipping_address: typeof order.shipping_address === 'string' 
-          ? JSON.parse(order.shipping_address) 
-          : order.shipping_address,
-        billing_address: typeof order.billing_address === 'string' 
-          ? JSON.parse(order.billing_address) 
-          : order.billing_address,
+        shipping_address: safeJson(order.shipping_address),
+        billing_address: safeJson(order.billing_address),
       }))
       
       setOrders(processedOrders)
@@ -185,14 +229,10 @@ export default function OrderManagement() {
     }
   }
 
-  const downloadDesignFile = async (item: OrderItem) => {
-    // Priority: digital_product.download_url > print_ready_file_url > design_file_url > customized_image_url
-    const downloadUrl = item.digital_product?.download_url || 
-                       item.print_ready_file_url || 
-                       item.design_file_url || 
-                       item.customized_image_url
-    
-    if (!downloadUrl) {
+  const downloadOrderItemFile = async (args: { key: string; url: string | null | undefined; filenameBase: string; itemName: string }) => {
+    const { key, url, filenameBase, itemName } = args
+
+    if (!url) {
       toast({
         title: t("admin.orders.toasts.noDesignFileTitle"),
         description: t("admin.orders.toasts.noDesignFileDesc"),
@@ -201,19 +241,22 @@ export default function OrderManagement() {
       return
     }
 
-    setDownloadingDesign(item.id)
+    setDownloadingDesign(key)
     try {
-      // Create a temporary link and trigger download
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = `${item.name}-design.${downloadUrl.split('.').pop()}`
+      const safeUrl = url.split("?")[0]
+      const ext = safeUrl.includes(".") ? safeUrl.split(".").pop() : ""
+      const downloadName = ext ? `${filenameBase}.${ext}` : filenameBase
+
+      const link = document.createElement("a")
+      link.href = url
+      link.download = downloadName
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
 
       toast({
         title: t("admin.orders.toasts.downloadStartedTitle"),
-        description: `${t("admin.orders.toasts.downloadStartedDescPrefix")} ${item.name}`,
+        description: `${t("admin.orders.toasts.downloadStartedDescPrefix")} ${itemName}`,
       })
     } catch (error) {
       console.error("Error downloading design file:", error)
@@ -644,29 +687,60 @@ export default function OrderManagement() {
                                             </div>
                                             <div className="flex gap-2">
                                               {(() => {
-                                                // Priority for download: digital_product.download_url > print_ready_file_url > design_file_url > customized_image_url
-                                                const downloadUrl = item.digital_product?.download_url || 
-                                                                  item.print_ready_file_url || 
-                                                                  item.design_file_url || 
-                                                                  item.customized_image_url
-                                                
-                                                if (downloadUrl) {
-                                                  return (
-                                                    <Button
-                                                      variant="outline"
-                                                      size="sm"
-                                                      onClick={() => downloadDesignFile(item)}
-                                                      disabled={downloadingDesign === item.id}
-                                                    >
-                                                      {downloadingDesign === item.id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                      ) : (
-                                                        <Download className="h-4 w-4" />
-                                                      )}
-                                                    </Button>
-                                                  )
-                                                }
-                                                return null
+                                                const purchasedUrl = item.digital_product?.download_url || item.digital_product?.preview_url
+                                                const designUrl = item.design_image_url || item.print_ready_file_url || item.design_file_url
+
+                                                const purchasedKey = `${item.id}:purchased`
+                                                const designKey = `${item.id}:design`
+
+                                                return (
+                                                  <div className="flex flex-col gap-2">
+                                                    {purchasedUrl && (
+                                                      <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                          downloadOrderItemFile({
+                                                            key: purchasedKey,
+                                                            url: purchasedUrl,
+                                                            filenameBase: `${item.name}-purchased`,
+                                                            itemName: item.name,
+                                                          })
+                                                        }
+                                                        disabled={downloadingDesign === purchasedKey}
+                                                        title="Download purchased design"
+                                                      >
+                                                        {downloadingDesign === purchasedKey ? (
+                                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                          <Download className="h-4 w-4" />
+                                                        )}
+                                                      </Button>
+                                                    )}
+                                                    {designUrl && (
+                                                      <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                          downloadOrderItemFile({
+                                                            key: designKey,
+                                                            url: designUrl,
+                                                            filenameBase: `${item.name}-design`,
+                                                            itemName: item.name,
+                                                          })
+                                                        }
+                                                        disabled={downloadingDesign === designKey}
+                                                        title="Download design file"
+                                                      >
+                                                        {downloadingDesign === designKey ? (
+                                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                          <Download className="h-4 w-4" />
+                                                        )}
+                                                      </Button>
+                                                    )}
+                                                  </div>
+                                                )
                                               })()}
                                             </div>
                                           </div>
@@ -683,6 +757,55 @@ export default function OrderManagement() {
                                         <p className="text-gray-500 text-center py-4">{t("admin.orders.noItemsFound")}</p>
                                       )}
                                     </div>
+                                  </div>
+
+                                  {/* Purchased Digital Products */}
+                                  <div>
+                                    <h4 className="font-semibold mb-3">Purchased Designs ({selectedOrderDigitalProducts.length})</h4>
+                                    {loadingSelectedOrderDigitalProducts ? (
+                                      <div className="text-sm text-gray-500 flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>{t("orders.downloading")}</span>
+                                      </div>
+                                    ) : selectedOrderDigitalProducts.length === 0 ? (
+                                      <p className="text-sm text-gray-500">No purchased designs found for this order.</p>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        {selectedOrderDigitalProducts.map((p) => {
+                                          const url = p.download_url || p.preview_url || null
+                                          const key = `digital:${p.id}`
+                                          return (
+                                            <div key={p.id} className="border rounded-lg p-4 flex items-start justify-between gap-4">
+                                              <div>
+                                                <div className="font-medium">{p.name}</div>
+                                                <div className="text-sm text-gray-600">{p.type}</div>
+                                              </div>
+                                              <div>
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    downloadOrderItemFile({
+                                                      key,
+                                                      url,
+                                                      filenameBase: `${p.name}-purchased`,
+                                                      itemName: p.name,
+                                                    })
+                                                  }
+                                                  disabled={downloadingDesign === key}
+                                                >
+                                                  {downloadingDesign === key ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                  ) : (
+                                                    <Download className="h-4 w-4" />
+                                                  )}
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Order Summary */}

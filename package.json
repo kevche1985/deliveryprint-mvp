@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start",
+    "build": "node node_modules/next/dist/bin/next build",
+    "dev": "node node_modules/next/dist/bin/next dev",
+    "lint": "node node_modules/next/dist/bin/next lint",
+    "start": "node node_modules/next/dist/bin/next start",
     "check:react2shell": "node -e \"const v=require('next/package.json').version;function vuln(v){const m=v.match(/^(\\d+)\\.(\\d+)\\.(\\d+)(?:-(canary)\\.(\\d+))?/);if(!m)return false;const M=+m[1],N=+m[2],P=+m[3],T=m[4],C=m[5]?+m[5]:0;if(T==='canary'){if(M===14&&v.startsWith('14.3.0-canary'))return C>76; if(M===15&&N===6) return C<58; if(M===16&&N===1) return C<12; return false;} if(M===16&&N===0) return P<=6; if(M===15){const safe=(N===0&&P>=5)||(N===1&&P>=9)||(N===2&&P>=6)||(N===3&&P>=6)||(N===4&&P>=8)||(N===5&&P>=7);return !safe;} return false;}if(vuln(v)){console.error('Detected vulnerable Next.js version: '+v);process.exit(1)}else{console.log('Next.js version safe: '+v)}\"",
     "postinstall": "npm run check:react2shell"
   },
@@ -76,11 +76,14 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22.18.1",
+    "@types/node": "^22.19.13",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.33",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }

@@ -23,6 +23,11 @@ import {
   ChevronDown,
   Mail,
   Printer,
+  Tag,
+  Layers,
+  Folder,
+  Sliders,
+  Puzzle,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -250,34 +255,160 @@ function AdminContent({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <nav className="space-y-1">
-              {[
-                { href: "/admin", icon: LayoutDashboard, title: t("admin.nav.dashboard"), description: t("admin.navDescriptions.dashboard") },
-                { href: "/admin/products", icon: Package, title: t("admin.nav.products"), description: t("admin.navDescriptions.products") },
-                { href: "/admin/services", icon: Printer, title: "Services", description: "Manage your services" },
-                { href: "/admin/orders", icon: ShoppingCart, title: t("admin.nav.orders"), description: t("admin.navDescriptions.orders") },
-                { href: "/admin/payments", icon: CreditCard, title: t("admin.nav.payments"), description: t("admin.navDescriptions.payments") },
-                { href: "/admin/transactions", icon: CreditCard, title: t("admin.nav.transactions"), description: t("admin.navDescriptions.transactions") },
-                { href: "/admin/users", icon: Users, title: t("admin.nav.users"), description: t("admin.navDescriptions.users") },
-                { href: "/admin/quotes", icon: FileText, title: t("admin.nav.quotes"), description: t("admin.navDescriptions.quotes") },
-                { href: "/admin/messages", icon: MessageSquare, title: t("admin.nav.messages"), description: t("admin.navDescriptions.messages") },
-                { href: "/admin/translations", icon: MessageSquare, title: t("admin.nav.translations"), description: t("admin.navDescriptions.translations") },
-                { href: "/admin/settings", icon: Settings, title: t("admin.nav.settings"), description: t("admin.navDescriptions.settings") },
-                { href: "/admin/email-settings", icon: Mail, title: t("admin.nav.emailSettings"), description: t("admin.navDescriptions.emailSettings") },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div>{item.title}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  </div>
-                </Link>
-              ))}
+            <nav className="space-y-6">
+              {/* Accesos Directos */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Accesos directos</div>
+                <div className="space-y-1">
+                  <Link href="/admin" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <LayoutDashboard className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.dashboard")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.dashboard")}</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Catálogo */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Catálogo</div>
+                <div className="space-y-1">
+                  <Link href="/admin/products" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Package className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.products")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.products")}</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/services" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Printer className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Services</div>
+                      <div className="text-xs text-gray-500">Manage your services</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/categories" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Folder className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Categorías</div>
+                      <div className="text-xs text-gray-500">Manage categories</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/attributes" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Sliders className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Atributos</div>
+                      <div className="text-xs text-gray-500">Product attributes</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Ventas */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ventas</div>
+                <div className="space-y-1">
+                  <Link href="/admin/orders" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <ShoppingCart className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.orders")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.orders")}</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/transactions" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <CreditCard className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.transactions")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.transactions")}</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Clientes */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Clientes</div>
+                <div className="space-y-1">
+                  <Link href="/admin/users" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Users className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.users")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.users")}</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Promociones */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Promociones</div>
+                <div className="space-y-1">
+                  <Link href="/admin/coupons" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Tag className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Cupones</div>
+                      <div className="text-xs text-gray-500">Manage coupons</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/promo-banners" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Layers className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Banners promocionales</div>
+                      <div className="text-xs text-gray-500">Manage promotional banners</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* CMS */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">CMS</div>
+                <div className="space-y-1">
+                  <Link href="/admin/translations" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <MessageSquare className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Traducciones</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.translations")}</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/widgets" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Puzzle className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Widgets</div>
+                      <div className="text-xs text-gray-500">Manage widgets</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              {/* System Settings */}
+              <div>
+                <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System Settings</div>
+                <div className="space-y-1">
+                  <Link href="/admin/settings" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Settings className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.settings")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.settings")}</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/email-settings" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Mail className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>{t("admin.nav.emailSettings")}</div>
+                      <div className="text-xs text-gray-500">{t("admin.navDescriptions.emailSettings")}</div>
+                    </div>
+                  </Link>
+                  <Link href="/admin/modules" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 group" onClick={() => setSidebarOpen(false)}>
+                    <Sliders className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                    <div className="flex-1 min-w-0">
+                      <div>Modules</div>
+                      <div className="text-xs text-gray-500">Show/hide modules</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
             </nav>
           </div>
 

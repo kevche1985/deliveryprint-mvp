@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -47,6 +47,31 @@ export default function Navigation() {
   }
 
   const isAdmin = profile?.role === "admin" || profile?.role === "operator"
+  const [adminVis, setAdminVis] = useState<Record<string, boolean> | null>(null)
+  const [webVis, setWebVis] = useState<Record<string, boolean> | null>(null)
+
+  // Fetch admin modules visibility (public endpoint). Defaults to all visible.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const resp = await fetch("/api/navigation/modules", { cache: "no-store" })
+        const json = await resp.json().catch(() => ({}))
+        if (!cancelled) {
+          setAdminVis(json?.admin || null)
+          setWebVis(json?.web || null)
+        }
+      } catch {
+        if (!cancelled) {
+          setAdminVis(null)
+          setWebVis(null)
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -61,6 +86,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            {(webVis?.products !== false) && (
             <Link
               href="/products"
               className={`${
@@ -69,8 +95,10 @@ export default function Navigation() {
             >
               {t("navigation.products")}
             </Link>
+            )}
 
             {/* Services Dropdown */}
+            {(webVis?.services !== false) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -89,21 +117,31 @@ export default function Navigation() {
                   <Link href="/services">{t("services.all")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {(webVis?.servicesDigitalPrinting !== false) && (
                 <DropdownMenuItem asChild>
                   <Link href="/services/digital-printing">{t("services.digitalPrinting")}</Link>
                 </DropdownMenuItem>
+                )}
+                {(webVis?.servicesLargeFormat !== false) && (
                 <DropdownMenuItem asChild>
                   <Link href="/services/large-format">{t("services.largeFormat")}</Link>
                 </DropdownMenuItem>
+                )}
+                {(webVis?.servicesEventStands !== false) && (
                 <DropdownMenuItem asChild>
                   <Link href="/services/event-stands">{t("services.eventStands")}</Link>
                 </DropdownMenuItem>
+                )}
+                {(webVis?.servicesIlluminatedSigns !== false) && (
                 <DropdownMenuItem asChild>
                   <Link href="/services/illuminated-signs">{t("services.illuminatedSigns")}</Link>
                 </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
 
+            {(webVis?.aiStudio !== false) && (
             <Link
               href="/ai-studio"
               className={`${
@@ -113,8 +151,9 @@ export default function Navigation() {
               <Sparkles className="mr-1 h-4 w-4" />
               {t("navigation.aiStudio")}
             </Link>
+            )}
 
-            {profile?.role === "supplier" && (
+            {profile?.role === "supplier" && (webVis?.supplierPortal !== false) && (
               <Link
                 href="/supplier/dashboard"
                 className={`${
@@ -133,33 +172,51 @@ export default function Navigation() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
+                  {(adminVis?.dashboard !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">{t("navigation.dashboard")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.orders !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/orders">{t("orders.title")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.products !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/products">{t("products.title")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.services !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/services">Services</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.users !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/users">{t("users.title")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.quotes !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/quotes">{t("quotes.title")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.transactions !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/transactions">{t("admin.nav.transactions")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.disputes !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/disputes">{t("admin.nav.disputes")}</Link>
                   </DropdownMenuItem>
+                  )}
+                  {(adminVis?.emailSettings !== false) && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/email-settings">{t("admin.nav.emailSettings")}</Link>
                   </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

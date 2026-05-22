@@ -21,6 +21,19 @@ yarn-error.log*
 
 # vercel
 .vercel
+.vercel_cli/
+
+# macOS
+.DS_Store
+
+# Trae
+.trae/
+
+# local backups / exports
+backups/
+*.zip
+*.tar.gz
+.env*.local
 
 # typescript
 *.tsbuildinfo

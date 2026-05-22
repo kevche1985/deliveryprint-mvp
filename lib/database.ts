@@ -12,6 +12,9 @@ export type Product = {
   is_featured: boolean
   // New: controls whether product supports customization flows
   is_customizable: boolean
+  variant_dimensions?:
+    | Array<{ name: string; key: string; options?: Array<{ value: string; price?: number; sku?: string | null }> }>
+    | null
   created_at: string
   updated_at: string | null
   tenant_id: string | null
@@ -21,6 +24,8 @@ export type ProductImage = {
   id: string
   product_id: string
   url: string
+  media_type?: "image" | "video" | string
+  poster_url?: string | null
   alt_text: string | null
   is_primary: boolean
   display_order?: number
@@ -34,6 +39,8 @@ export type ProductVariant = {
   price: number
   attributes: Record<string, any>
   inventory: number
+  is_enabled?: boolean
+  image_url?: string | null
 }
 
 export type Category = {
@@ -244,6 +251,7 @@ export async function getProducts(
   return (data ?? []).map((p: any) => ({
     ...p,
     is_customizable: p?.is_customizable ?? true,
+    variant_dimensions: Array.isArray(p?.variant_dimensions) ? p.variant_dimensions : [],
   })) as Product[]
 }
 
@@ -257,7 +265,11 @@ export async function getProductById(id: string) {
   }
 
   if (!data) return null
-  return { ...data, is_customizable: (data as any).is_customizable ?? true } as Product
+  return {
+    ...data,
+    is_customizable: (data as any).is_customizable ?? true,
+    variant_dimensions: Array.isArray((data as any)?.variant_dimensions) ? (data as any).variant_dimensions : [],
+  } as Product
 }
 
 
@@ -270,7 +282,11 @@ export async function getProductBySlug(slug: string) {
   }
 
   if (!data) return null
-  return { ...data, is_customizable: (data as any).is_customizable ?? true } as Product
+  return {
+    ...data,
+    is_customizable: (data as any).is_customizable ?? true,
+    variant_dimensions: Array.isArray((data as any)?.variant_dimensions) ? (data as any).variant_dimensions : [],
+  } as Product
 }
 
 export async function getProductImages(productId: string) {
@@ -511,6 +527,39 @@ export async function getOrderItemsWithImages(orderId: string) {
   }
 }
 
+export async function getOrderItemsWithUploads(orderId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("order_items")
+      .select(
+        `
+        *,
+        products:product_id (
+          id,
+          name,
+          image,
+          category
+        ),
+        uploaded_file:uploaded_files!uploaded_file_id (
+          id,
+          file_url,
+          original_filename,
+          file_name,
+          status
+        )
+      `,
+      )
+      .eq("order_id", orderId)
+      .order("created_at", { ascending: true })
+
+    if (error) throw new Error(`Failed to fetch order items: ${error.message}`)
+    return data || []
+  } catch (error) {
+    console.error("Database connection error or other error in getOrderItemsWithUploads:", error)
+    throw error
+  }
+}
+
 // User Functions
 export async function getUserProfile(userId: string) {
   const { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).single()
@@ -584,10 +633,6 @@ export async function updateOrderPaymentStatus(orderId: string, status: string, 
   const updateData: any = {
     status,
     updated_at: new Date().toISOString(),
-  }
-
-  if (paymentData) {
-    updateData.payment_data = paymentData
   }
 
   const { data, error } = await supabase

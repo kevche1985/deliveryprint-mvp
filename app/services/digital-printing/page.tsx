@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ShoppingCart, Info, FileImage, Calculator, Sparkles, X, Palette } from "lucide-react"
+import { ShoppingCart, Info, FileImage, Calculator, Sparkles, X, Palette, Loader2 } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useCart } from "@/lib/cart-context"
 import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabase"
 import { toast } from "@/components/ui/use-toast"
 import DesignServiceEditor from "@/components/design-service-editor" // New import
 import { useLanguage } from "@/lib/language-context"
@@ -28,148 +30,86 @@ type DesignOutputData = {
   id?: string
 }
 import QuoteRequestModal from "@/components/quote-request-modal"
+import FastTrackCheckoutModal from "@/components/fast-track-checkout-modal"
 
-const digitalPrintingProducts = [
+type DigitalPrintingSize = {
+  label?: string
+  width: number
+  height: number
+  price_single: number
+  price_double?: number
+}
+
+type DigitalPrintingProduct = {
+  id: string
+  name: string
+  description: string
+  sizes: DigitalPrintingSize[]
+  double_sided_available: boolean
+  image: string
+}
+
+const digitalPrintingProducts: DigitalPrintingProduct[] = [
   {
-    id: "foldcote-14",
-    name: "FOLDCOTE 14",
-    description: "Premium coated paper with excellent print quality and durability",
-    sizes: [
-      { width: 8.5, height: 11, price_single: 0.75, price_double: 1.25 },
-      { width: 11, height: 17, price_single: 1.0, price_double: 1.75 },
-      { width: 12, height: 18, price_single: 1.25, price_double: 2.0 },
-      { width: 13, height: 19, price_single: 1.5, price_double: 2.5 },
-      { width: 18, height: 24, price_single: 3.0, price_double: 5.0 },
-    ],
-    double_sided_available: true,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//foldcote-14.jpg?height=200&width=300",
-  },
-  {
-    id: "adhesivo",
-    name: "ADHESIVO",
-    description: "High-quality vinyl stickers with strong adhesive backing",
-    sizes: [
-      { width: 4, height: 6, price_single: 1.0 },
-      { width: 8.5, height: 11, price_single: 1.5 },
-      { width: 12, height: 18, price_single: 2.0 },
-      { width: 13, height: 19, price_single: 2.5 },
-      { width: 18, height: 24, price_single: 4.0 },
-      { width: 24, height: 36, price_single: 8.0 },
-    ],
-    double_sided_available: false,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//Adhesivo.png?height=200&width=300",
-  },
-  {
-    id: "couche",
-    name: "COUCHE",
+    id: "couche-100",
+    name: "COUCHE 100",
     description: "Smooth coated paper perfect for high-quality color printing",
     sizes: [
-      { width: 8.5, height: 11, price_single: 0.75, price_double: 1.25 },
-      { width: 11, height: 17, price_single: 1.0, price_double: 1.75 },
       { width: 12, height: 18, price_single: 1.25, price_double: 2.0 },
       { width: 13, height: 19, price_single: 1.5, price_double: 2.0 },
-      { width: 18, height: 24, price_single: 2.5, price_double: 4.0 },
     ],
     double_sided_available: true,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//COUCHE.jpg?height=200&width=300",
+    image: "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images/COUCHE.jpg",
+  },
+  {
+    id: "foldcote-12",
+    name: "FOLDCOTE 12",
+    description: "Premium coated paper with excellent print quality and durability",
+    sizes: [
+      { width: 12, height: 18, price_single: 1.25, price_double: 2.0 },
+      { width: 13, height: 19, price_single: 1.5, price_double: 2.5 },
+    ],
+    double_sided_available: true,
+    image: "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images/Folcote_2.jpg",
   },
   {
     id: "bond",
     name: "BOND",
     description: "Standard office paper for everyday printing needs",
     sizes: [
-      { width: 8.5, height: 11, price_single: 0.5, price_double: 0.8 },
-      { width: 11, height: 17, price_single: 1.0, price_double: 1.75 },
-      { width: 12, height: 18, price_single: 1.25, price_double: 2.0 },
-      { width: 13, height: 19, price_single: 1.5, price_double: 2.5 },
+      { label: "Tamaño Carta", width: 8.5, height: 11, price_single: 0.5, price_double: 0.8 },
+      { label: "A4", width: 8.27, height: 11.69, price_single: 0.5, price_double: 0.8 },
+      { label: "12x18”", width: 12, height: 18, price_single: 1.25, price_double: 2.0 },
     ],
     double_sided_available: true,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//Bond.jpg?height=200&width=300",
+    image: "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images/PAPEL%20BOND.jpg",
   },
   {
-    id: "etiqueta-especial",
-    name: "ETIQUETA ESPECIAL",
-    description: "Premium specialty labels for professional applications",
+    id: "adhesivo",
+    name: "ADHESIVO",
+    description: "High-quality vinyl stickers with strong adhesive backing",
     sizes: [
-      { width: 4, height: 6, price_single: 2.0 },
-      { width: 8.5, height: 11, price_single: 2.5 },
-      { width: 12, height: 18, price_single: 3.0 },
-      { width: 13, height: 19, price_single: 3.5 },
-      { width: 18, height: 24, price_single: 5.0 },
+      { width: 12, height: 18, price_single: 2.0 },
+      { width: 13, height: 19, price_single: 2.5 },
     ],
     double_sided_available: false,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//Adhesivo.png?height=200&width=300",
-  },
-  {
-    id: "vinyl",
-    name: "VINYL BANNER",
-    description: "Durable vinyl material perfect for outdoor signage and large format printing",
-    sizes: [
-      { width: 18, height: 24, price_single: 12.0 },
-      { width: 24, height: 36, price_single: 18.0 },
-      { width: 36, height: 48, price_single: 28.0 },
-      { width: 48, height: 72, price_single: 45.0 },
-      { width: 60, height: 96, price_single: 75.0 },
-      { width: 72, height: 120, price_single: 120.0 },
-    ],
-    double_sided_available: false,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//LONNA%20BANNER.jpg?height=200&width=300",
-  },
-  {
-    id: "troquelate",
-    name: "TROQUELATE",
-    description: "Die-cut specialty material for custom shapes and professional applications",
-    sizes: [
-      { width: 12, height: 18, price_single: 6.0 },
-      { width: 18, height: 24, price_single: 10.0 },
-      { width: 24, height: 36, price_single: 18.0 },
-      { width: 36, height: 48, price_single: 32.0 },
-      { width: 48, height: 60, price_single: 50.0 },
-      { width: 60, height: 72, price_single: 75.0 },
-    ],
-    double_sided_available: false,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//TARJETAS%20TROQUELADAS.jpg?height=200&width=300",
-  },
-  {
-    id: "canvas",
-    name: "CANVAS",
-    description: "High-quality canvas material ideal for art prints and large format displays",
-    sizes: [
-      { width: 11, height: 14, price_single: 8.0 },
-      { width: 16, height: 20, price_single: 15.0 },
-      { width: 18, height: 24, price_single: 20.0 },
-      { width: 24, height: 36, price_single: 35.0 },
-      { width: 36, height: 48, price_single: 55.0 },
-      { width: 48, height: 60, price_single: 85.0 },
-      { width: 60, height: 72, price_single: 125.0 },
-    ],
-    double_sided_available: false,
-    image:
-      "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images//CANVAS.jpg?height=200&width=300",
+    image: "https://dzlqddocovzijnfwygap.supabase.co/storage/v1/object/public/web-images/ADHESIVO.jpg",
   },
 ]
 
 export default function DigitalPrintingPage() {
   const searchParams = useSearchParams()
-  const [selectedProduct, setSelectedProduct] = useState(digitalPrintingProducts[0])
-  const [selectedSize, setSelectedSize] = useState<{
-    width: number
-    height: number
-    price_single: number
-    price_double?: number
-  }>(selectedProduct.sizes[0])
-  const [printSides, setPrintSides] = useState<"single" | "double">("single")
+  const router = useRouter()
+  const [selectedProduct, setSelectedProduct] = useState<DigitalPrintingProduct | null>(null)
+  const [selectedSize, setSelectedSize] = useState<DigitalPrintingSize | null>(null)
+  const [printSides, setPrintSides] = useState<"single" | "double" | null>(null)
+  const [colorMode, setColorMode] = useState<"bw" | "color" | null>(null)
+  const [currentStep, setCurrentStep] = useState<number>(1)
   const [quantity, setQuantity] = useState(1)
   const [aiDesign, setAiDesign] = useState<any>(null)
   const [showAiDesign, setShowAiDesign] = useState(false)
   const [showQuoteModal, setShowQuoteModal] = useState(false)
+  const [showFastCheckout, setShowFastCheckout] = useState(false)
 
   // New state for Design Editor
   const [showDesignEditor, setShowDesignEditor] = useState(false)
@@ -177,14 +117,54 @@ export default function DigitalPrintingPage() {
 
   const [dragActive, setDragActive] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [uploadedLinks, setUploadedLinks] = useState<
+    Array<{ uploaded_file_id: string; file_url: string; file_name: string; original_filename: string }>
+  >([])
+  const [uploadingDesigns, setUploadingDesigns] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const cartContext = useCart()
   const { addItem } = cartContext || { addItem: () => {} }
   const { user } = useAuth()
   const { t } = useLanguage()
+  const materialRef = useRef<HTMLDivElement>(null)
+  const sizeRef = useRef<HTMLDivElement>(null)
+  const sidesRef = useRef<HTMLDivElement>(null)
+  const colorRef = useRef<HTMLDivElement>(null)
 
-  const handleAddToCart = () => {
+  const uploadDesignFiles = async (files: File[]) => {
+    const results: Array<{ uploaded_file_id: string; file_url: string; file_name: string; original_filename: string }> = []
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token || null
+
+    for (const f of files) {
+      const fd = new FormData()
+      fd.append("file", f)
+      const res = await fetch("/api/uploads/design", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: fd,
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || "Design upload failed")
+      }
+      const data = await res.json().catch(() => ({}))
+      if (!data?.uploadedFile?.id || !data?.uploadedFile?.file_url) {
+        throw new Error("Design upload returned an invalid response")
+      }
+      results.push({
+        uploaded_file_id: data.uploadedFile.id,
+        file_url: data.uploadedFile.file_url,
+        file_name: data.uploadedFile.file_name || f.name,
+        original_filename: data.uploadedFile.original_filename || f.name,
+      })
+    }
+
+    return results
+  }
+
+  const handleAddToCart = async () => {
     if (!cartContext) {
       alert("Cart is not available. Please refresh the page and try again.")
       return
@@ -194,22 +174,60 @@ export default function DigitalPrintingPage() {
 // Determine which design to use (AI design takes priority over custom design)
     const designToUse = aiDesign || customDesign
 
-    // Determine the correct image to use for the cart thumbnail
+    if (!selectedProduct || !selectedSize || !printSides || !colorMode) {
+      toast({ title: t("common.toast.error"), description: t("common.toast.completeSteps"), variant: "destructive" })
+      return
+    }
+
+    let finalUploadedLinks = uploadedLinks
+    if (uploadedFiles.length > 0 && finalUploadedLinks.length === 0) {
+      setUploadingDesigns(true)
+      try {
+        finalUploadedLinks = await uploadDesignFiles(uploadedFiles)
+        setUploadedLinks(finalUploadedLinks)
+      } catch (e: any) {
+      toast({
+          title: t("common.toast.error"),
+          description: e?.message || "Failed to upload design file",
+          variant: "destructive",
+        })
+        return
+      } finally {
+        setUploadingDesigns(false)
+      }
+    }
     let cartImage = selectedProduct.image || "/placeholder.svg?height=200&width=300"
-    
     if (aiDesign && aiDesign.previewUrl) {
-      // Use AI-generated design image as thumbnail
       cartImage = aiDesign.previewUrl
-    } else if (customDesign && customDesign.customizedProductImage) {
-      // Use custom design image as thumbnail
-      cartImage = customDesign.customizedProductImage
+    } else if (customDesign) {
+      const cd: any = customDesign
+      cartImage =
+        cd.customizedProductImage ||
+        cd.thumbnail_jpeg ||
+        cd.preview_url ||
+        cd.download_url ||
+        cd.storage_url ||
+        cartImage
     }
 
     const sidesLabel = printSides === "double"
       ? t("services.digitalPrintingPage.doubleSided")
       : t("services.digitalPrintingPage.singleSided")
+    const colorLabel = colorMode === "bw" ? t("services.digitalPrintingPage.color.bw") : t("services.digitalPrintingPage.color.full")
 
     const localizedProductName = t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)
+    const sizeLabel = selectedSize.label
+      ? `${selectedSize.label} (${selectedSize.width}" × ${selectedSize.height}")`
+      : `${selectedSize.width}" × ${selectedSize.height}"`
+
+    const fallbackDesignUrl =
+      finalUploadedLinks?.[0]?.file_url ||
+      (customDesign as any)?.download_url ||
+      (customDesign as any)?.storage_url ||
+      (customDesign as any)?.customizedProductImage ||
+      (aiDesign as any)?.download_url ||
+      (aiDesign as any)?.previewUrl ||
+      null
 
     const cartItem = {
       productId: `digital-print-${selectedProduct.id}`,
@@ -217,9 +235,10 @@ export default function DigitalPrintingPage() {
       designId: designToUse?.id || undefined,
       quantity: quantity,
       price: calculatePrice(),
-      name: `${localizedProductName} - ${selectedSize.width}" × ${selectedSize.height}" (${sidesLabel})`,
+      name: `${localizedProductName} - ${sizeLabel} (${sidesLabel}, ${colorLabel})`,
       image: cartImage, // Now uses AI design image when available
       customizations: {
+        material_type: selectedProduct.name,
         product: selectedProduct,
         size: selectedSize,
         printSides: printSides,
@@ -233,10 +252,14 @@ export default function DigitalPrintingPage() {
               baseProductImage: customDesign.baseProductImage,
             }
           : undefined,
+        uploadedFiles: finalUploadedLinks,
+        uploaded_file_id: finalUploadedLinks?.[0]?.uploaded_file_id || null,
+        design_file_url: fallbackDesignUrl,
         specifications: {
           material: localizedProductName,
           dimensions: `${selectedSize.width} × ${selectedSize.height}`,
           sides: printSides,
+          color: colorMode,
           doubleSidedAvailable: selectedProduct.double_sided_available,
         },
       },
@@ -249,10 +272,16 @@ export default function DigitalPrintingPage() {
     })
   }
 
-  const calculatePrice = () => {
-    const basePrice =
-      printSides === "double" && 'price_double' in selectedSize ? selectedSize.price_double : selectedSize.price_single
-    return (basePrice || 0) * quantity
+  const handleFastCheckout = async () => {
+    await handleAddToCart()
+    router.push("/checkout")
+  }
+
+  function calculatePrice() {
+    if (!selectedSize || !printSides || !colorMode) return 0
+    const basePrice = printSides === "double" && 'price_double' in selectedSize ? (selectedSize as any).price_double : selectedSize.price_single
+    const colorMultiplier = colorMode === "bw" ? 0.9 : 1
+    return ((basePrice || 0) * colorMultiplier) * quantity
   }
 
   const handleProductChange = (productId: string) => {
@@ -260,9 +289,10 @@ export default function DigitalPrintingPage() {
     if (product) {
       setSelectedProduct(product)
       setSelectedSize(product.sizes[0])
-      if (!product.double_sided_available) {
-        setPrintSides("single")
-      }
+      setPrintSides(null)
+      setColorMode(null)
+      setCurrentStep(2)
+      sizeRef.current?.scrollIntoView({ behavior: "smooth" })
       // Don't clear designs when material changes - preserve user's design choice
       // setCustomDesign(null) - Commented out to preserve custom designs
       // setShowAiDesign(false) - Commented out to preserve AI designs
@@ -271,6 +301,7 @@ export default function DigitalPrintingPage() {
   }
 
   const handleSizeChange = (sizeIndex: string) => {
+    if (!selectedProduct) return
     const size = selectedProduct.sizes[Number.parseInt(sizeIndex)]
     if (size) {
       // Handle union type with optional price_double
@@ -280,6 +311,8 @@ export default function DigitalPrintingPage() {
         price_single: size.price_single,
         price_double: 'price_double' in size ? size.price_double : undefined
       })
+      setCurrentStep(3)
+      sidesRef.current?.scrollIntoView({ behavior: "smooth" })
     }
   }
 
@@ -313,7 +346,7 @@ export default function DigitalPrintingPage() {
     }
   }
 
-  const handleFiles = (files: FileList) => {
+  const handleFiles = async (files: FileList) => {
     const validFiles = Array.from(files).filter((file) => {
       const validTypes = [
         "application/pdf",
@@ -327,9 +360,8 @@ export default function DigitalPrintingPage() {
       return validTypes.includes(file.type) || validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
     })
 
-    if (validFiles.length > 0) {
-      setUploadedFiles((prev) => [...prev, ...validFiles])
-    }
+    if (validFiles.length === 0) return
+    setUploadedFiles((prev) => [...prev, ...validFiles])
   }
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -340,6 +372,7 @@ export default function DigitalPrintingPage() {
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
+    setUploadedLinks((prev) => prev.filter((_, i) => i !== index))
   }
 
   // Check for AI-generated design or manually created design
@@ -470,13 +503,38 @@ export default function DigitalPrintingPage() {
                   <div className="flex items-start gap-4">
                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-white border-2 border-red-200">
                       <img
-                        src={customDesign.customizedProductImage || "/placeholder.svg"}
+                        src={
+                          (customDesign as any)?.thumbnail_jpeg ||
+                          (customDesign as any)?.customizedProductImage ||
+                          (customDesign as any)?.preview_url ||
+                          (customDesign as any)?.download_url ||
+                          (customDesign as any)?.storage_url ||
+                          (customDesign as any)?.baseProductImage ||
+                          "/placeholder.svg"
+                        }
                         alt="Custom Design"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const cd: any = customDesign
+                          if (!(e.currentTarget as any).dataset.fallbackApplied) {
+                            (e.currentTarget as any).dataset.fallbackApplied = "1"
+                            e.currentTarget.src =
+                              cd?.thumbnail_jpeg ||
+                              cd?.customizedProductImage ||
+                              cd?.preview_url ||
+                              cd?.download_url ||
+                              cd?.storage_url ||
+                              cd?.baseProductImage ||
+                              "/placeholder.svg"
+                          }
+                        }}
                       />
                     </div>
                     <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{t("services.digitalPrintingPage.customDesignLabel")} for {t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}</h3>
+                          <h3 className="font-semibold text-lg">
+                            {t("services.digitalPrintingPage.customDesignLabel")}
+                            {selectedProduct ? ` for ${t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}` : ""}
+                          </h3>
                       <p className="text-sm text-gray-600 capitalize mb-2">{t("services.digitalPrintingPage.manuallyCreated")}</p>
                       <Badge variant="secondary" className="bg-red-100 text-red-800">
                         {t("services.digitalPrintingPage.readyForPrinting")}
@@ -493,12 +551,26 @@ export default function DigitalPrintingPage() {
               </Card>
             )}
 
+            {/* Stepper */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">Follow these steps to make your first print</p>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge className="cursor-pointer" variant={currentStep === 1 ? "default" : "outline"} onClick={() => { setCurrentStep(1); materialRef.current?.scrollIntoView({ behavior: "smooth" }) }}>1 {t("services.digitalPrintingPage.steps.material")}</Badge>
+                <span>›</span>
+                <Badge className="cursor-pointer" variant={currentStep === 2 ? "default" : "outline"} onClick={() => { setCurrentStep(2); sizeRef.current?.scrollIntoView({ behavior: "smooth" }) }}>2 {t("services.digitalPrintingPage.steps.size")}</Badge>
+                <span>›</span>
+                <Badge className="cursor-pointer" variant={currentStep === 3 ? "default" : "outline"} onClick={() => { setCurrentStep(3); sidesRef.current?.scrollIntoView({ behavior: "smooth" }) }}>3 {t("services.digitalPrintingPage.steps.sides")}</Badge>
+                <span>›</span>
+                <Badge className="cursor-pointer" variant={currentStep === 4 ? "default" : "outline"} onClick={() => { setCurrentStep(4); colorRef.current?.scrollIntoView({ behavior: "smooth" }) }}>4 {t("services.digitalPrintingPage.steps.color")}</Badge>
+              </div>
+            </div>
+
             {/* Material Selection */}
-            <Card>
+            <Card ref={materialRef}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileImage className="h-5 w-5" />
-                  {t("services.digitalPrintingPage.selectMaterial")}
+                  {`${t("common.step")} 1 - ${t("services.digitalPrintingPage.selectMaterial")}`}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -507,7 +579,7 @@ export default function DigitalPrintingPage() {
                     <div
                       key={product.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        selectedProduct.id === product.id
+                        selectedProduct?.id === product.id
                           ? "border-red-500 bg-red-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
@@ -541,9 +613,9 @@ export default function DigitalPrintingPage() {
             </Card>
 
             {/* Size Selection */}
-            <Card>
+            <Card ref={sizeRef}>
               <CardHeader>
-                <CardTitle>{t("services.digitalPrintingPage.sizeOptionsTitle")}</CardTitle>
+                <CardTitle>{`${t("common.step")} 2 - ${t("services.digitalPrintingPage.sizeOptionsTitle")}`}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -551,58 +623,92 @@ export default function DigitalPrintingPage() {
                     {t("services.digitalPrintingPage.materialSize")}
                   </Label>
                   <Select
-                    value={selectedProduct.sizes.findIndex(size => 
+                    disabled={!selectedProduct}
+                    value={selectedProduct && selectedSize ? selectedProduct.sizes.findIndex(size => 
                       size.width === selectedSize.width && 
                       size.height === selectedSize.height && 
                       size.price_single === selectedSize.price_single
-                    ).toString()}
+                    ).toString() : undefined}
                     onValueChange={handleSizeChange}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedProduct.sizes.map((size, index) => (
+                      {(selectedProduct || { sizes: [] }).sizes.map((size, index) => (
                         <SelectItem key={index} value={index.toString()}>
-                          {size.width}" × {size.height}" - ${size.price_single}
-                          {'price_double' in size && ` / $${(size as any).price_double} (${t("services.digitalPrintingPage.doubleSided")})`}
+                          {size.label ? `${size.label} (${size.width}" × ${size.height}")` : `${size.width}" × ${size.height}"`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {selectedProduct.double_sided_available && (
-                  <div>
-                    <Label className="text-sm font-medium mb-3 block">{t("services.digitalPrintingPage.printSides")}</Label>
-                    <RadioGroup value={printSides} onValueChange={(value: "single" | "double") => setPrintSides(value)}>
+                {selectedProduct?.double_sided_available && (
+                  <div ref={sidesRef}>
+                    <Label className="text-sm font-medium mb-3 block">{`${t("common.step")} 3 - ${t("services.digitalPrintingPage.printSides")}`}</Label>
+                    <RadioGroup value={printSides || undefined} onValueChange={(value: "single" | "double") => { setPrintSides(value); setCurrentStep(4); colorRef.current?.scrollIntoView({ behavior: "smooth" }) }}>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="single" id="single" />
-                        <Label htmlFor="single">{t("services.digitalPrintingPage.singleSided")} - ${selectedSize.price_single}</Label>
+                        <RadioGroupItem value="single" id="single" disabled={!selectedProduct || !selectedSize} />
+                        <Label htmlFor="single">{t("services.digitalPrintingPage.singleSided")}</Label>
                       </div>
-                      {'price_double' in selectedSize && (
+                      {selectedSize && 'price_double' in selectedSize && (
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="double" id="double" />
-                          <Label htmlFor="double">{t("services.digitalPrintingPage.doubleSided")} - ${selectedSize.price_double}</Label>
+                          <RadioGroupItem value="double" id="double" disabled={!selectedProduct || !selectedSize} />
+                          <Label htmlFor="double">{t("services.digitalPrintingPage.doubleSided")}</Label>
                         </div>
                       )}
                     </RadioGroup>
                   </div>
                 )}
 
-                <div>
-                  <Label htmlFor="quantity" className="text-sm font-medium mb-2 block">
-                    {t("services.digitalPrintingPage.quantity")}
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    max="1000"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Number.parseInt(e.target.value) || 1))}
-                    className="w-32"
-                  />
+                {/* Color selection */}
+                <div className="mt-4" ref={colorRef}>
+                  <Label className="text-sm font-medium mb-3 block">{`${t("common.step")} 4 - ${t("services.digitalPrintingPage.color.title")}`}</Label>
+                  <RadioGroup value={colorMode || undefined} onValueChange={(v: "bw" | "color") => setColorMode(v)}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="bw" id="bw" disabled={!selectedProduct} />
+                      <Label htmlFor="bw">{t("services.digitalPrintingPage.color.bw")} (-10%)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="color" id="color" disabled={!selectedProduct} />
+                      <Label htmlFor="color">{t("services.digitalPrintingPage.color.full")}</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 items-start">
+                  <div>
+                    <Label htmlFor="quantity" className="text-sm font-medium mb-2 block">
+                      {t("services.digitalPrintingPage.quantity")}
+                    </Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      max="1000"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Number.parseInt(e.target.value) || 1))}
+                      className="w-32"
+                    />
+                  </div>
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="text-sm font-medium mb-2">Estimación</div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Unitario</span>
+                      <span>
+                        {selectedSize && printSides && colorMode
+                          ? `$${(((printSides === "double" && 'price_double' in selectedSize)
+                                ? ((selectedSize as any).price_double || selectedSize.price_single)
+                                : selectedSize.price_single) * (colorMode === "bw" ? 0.9 : 1)).toFixed(2)}`
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>{selectedSize && printSides && colorMode ? `$${calculatePrice().toFixed(2)}` : "-"}</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -672,18 +778,13 @@ export default function DigitalPrintingPage() {
                             userObject: user
                           })
                           
-                          // Check if user is logged in before opening design editor
                           if (!user?.email) {
-                            console.log("❌ User not logged in, showing login toast")
                             toast({
                               title: t("common.loginRequired.title"),
                               description: t("common.loginRequired.description"),
                               variant: "destructive",
                             })
-                            return
                           }
-                          
-                          console.log("✅ User authenticated, opening design editor")
                           setShowDesignEditor(true)
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white"
@@ -751,10 +852,12 @@ export default function DigitalPrintingPage() {
                         {(() => {
                           // Try multiple possible image URL properties
                            const customDesignAny = customDesign as any
-                           const imageUrl = customDesign?.customizedProductImage || 
-                                           customDesignAny?.preview_url || 
-                                           customDesignAny?.download_url ||
-                                           aiDesign?.previewUrl
+                           const imageUrl = customDesignAny?.thumbnail_jpeg ||
+                                            customDesign?.customizedProductImage || 
+                                            customDesignAny?.preview_url || 
+                                            customDesignAny?.download_url ||
+                                            customDesignAny?.baseProductImage ||
+                                            aiDesign?.previewUrl
                            
                            console.log('🖼️ Thumbnail debug:', {
                              hasCustomDesign: !!customDesign,
@@ -852,19 +955,27 @@ export default function DigitalPrintingPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                          <span className="font-medium">{t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}</span>
+                          <span className="font-medium">{selectedProduct ? t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`) : t("services.digitalPrintingPage.steps.material")}</span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
                       <span>{t("common.labels.size")}</span>
                       <span>
-                        {selectedSize.width}" × {selectedSize.height}"
+                        {selectedSize
+                          ? selectedSize.label
+                            ? `${selectedSize.label} (${selectedSize.width}" × ${selectedSize.height}")`
+                            : `${selectedSize.width}" × ${selectedSize.height}"`
+                          : "-"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>{t("common.labels.print")}</span>
-                          <span className="capitalize">{printSides === "double" ? t("services.digitalPrintingPage.doubleSided") : t("services.digitalPrintingPage.singleSided")}</span>
+                          <span className="capitalize">{printSides ? (printSides === "double" ? t("services.digitalPrintingPage.doubleSided") : t("services.digitalPrintingPage.singleSided")) : "-"}</span>
                     </div>
+                      <div className="flex justify-between">
+                        <span>{t("common.labels.color")}</span>
+                        <span>{colorMode ? (colorMode === "bw" ? t("services.digitalPrintingPage.color.bw") : t("services.digitalPrintingPage.color.full")) : "-"}</span>
+                      </div>
                     <div className="flex justify-between">
                       <span>{t("common.labels.quantity")}</span>
                       <span>{quantity}</span>
@@ -889,10 +1000,11 @@ export default function DigitalPrintingPage() {
                   <div className="flex justify-between">
                     <span>{t("common.labels.unitPrice")}</span>
                     <span>
-                        $
-                        {printSides === "double" && 'price_double' in selectedSize
-                          ? (selectedSize.price_double || selectedSize.price_single).toFixed(2)
-                          : selectedSize.price_single.toFixed(2)}
+                        {selectedSize ? (
+                          printSides === "double" && 'price_double' in selectedSize
+                            ? `$${((selectedSize as any).price_double || selectedSize.price_single).toFixed(2)}`
+                            : `$${selectedSize.price_single.toFixed(2)}`
+                        ) : "-$"}
                       </span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
@@ -902,9 +1014,23 @@ export default function DigitalPrintingPage() {
                 </div>
 
                 <div className="space-y-3 pb-4">
-                  <Button onClick={handleAddToCart} className="w-full bg-red-600 hover:bg-red-700" size="lg">
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    {t("common.addToCart")}
+                  <Button
+                    onClick={() => setShowFastCheckout(true)}
+                    className="w-full bg-gray-900 hover:bg-gray-800"
+                    size="lg"
+                    disabled={uploadingDesigns}
+                  >
+                    {t("common.checkout")}
+                  </Button>
+
+                  <Button
+                    onClick={() => void handleAddToCart()}
+                    className="w-full bg-red-600 hover:bg-red-700"
+                    size="lg"
+                    disabled={uploadingDesigns}
+                  >
+                    {uploadingDesigns ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
+                    {uploadingDesigns ? "Uploading design..." : t("common.addToCart")}
                   </Button>
 
                   <div className="text-center">
@@ -952,21 +1078,21 @@ export default function DigitalPrintingPage() {
               setCustomDesign(designData)
               setShowDesignEditor(false)
             }}
-            productImage={selectedProduct.image || ''}
-            productName={t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`)}
-            product={selectedProduct}
-            variants={selectedProduct.sizes || []}
-            selectedVariant={selectedProduct.sizes?.findIndex(size => 
+            productImage={selectedProduct?.image || ''}
+            productName={selectedProduct ? t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`) : ''}
+            product={selectedProduct as any}
+            variants={selectedProduct?.sizes || []}
+            selectedVariant={selectedProduct && selectedSize ? selectedProduct.sizes?.findIndex(size => 
               size.width === selectedSize.width && 
               size.height === selectedSize.height && 
               size.price_single === selectedSize.price_single
-            )?.toString() || '0'}
+            )?.toString() : '0'}
             initialDesign={
               customDesign
                 ? {
                     elements: customDesign.elements,
                     zoom: customDesign.zoom,
-                    productImage: customDesign.baseProductImage || selectedProduct.image || '',
+                    productImage: customDesign.baseProductImage || selectedProduct?.image || '',
                   }
                 : undefined
             }
@@ -987,6 +1113,28 @@ export default function DigitalPrintingPage() {
           }}
         />
       )}
+
+      <FastTrackCheckoutModal
+        isOpen={showFastCheckout}
+        onClose={() => setShowFastCheckout(false)}
+        title={t("common.checkout")}
+        description={t("common.fastCheckoutDescription")}
+        proceedLabel={t("common.checkout")}
+        cancelLabel={t("common.cancel")}
+        disabled={uploadingDesigns}
+        summary={[
+          {
+            label: t("common.labels.material"),
+            value: selectedProduct ? t(`services.digitalPrintingPage.products.${selectedProduct.id}.name`) : "-",
+          },
+          { label: t("common.labels.quantity"), value: String(quantity) },
+          { label: t("common.labels.total"), value: `$${calculatePrice().toFixed(2)}` },
+        ]}
+        onProceed={async () => {
+          await handleFastCheckout()
+          setShowFastCheckout(false)
+        }}
+      />
     </div>
   )
 }
